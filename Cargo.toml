@@ -1,0 +1,19 @@
+[package]
+name = "embedded_menu"
+version = "0.1.0"
+authors = ["Dániel Buga <daniel@revolutionrobotics.org>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+display-interface = "0.4"
+generic-array = "0.14.2"
+embedded-graphics = "0.6.2"
+embedded-layout = { git = "https://github.com/bugadani/embedded-layout" }
+embedded-text = "0.2.0"
+log = { version = "0.4.8", features = ["max_level_trace", "release_max_level_warn"] }
+
+[dev-dependencies]
+embedded-graphics-simulator = "0.2.1"
+sdl2 = "0.32.2"
