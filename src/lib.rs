@@ -10,7 +10,7 @@ use embedded_graphics::{
     geometry::Size,
     mono_font::{ascii::FONT_6X10, MonoTextStyle, MonoTextStyleBuilder},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
-    prelude::{Dimensions, DrawTargetExt, Point},
+    prelude::{DrawTargetExt, Point},
     primitives::{Line, Primitive, PrimitiveStyle, Rectangle, Styled},
     Drawable,
 };
@@ -250,7 +250,7 @@ mod private {
 
 use private::NoItems;
 
-use crate::adapters::{constrain::ConstrainedDrawTarget, invert::BinaryColorDrawTargetExt};
+use crate::adapters::invert::BinaryColorDrawTargetExt;
 
 pub struct MenuBuilder<IT, LL, R, C>
 where
@@ -665,9 +665,8 @@ where
                         .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
 
                 // selection indicator
-                let mut interaction_display = ConstrainedDrawTarget::new(
-                    display,
-                    Rectangle::new(
+                let mut interaction_display = display.cropped(
+                    &Rectangle::new(
                         Point::zero(),
                         Size::new(menu_list_width, menuitem_inner_height),
                     )
