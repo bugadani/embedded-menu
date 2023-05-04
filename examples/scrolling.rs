@@ -152,7 +152,11 @@ fn main() -> Result<(), core::convert::Infallible> {
         let mut had_interaction = false;
         for event in window.events() {
             match event {
-                SimulatorEvent::KeyUp { keycode, .. } => match keycode {
+                SimulatorEvent::KeyDown {
+                    keycode,
+                    repeat: false,
+                    ..
+                } => match keycode {
                     Keycode::Return => {
                         menu.interact(InteractionType::Select);
                         had_interaction = true;
