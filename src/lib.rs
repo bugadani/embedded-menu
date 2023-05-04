@@ -7,14 +7,17 @@ use core::marker::PhantomData;
 use embedded_graphics::{
     draw_target::DrawTarget,
     geometry::Size,
-    mono_font::{ascii::FONT_6X10, MonoTextStyleBuilder},
+    mono_font::{ascii::FONT_6X10, MonoTextStyle, MonoTextStyleBuilder},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
     prelude::{Dimensions, Point},
-    primitives::{Line, Primitive, PrimitiveStyle, Rectangle},
+    primitives::{Line, Primitive, PrimitiveStyle, Rectangle, Styled},
     Drawable, Pixel,
 };
 use embedded_layout::{
-    layout::linear::LinearLayout, object_chain::ChainElement, prelude::*, view_group::ViewGroup,
+    layout::linear::{LinearLayout, Vertical},
+    object_chain::ChainElement,
+    prelude::*,
+    view_group::ViewGroup,
 };
 use embedded_text::TextBox;
 use interaction::{programmed::Programmed, InputType, InteractionController, InteractionType};
@@ -588,7 +591,14 @@ where
     VG: ViewGroup + MenuExt<R> + Drawable<Color = C>,
     C: PixelColor + From<Rgb888>,
 {
-    pub fn update<D>(&mut self, display: &D)
+    fn header<'t, D>(
+        &self,
+        title: &'t str,
+        display: &D,
+    ) -> LinearLayout<
+        Vertical<horizontal::Left>,
+        Link<Styled<Line, PrimitiveStyle<C>>, Chain<TextBox<'t, MonoTextStyle<'static, C>>>>,
+    >
     where
         D: DrawTarget<Color = C>,
     {
@@ -600,27 +610,36 @@ where
             .text_color(self.style.color)
             .build();
         let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
+        LinearLayout::vertical(
+            Chain::new(TextBox::new(
+                title,
+                Rectangle::new(
+                    Point::zero(),
+                    Size::new(display_size.width, FONT_6X10.character_size.height),
+                ),
+                text_style,
+            ))
+            .append(
+                Line::new(
+                    Point::zero(),
+                    Point::new(display_area.bottom_right().unwrap().x, 0),
+                )
+                .into_styled(thin_stroke),
+            ),
+        )
+        .arrange()
+    }
+
+    pub fn update<D>(&mut self, display: &D)
+    where
+        D: DrawTarget<Color = C>,
+    {
+        let display_area = display.bounding_box();
+        let display_size = display_area.size();
 
         match self.display_mode {
             MenuDisplayMode::List => {
-                let menu_title = LinearLayout::vertical(
-                    Chain::new(TextBox::new(
-                        self.title,
-                        Rectangle::new(
-                            Point::zero(),
-                            Size::new(display_size.width, FONT_6X10.character_size.height),
-                        ),
-                        text_style,
-                    ))
-                    .append(
-                        Line::new(
-                            Point::zero(),
-                            Point::new(display_area.bottom_right().unwrap().x, 0),
-                        )
-                        .into_styled(thin_stroke),
-                    ),
-                )
-                .arrange();
+                let menu_title = self.header(self.title, display);
 
                 let menu_height = (display_size.height - menu_title.size().height) as i32;
 
@@ -689,24 +708,7 @@ where
 
         match self.display_mode {
             MenuDisplayMode::List => {
-                let menu_title = LinearLayout::vertical(
-                    Chain::new(TextBox::new(
-                        self.title,
-                        Rectangle::new(
-                            Point::zero(),
-                            Size::new(display_size.width, FONT_6X10.character_size.height),
-                        ),
-                        text_style,
-                    ))
-                    .append(
-                        Line::new(
-                            Point::zero(),
-                            Point::new(display_area.bottom_right().unwrap().x, 0),
-                        )
-                        .into_styled(thin_stroke),
-                    ),
-                )
-                .arrange();
+                let menu_title = self.header(self.title, display);
                 menu_title.draw(display)?;
 
                 let menu_height = (display_size.height - menu_title.size().height) as i32;
@@ -774,29 +776,12 @@ where
                         .draw(&mut scrollbar_display)?;
                 }
             }
-            _ => {
-                let layout = LinearLayout::vertical(
-                    Chain::new(TextBox::new(
-                        self.items.title_of(self.selected),
-                        Rectangle::new(
-                            Point::zero(),
-                            Size::new(display_size.width, FONT_6X10.character_size.height),
-                        ),
-                        text_style,
-                    ))
-                    .append(
-                        Line::new(
-                            Point::zero(),
-                            Point::new(display_area.bottom_right().unwrap().x, 0),
-                        )
-                        .into_styled(thin_stroke),
-                    ),
-                );
-
-                let size = layout.size();
+            MenuDisplayMode::Details => {
+                let header = self.header(self.items.title_of(self.selected), display);
 
                 // TODO: embedded-layout should allow appending views at this point
-                let vg = layout.into_inner();
+                let size = header.size();
+                let vg = header.into_inner();
                 LinearLayout::vertical(
                     vg.append(
                         TextBox::new(
