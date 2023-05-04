@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 
+pub mod adapters;
 pub mod interaction;
 pub mod items;
 
@@ -11,7 +12,7 @@ use embedded_graphics::{
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
     prelude::{Dimensions, Point},
     primitives::{Line, Primitive, PrimitiveStyle, Rectangle, Styled},
-    Drawable, Pixel,
+    Drawable,
 };
 use embedded_layout::{
     layout::linear::{LinearLayout, Vertical},
@@ -36,63 +37,6 @@ impl RectangleExt for Rectangle {
     #[inline]
     fn intersects_with(&self, other: &Rectangle) -> bool {
         !self.intersection(other).is_zero_sized()
-    }
-}
-
-pub struct ConstrainedDrawTarget<'a, C, D>
-where
-    C: PixelColor,
-    D: DrawTarget<Color = C>,
-{
-    clipping_rect: Rectangle,
-    parent: &'a mut D,
-    _color: PhantomData<C>,
-}
-
-impl<'a, C, D> ConstrainedDrawTarget<'a, C, D>
-where
-    C: PixelColor,
-    D: DrawTarget<Color = C>,
-{
-    pub fn new(parent: &'a mut D, bounds: Rectangle) -> Self {
-        Self {
-            parent,
-            clipping_rect: bounds,
-            _color: PhantomData,
-        }
-    }
-}
-
-impl<'a, C, D> Dimensions for ConstrainedDrawTarget<'a, C, D>
-where
-    C: PixelColor,
-    D: DrawTarget<Color = C>,
-{
-    fn bounding_box(&self) -> Rectangle {
-        self.parent.bounding_box()
-    }
-}
-
-impl<'a, C, D> DrawTarget for ConstrainedDrawTarget<'a, C, D>
-where
-    C: PixelColor,
-    D: DrawTarget<Color = C>,
-{
-    type Color = C;
-    type Error = D::Error;
-
-    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
-    where
-        I: IntoIterator<Item = embedded_graphics::Pixel<Self::Color>>,
-    {
-        self.parent.draw_iter(pixels.into_iter().filter_map(|px| {
-            let point = px.0 + self.clipping_rect.top_left;
-            if self.clipping_rect.contains(point) {
-                Some(Pixel(point, px.1))
-            } else {
-                None
-            }
-        }))
     }
 }
 
@@ -321,6 +265,8 @@ mod private {
 }
 
 use private::NoItems;
+
+use crate::adapters::{constrain::ConstrainedDrawTarget, invert::BinaryColorDrawTargetExt};
 
 pub struct MenuBuilder<IT, LL, R, C>
 where
@@ -683,24 +629,23 @@ where
     }
 }
 
-impl<'a, IT, VG, R, C> Drawable for Menu<IT, VG, R, C>
+impl<'a, IT, VG, R> Drawable for Menu<IT, VG, R, BinaryColor>
 where
     R: Copy,
-    IT: InteractionController + Drawable<Color = C>,
-    VG: ViewGroup + MenuExt<R> + Drawable<Color = C>,
-    C: PixelColor + From<Rgb888>,
+    IT: InteractionController + Drawable<Color = BinaryColor>,
+    VG: ViewGroup + MenuExt<R> + Drawable<Color = BinaryColor>,
 {
-    type Color = C;
+    type Color = BinaryColor;
     type Output = ();
 
     fn draw<D>(&self, display: &mut D) -> Result<(), D::Error>
     where
-        D: DrawTarget<Color = C>,
+        D: DrawTarget<Color = BinaryColor>,
     {
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let text_style = MonoTextStyleBuilder::<C>::new()
+        let text_style = MonoTextStyleBuilder::<BinaryColor>::new()
             .font(&FONT_6X10)
             .text_color(self.style.color)
             .build();
@@ -731,21 +676,6 @@ where
                     display_size.width
                 };
 
-                let mut constrained_display = ConstrainedDrawTarget::new(
-                    display,
-                    Rectangle::new(
-                        Point::zero(),
-                        Size::new(menu_list_width, menu_height as u32),
-                    )
-                    .align_to(
-                        &display_area,
-                        horizontal::Left,
-                        vertical::Bottom,
-                    ),
-                );
-
-                self.items.draw(&mut constrained_display)?;
-
                 // selection indicator
                 let mut interaction_display = ConstrainedDrawTarget::new(
                     display,
@@ -761,6 +691,36 @@ where
                 );
 
                 self.interaction.draw(&mut interaction_display)?;
+
+                // FIXME: this is terrible
+                let interaction = interaction_display.bounding_box();
+                let mut inverting_overlay = display.invert_area(&Rectangle::new(
+                    Point::new(
+                        0,
+                        self.indicator_offset.current() - self.list_offset.current()
+                            + 1
+                            + menuitem_height
+                            - 2,
+                    ),
+                    Size::new(
+                        self.interaction.fill_area_width(interaction.size.width),
+                        menuitem_height as u32 - 2,
+                    ),
+                ));
+                let mut constrained_display = ConstrainedDrawTarget::new(
+                    &mut inverting_overlay,
+                    Rectangle::new(
+                        Point::zero(),
+                        Size::new(menu_list_width, menu_height as u32),
+                    )
+                    .align_to(
+                        &display_area,
+                        horizontal::Left,
+                        vertical::Bottom,
+                    ),
+                );
+
+                self.items.draw(&mut constrained_display)?;
 
                 if draw_scrollbar {
                     let scale =

@@ -40,6 +40,19 @@ impl InteractionController for SingleTouch {
         self.interaction_time = 0;
     }
 
+    fn fill_area_width(&self, max: u32) -> u32 {
+        if self.ignore_time <= self.interaction_time && self.interaction_time < self.max_time {
+            // Draw indicator bar
+            let time = (self.interaction_time - self.ignore_time) as f32
+                / ((self.max_time - self.ignore_time) as f32 * 0.9);
+
+            ((time * (max - 1) as f32) as u32).max(1)
+        } else {
+            // Don't draw anything
+            1
+        }
+    }
+
     fn update(&mut self, action: Self::Input) -> InteractionType {
         if action {
             if self.interaction_time < self.max_time {
@@ -73,21 +86,12 @@ impl Drawable for SingleTouch {
     type Output = ();
 
     fn draw<D: DrawTarget<Color = BinaryColor>>(&self, display: &mut D) -> Result<(), D::Error> {
-        let width =
-            if self.ignore_time <= self.interaction_time && self.interaction_time < self.max_time {
-                // Draw indicator bar
-                let time = (self.interaction_time - self.ignore_time) as f32
-                    / ((self.max_time - self.ignore_time) as f32 * 0.9);
-
-                ((time * (display.bounding_box().size.width - 1) as f32) as u32).max(1)
-            } else {
-                // Don't draw anything
-                1
-            };
-
         Rectangle::new(
             Point::zero(),
-            Size::new(width, display.bounding_box().size.height),
+            Size::new(
+                self.fill_area_width(display.bounding_box().size.width),
+                display.bounding_box().size.height,
+            ),
         )
         .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
         .draw(display)

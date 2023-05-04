@@ -29,5 +29,6 @@ pub trait InteractionController {
     type Input: core::fmt::Debug + InputType;
 
     fn reset(&mut self) {}
+    fn fill_area_width(&self, max: u32) -> u32;
     fn update(&mut self, action: Self::Input) -> InteractionType;
 }
