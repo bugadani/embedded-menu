@@ -1,4 +1,4 @@
-use crate::{Margin, MarginExt, MenuEvent, MenuItemTrait, RectangleExt};
+use crate::{Margin, MarginExt, MenuEvent, MenuItemTrait};
 
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -108,7 +108,7 @@ where
         let text_bounds = self.bounds();
         let display_area = display.bounding_box();
 
-        if !text_bounds.intersects_with(&display_area) {
+        if text_bounds.intersection(&display_area).is_zero_sized() {
             return Ok(());
         }
 

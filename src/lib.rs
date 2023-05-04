@@ -23,23 +23,6 @@ use embedded_layout::{
 use embedded_text::TextBox;
 use interaction::{programmed::Programmed, InputType, InteractionController, InteractionType};
 
-pub trait RectangleExt {
-    fn expand(self, by: i32) -> Rectangle;
-    fn intersects_with(&self, other: &Rectangle) -> bool;
-}
-
-impl RectangleExt for Rectangle {
-    #[inline]
-    fn expand(self, by: i32) -> Rectangle {
-        self.offset(by)
-    }
-
-    #[inline]
-    fn intersects_with(&self, other: &Rectangle) -> bool {
-        !self.intersection(other).is_zero_sized()
-    }
-}
-
 pub enum MenuDisplayMode {
     List,
     Details,
@@ -713,9 +696,9 @@ where
                         Size::new(menu_list_width, menu_height as u32),
                     )
                     .align_to(
-                        &display_area,
+                        &menu_title,
                         horizontal::Left,
-                        vertical::Bottom,
+                        vertical::TopToBottom,
                     ),
                 );
 
