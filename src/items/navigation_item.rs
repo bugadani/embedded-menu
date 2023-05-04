@@ -88,7 +88,9 @@ where
 
         TextBox::new(
             self.marker,
-            Rectangle::new(inner_bounds.top_left, inner_bounds.size()),
+            self.style
+                .measure_string(self.marker, inner_bounds.top_left, Baseline::Top)
+                .bounding_box,
             self.style,
         )
         .align_to(&display_area, horizontal::Right, vertical::NoAlignment)
