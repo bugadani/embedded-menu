@@ -34,7 +34,7 @@ impl<'a, R: Copy, C: PixelColor> NavigationItem<'a, R, C> {
             bounds: style
                 .measure_string(title, Point::zero(), Baseline::Top)
                 .bounding_box
-                .with_margin(2, 0, 1, 1),
+                .with_margin(1, 0, 0, 1),
         }
     }
 }

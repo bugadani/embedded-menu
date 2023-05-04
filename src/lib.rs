@@ -699,8 +699,7 @@ where
                         0,
                         self.indicator_offset.current() - self.list_offset.current()
                             + 1
-                            + menuitem_height
-                            - 2,
+                            + menuitem_height,
                     ),
                     Size::new(
                         self.interaction.fill_area_width(interaction.size.width),
