@@ -4,13 +4,17 @@
 //! Watch the animated selection indicator fill up. Long press is registered as the bar reaches full width.
 
 use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
+    Window,
 };
-use sdl2::keyboard::Keycode;
 use std::{thread, time::Duration};
 
-use embedded_graphics::{pixelcolor::BinaryColor, primitives::Rectangle};
-use embedded_layout::prelude::*;
+use embedded_graphics::{
+    pixelcolor::BinaryColor,
+    prelude::{Point, Size},
+    primitives::Rectangle,
+    Drawable,
+};
 
 use embedded_menu::{
     interaction::single_touch::SingleTouch,
@@ -44,7 +48,7 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let display_area = Rectangle::with_size(Point::zero(), Size::new(128, 64));
+    let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = MenuBuilder::<_, _, _, _>::new("Menu", display_area)
         .show_details_after(300)
         .with_interaction_controller(SingleTouch::new(5, 100))
@@ -152,18 +156,14 @@ fn main() -> Result<(), core::convert::Infallible> {
 
         for event in window.events() {
             match event {
-                SimulatorEvent::KeyDown { keycode, .. } => match keycode {
-                    Keycode::Space => {
-                        space_pressed = true;
-                    }
-                    _ => {}
-                },
-                SimulatorEvent::KeyUp { keycode, .. } => match keycode {
-                    Keycode::Space => {
-                        space_pressed = false;
-                    }
-                    _ => {}
-                },
+                SimulatorEvent::KeyDown {
+                    keycode: Keycode::Space,
+                    ..
+                } => space_pressed = true,
+                SimulatorEvent::KeyUp {
+                    keycode: Keycode::Space,
+                    ..
+                } => space_pressed = false,
                 SimulatorEvent::Quit => break 'running,
                 _ => {}
             }

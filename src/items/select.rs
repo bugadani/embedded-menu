@@ -1,9 +1,16 @@
-use crate::{MenuEvent, MenuItemTrait};
+use crate::{Margin, MarginExt, MenuEvent, MenuItemTrait, RectangleExt};
 
-use crate::{Margin, MarginExt, RectangleExt};
-use embedded_graphics::{fonts::Font6x8, primitives::Rectangle, DrawTarget};
+use embedded_graphics::{
+    draw_target::DrawTarget,
+    mono_font::{ascii::FONT_6X10, MonoTextStyle},
+    pixelcolor::Rgb888,
+    prelude::{PixelColor, Point},
+    primitives::Rectangle,
+    text::{renderer::TextRenderer, Baseline},
+    Drawable,
+};
 use embedded_layout::prelude::*;
-use embedded_text::{alignment::*, prelude::*, utils::font_ext::FontExt};
+use embedded_text::TextBox;
 
 pub trait SelectValue: Sized + Copy {
     fn next(self) -> Self;
@@ -27,14 +34,19 @@ impl SelectValue for bool {
 
 pub struct Select<'a, R: Copy, S: SelectValue, C: PixelColor> {
     title_text: &'a str,
-    style: TextBoxStyle<C, Font6x8, LeftAligned, TopAligned>,
+    style: MonoTextStyle<'a, C>,
     bounds: Margin<Rectangle>,
     details: &'a str,
     convert: fn(S) -> R,
     value: S,
 }
 
-impl<'a, R: Copy, S: SelectValue, C: PixelColor> Select<'a, R, S, C> {
+impl<'a, R, S, C> Select<'a, R, S, C>
+where
+    R: Copy,
+    S: SelectValue,
+    C: PixelColor,
+{
     pub fn new(
         title: &'a str,
         details: &'a str,
@@ -42,10 +54,7 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> Select<'a, R, S, C> {
         convert: fn(S) -> R,
         color: C,
     ) -> Self {
-        let style = TextBoxStyleBuilder::new(Font6x8).text_color(color).build();
-
-        let width = Font6x8::str_width(title);
-        let height = Font6x8::CHARACTER_SIZE.height;
+        let style = MonoTextStyle::new(&FONT_6X10, color);
 
         Self {
             title_text: title,
@@ -53,7 +62,9 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> Select<'a, R, S, C> {
             convert,
             value: initial,
             style,
-            bounds: Rectangle::with_size(Point::zero(), Size::new(width, height))
+            bounds: style
+                .measure_string(title, Point::zero(), Baseline::Top)
+                .bounding_box
                 .with_margin(2, 0, 1, 1),
         }
     }
@@ -75,15 +86,8 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> MenuItemTrait<R> for Select<'a,
 }
 
 impl<'a, R: Copy, S: SelectValue, C: PixelColor> View for Select<'a, R, S, C> {
-    #[must_use]
-    fn translate(mut self, by: Point) -> Self {
+    fn translate_impl(&mut self, by: Point) {
         self.bounds.translate_mut(by);
-        self
-    }
-
-    fn translate_mut(&mut self, by: Point) -> &mut Self {
-        self.bounds.translate_mut(by);
-        self
     }
 
     fn bounds(&self) -> Rectangle {
@@ -91,10 +95,18 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> View for Select<'a, R, S, C> {
     }
 }
 
-impl<'a, R: Copy, S: SelectValue, C: PixelColor> Drawable<C> for &Select<'a, R, S, C> {
-    fn draw<D: DrawTarget<C>>(self, display: &mut D) -> Result<(), D::Error> {
+impl<'a, R, S, C> Drawable for Select<'a, R, S, C>
+where
+    R: Copy,
+    S: SelectValue,
+    C: PixelColor + From<Rgb888>,
+{
+    type Color = C;
+    type Output = ();
+
+    fn draw<D: DrawTarget<Color = C>>(&self, display: &mut D) -> Result<(), D::Error> {
         let text_bounds = self.bounds();
-        let display_area = display.display_area();
+        let display_area = display.bounding_box();
 
         if !text_bounds.intersects_with(&display_area) {
             return Ok(());
@@ -103,22 +115,18 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> Drawable<C> for &Select<'a, R, 
         let value_text = self.value.name();
         let inner_bounds = self.bounds.inner().bounds();
 
-        TextBox::new(self.title_text, inner_bounds)
-            .into_styled(self.style)
-            .draw(display)?;
+        TextBox::new(self.title_text, inner_bounds, self.style).draw(display)?;
 
         TextBox::new(
             value_text,
-            Rectangle::with_size(
-                inner_bounds.top_left,
-                Size::new(
-                    Font6x8::str_width(value_text),
-                    Font6x8::CHARACTER_SIZE.height,
-                ),
-            ),
+            self.style
+                .measure_string(value_text, inner_bounds.top_left, Baseline::Top)
+                .bounding_box,
+            self.style,
         )
-        .into_styled(self.style)
         .align_to(&display_area, horizontal::Right, vertical::NoAlignment)
-        .draw(display)
+        .draw(display)?;
+
+        Ok(())
     }
 }

@@ -1,13 +1,16 @@
 //! Run using `cargo run --example scrolling --target x86_64-pc-windows-msvc`
 
-use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+use embedded_graphics::{
+    pixelcolor::BinaryColor,
+    prelude::{Point, Size},
+    primitives::Rectangle,
+    Drawable,
 };
-use sdl2::keyboard::Keycode;
+use embedded_graphics_simulator::{
+    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
+    Window,
+};
 use std::{thread, time::Duration};
-
-use embedded_graphics::{pixelcolor::BinaryColor, primitives::Rectangle};
-use embedded_layout::prelude::*;
 
 use embedded_menu::{
     interaction::InteractionType,
@@ -41,7 +44,7 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let display_area = Rectangle::with_size(Point::zero(), Size::new(128, 64));
+    let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = MenuBuilder::<_, _, _, _>::new("Menu", display_area)
         .show_details_after(300)
         .add_item(NavigationItem::new(

@@ -1,8 +1,12 @@
 use crate::interaction::{InteractionController, InteractionType};
-use embedded_layout::prelude::*;
 
 use embedded_graphics::{
-    pixelcolor::BinaryColor, primitives::Line, style::PrimitiveStyle, DrawTarget,
+    draw_target::DrawTarget,
+    pixelcolor::BinaryColor,
+    prelude::Point,
+    primitives::Line,
+    primitives::{Primitive, PrimitiveStyle},
+    Drawable,
 };
 
 pub struct Programmed {}
@@ -22,11 +26,17 @@ impl InteractionController for Programmed {
     }
 }
 
-impl Drawable<BinaryColor> for &Programmed {
-    fn draw<D: DrawTarget<BinaryColor>>(self, display: &mut D) -> Result<(), D::Error> {
+impl Drawable for Programmed {
+    type Color = BinaryColor;
+    type Output = ();
+
+    fn draw<D>(&self, display: &mut D) -> Result<(), D::Error>
+    where
+        D: DrawTarget<Color = BinaryColor>,
+    {
         Line::new(
-            Point::new(0, 0),
-            Point::new(0, display.size().height as i32 - 1),
+            Point::zero(),
+            Point::new(0, display.bounding_box().size.height as i32 - 1),
         )
         .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
         .draw(display)

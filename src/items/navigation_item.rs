@@ -1,12 +1,19 @@
-use crate::{MenuEvent, MenuItemTrait};
+use crate::{Margin, MarginExt, MenuEvent, MenuItemTrait, RectangleExt};
 
-use crate::{Margin, MarginExt, RectangleExt};
-use embedded_graphics::{fonts::Font6x8, primitives::Rectangle, DrawTarget};
+use embedded_graphics::{
+    draw_target::DrawTarget,
+    mono_font::{ascii::FONT_6X10, MonoTextStyle},
+    pixelcolor::Rgb888,
+    prelude::{PixelColor, Point},
+    primitives::Rectangle,
+    text::{renderer::TextRenderer, Baseline},
+    Drawable,
+};
 use embedded_layout::prelude::*;
-use embedded_text::{alignment::*, prelude::*, utils::font_ext::FontExt};
+use embedded_text::TextBox;
 
 pub struct NavigationItem<'a, R: Copy, C: PixelColor> {
-    style: TextBoxStyle<C, Font6x8, LeftAligned, TopAligned>,
+    style: MonoTextStyle<'a, C>,
     title_text: &'a str,
     details: &'a str,
     return_value: R,
@@ -15,17 +22,16 @@ pub struct NavigationItem<'a, R: Copy, C: PixelColor> {
 
 impl<'a, R: Copy, C: PixelColor> NavigationItem<'a, R, C> {
     pub fn new(title: &'a str, details: &'a str, value: R, color: C) -> Self {
-        let style = TextBoxStyleBuilder::new(Font6x8).text_color(color).build();
-
-        let width = Font6x8::str_width(title);
-        let height = Font6x8::CHARACTER_SIZE.height;
+        let style = MonoTextStyle::<C>::new(&FONT_6X10, color);
 
         Self {
             style,
             title_text: title,
             details,
             return_value: value,
-            bounds: Rectangle::with_size(Point::zero(), Size::new(width, height))
+            bounds: style
+                .measure_string(title, Point::zero(), Baseline::Top)
+                .bounding_box
                 .with_margin(2, 0, 1, 1),
         }
     }
@@ -46,15 +52,8 @@ impl<'a, R: Copy, C: PixelColor> MenuItemTrait<R> for NavigationItem<'a, R, C> {
 }
 
 impl<'a, R: Copy, C: PixelColor> View for NavigationItem<'a, R, C> {
-    #[must_use]
-    fn translate(mut self, by: Point) -> Self {
+    fn translate_impl(&mut self, by: Point) {
         self.bounds.translate_mut(by);
-        self
-    }
-
-    fn translate_mut(&mut self, by: Point) -> &mut Self {
-        self.bounds.translate_mut(by);
-        self
     }
 
     fn bounds(&self) -> Rectangle {
@@ -62,10 +61,20 @@ impl<'a, R: Copy, C: PixelColor> View for NavigationItem<'a, R, C> {
     }
 }
 
-impl<'a, R: Copy, C: PixelColor> Drawable<C> for &NavigationItem<'a, R, C> {
-    fn draw<D: DrawTarget<C>>(self, display: &mut D) -> Result<(), D::Error> {
+impl<'a, R, C> Drawable for NavigationItem<'a, R, C>
+where
+    R: Copy,
+    C: PixelColor + From<Rgb888>,
+{
+    type Color = C;
+    type Output = ();
+
+    fn draw<D>(&self, display: &mut D) -> Result<(), D::Error>
+    where
+        D: DrawTarget<Color = C>,
+    {
         let text_bounds = self.bounds();
-        let display_area = display.display_area();
+        let display_area = display.bounding_box();
 
         if !text_bounds.intersects_with(&display_area) {
             return Ok(());
@@ -73,19 +82,16 @@ impl<'a, R: Copy, C: PixelColor> Drawable<C> for &NavigationItem<'a, R, C> {
 
         let inner_bounds = self.bounds.inner().bounds();
 
-        TextBox::new(self.title_text, inner_bounds)
-            .into_styled(self.style)
-            .draw(display)?;
+        TextBox::new(self.title_text, inner_bounds, self.style).draw(display)?;
 
         TextBox::new(
             "»",
-            Rectangle::with_size(
-                inner_bounds.top_left,
-                Size::new(Font6x8::total_char_width('»'), inner_bounds.size().height),
-            ),
+            Rectangle::new(inner_bounds.top_left, inner_bounds.size()),
+            self.style,
         )
-        .into_styled(self.style)
         .align_to(&display_area, horizontal::Right, vertical::NoAlignment)
-        .draw(display)
+        .draw(display)?;
+
+        Ok(())
     }
 }

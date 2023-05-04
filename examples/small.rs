@@ -1,20 +1,22 @@
 //! Run using `cargo run --example small --target x86_64-pc-windows-msvc`
 //!
 //! Navigate using up/down arrows, interact using the Enter key
-use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+use embedded_graphics::{
+    pixelcolor::BinaryColor,
+    prelude::{Point, Size},
+    primitives::Rectangle,
+    Drawable,
 };
-use sdl2::keyboard::Keycode;
+use embedded_graphics_simulator::{
+    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
+    Window,
+};
 use std::{thread, time::Duration};
-
-use embedded_graphics::{pixelcolor::BinaryColor, primitives::Rectangle};
-use embedded_layout::prelude::*;
 
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, NavigationItem, Select},
-    MenuBuilder,
-    ConstrainedDrawTarget,
+    ConstrainedDrawTarget, MenuBuilder,
 };
 
 #[derive(Copy, Clone)]
@@ -43,7 +45,7 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let display_area = Rectangle::with_size(Point::zero(), Size::new(128, 64));
+    let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = MenuBuilder::<_, _, _, _>::new("Menu", display_area)
         .show_details_after(300)
         .add_item(NavigationItem::new(
@@ -84,7 +86,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
         let mut sub = ConstrainedDrawTarget::new(
             &mut display,
-            Rectangle::with_size(Point::new(16, 16), Size::new(96, 33)),
+            Rectangle::new(Point::new(16, 16), Size::new(96, 33)),
         );
         menu.draw(&mut sub).unwrap();
         window.update(&display);
