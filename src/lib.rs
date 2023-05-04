@@ -642,19 +642,17 @@ where
                 let menu_title = self.header(self.title, display);
                 menu_title.draw(display)?;
 
-                let menu_height = (display_size.height - menu_title.size().height) as i32;
+                let menu_height = display_size.height - menu_title.size().height;
 
                 // Height of the first menu item
-                let menuitem_height = self.items.bounds_of(0).size().height as i32;
+                let menuitem_height = self.items.bounds_of(0).size().height;
+                let menuitem_inner_height = menuitem_height - 2;
 
-                let scrollbar_area = Rectangle::new(
-                    Point::zero(),
-                    Size::new(1, menu_height as u32), // 1px width because text rendering has some padding
-                )
-                .align_to(&menu_title, horizontal::Right, vertical::TopToBottom);
+                let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height))
+                    .align_to(&menu_title, horizontal::Right, vertical::TopToBottom);
 
                 let list_height = self.items.bounds().size().height;
-                let draw_scrollbar = list_height > scrollbar_area.size().height;
+                let draw_scrollbar = list_height > menu_height;
 
                 let menu_list_width = if draw_scrollbar {
                     display_size.width - scrollbar_area.size().width
@@ -662,12 +660,16 @@ where
                     display_size.width
                 };
 
+                let menu_display_area =
+                    Rectangle::new(Point::zero(), Size::new(menu_list_width, menu_height))
+                        .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
+
                 // selection indicator
                 let mut interaction_display = ConstrainedDrawTarget::new(
                     display,
                     Rectangle::new(
                         Point::zero(),
-                        Size::new(menu_list_width, menuitem_height as u32 - 2),
+                        Size::new(menu_list_width, menuitem_inner_height),
                     )
                     .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
                     .translate(Point::new(
@@ -679,40 +681,28 @@ where
                 self.interaction.draw(&mut interaction_display)?;
 
                 // FIXME: this is terrible
-                let interaction = interaction_display.bounding_box();
                 let mut inverting_overlay = display.invert_area(&Rectangle::new(
                     Point::new(
                         0,
                         self.indicator_offset.current() - self.list_offset.current()
                             + 1
-                            + menuitem_height,
+                            + menuitem_height as i32,
                     ),
                     Size::new(
-                        self.interaction.fill_area_width(interaction.size.width),
-                        menuitem_height as u32 - 2,
+                        self.interaction.fill_area_width(menu_list_width),
+                        menuitem_inner_height,
                     ),
                 ));
 
-                self.items.draw(
-                    &mut inverting_overlay.clipped(
-                        &Rectangle::new(
-                            Point::zero(),
-                            Size::new(menu_list_width, menu_height as u32),
-                        )
-                        .align_to(
-                            &menu_title,
-                            horizontal::Left,
-                            vertical::TopToBottom,
-                        ),
-                    ),
-                )?;
+                self.items
+                    .draw(&mut inverting_overlay.clipped(&menu_display_area))?;
 
                 if draw_scrollbar {
-                    let scale =
-                        |value| (value as f32 * menu_height as f32 / list_height as f32) as i32;
+                    let scale_factor = menu_height as f32 / list_height as f32;
+                    let scale = |value| (value as f32 * scale_factor) as i32;
 
                     let scrollbar_height = scale(scrollbar_area.size().height as i32).max(1);
-                    let mut scrollbar_display = ConstrainedDrawTarget::new(display, scrollbar_area);
+                    let mut scrollbar_display = display.cropped(&scrollbar_area);
 
                     // Start scrollbar from y=1, so we have a margin on top instead of bottom
                     Line::new(Point::new(1, 1), Point::new(1, scrollbar_height))
