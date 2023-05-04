@@ -231,9 +231,17 @@ where
 }
 
 #[derive(Copy, Clone, Debug)]
+pub enum DisplayScrollbar {
+    Display,
+    Hide,
+    Auto,
+}
+
+#[derive(Copy, Clone, Debug)]
 pub struct MenuStyle<C: PixelColor> {
     pub(crate) color: C,
     pub(crate) indicator_color: C,
+    pub(crate) scrollbar: DisplayScrollbar,
 }
 
 impl<C: PixelColor> MenuStyle<C> {
@@ -241,6 +249,7 @@ impl<C: PixelColor> MenuStyle<C> {
         Self {
             color,
             indicator_color,
+            scrollbar: DisplayScrollbar::Auto,
         }
     }
 }
@@ -280,6 +289,7 @@ impl<R: Copy> MenuBuilder<Programmed, NoItems, R, BinaryColor> {
             style: MenuStyle {
                 color: BinaryColor::On,
                 indicator_color: BinaryColor::On,
+                scrollbar: DisplayScrollbar::Auto,
             },
         }
     }
@@ -647,7 +657,11 @@ where
                     .align_to(&menu_title, horizontal::Right, vertical::TopToBottom);
 
                 let list_height = self.items.bounds().size().height;
-                let draw_scrollbar = list_height > menu_height;
+                let draw_scrollbar = match self.style.scrollbar {
+                    DisplayScrollbar::Display => true,
+                    DisplayScrollbar::Hide => false,
+                    DisplayScrollbar::Auto => list_height > menu_height,
+                };
 
                 let menu_list_width = if draw_scrollbar {
                     display_size.width - scrollbar_area.size().width
@@ -692,16 +706,15 @@ where
                     .draw(&mut inverting_overlay.clipped(&menu_display_area))?;
 
                 if draw_scrollbar {
-                    let scale_factor = menu_height as f32 / list_height as f32;
-                    let scale = |value| (value as f32 * scale_factor) as i32;
+                    let scale = |value| (value * menu_height / list_height) as i32;
 
-                    let scrollbar_height = scale(scrollbar_area.size().height as i32).max(1);
+                    let scrollbar_height = scale(menu_height).max(1);
                     let mut scrollbar_display = display.cropped(&scrollbar_area);
 
                     // Start scrollbar from y=1, so we have a margin on top instead of bottom
-                    Line::new(Point::new(1, 1), Point::new(1, scrollbar_height))
+                    Line::new(Point::new(0, 1), Point::new(0, scrollbar_height))
                         .into_styled(thin_stroke)
-                        .translate(Point::new(0, scale(self.list_offset)))
+                        .translate(Point::new(1, scale(self.list_offset as u32)))
                         .draw(&mut scrollbar_display)?;
                 }
             }
