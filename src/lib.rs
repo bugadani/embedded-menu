@@ -348,7 +348,7 @@ where
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
             interaction: self.interaction,
             recompute_targets: false,
-            list_offset: Animated::new(0, ANIM_FRAMES),
+            list_offset: 0,
             indicator_offset: Animated::new(0, ANIM_FRAMES),
             idle_timeout_threshold: self.idle_timeout,
             idle_timeout: self.idle_timeout.unwrap_or_default(),
@@ -438,7 +438,7 @@ where
     interaction: IT,
     selected: u32,
     recompute_targets: bool,
-    list_offset: Animated,
+    list_offset: i32,
     indicator_offset: Animated,
     idle_timeout_threshold: Option<u16>,
     idle_timeout: u16,
@@ -566,53 +566,45 @@ where
     where
         D: DrawTarget<Color = C>,
     {
-        let display_area = display.bounding_box();
-        let display_size = display_area.size();
+        if let MenuDisplayMode::List = self.display_mode {
+            let display_area = display.bounding_box();
+            let display_size = display_area.size();
 
-        match self.display_mode {
-            MenuDisplayMode::List => {
-                let menu_title = self.header(self.title, display);
+            let menu_title = self.header(self.title, display);
+            let title_height = menu_title.size().height as i32;
 
-                let menu_height = (display_size.height - menu_title.size().height) as i32;
+            let menu_height = display_size.height as i32 - title_height;
 
-                // Height of the first menu item
-                let menuitem_height = self.items.bounds_of(0).size().height as i32;
+            // Height of the selection indicator
+            let indicator_height = self.items.bounds_of(0).size().height as i32 - 1;
 
-                /* Reset positions */
-                self.items
-                    .align_to_mut(&display_area, horizontal::Left, vertical::Top);
+            // Reset positions
+            self.items
+                .align_to_mut(&display_area, horizontal::Left, vertical::Top);
 
-                /* animations */
-                if self.recompute_targets {
-                    self.recompute_targets = false;
+            // animations
+            if self.recompute_targets {
+                self.recompute_targets = false;
 
-                    let current_target_top = self.list_offset.target();
-                    let current_target_bottom = current_target_top + menu_height - 1;
-
-                    let selected_top = self.items.bounds_of(self.selected).top_left.y;
-                    let selected_bottom = selected_top + menuitem_height;
-
-                    if selected_top < current_target_top {
-                        self.list_offset.update_target(selected_top);
-                    } else if selected_bottom > current_target_bottom {
-                        self.list_offset
-                            .update_target(selected_bottom - menu_height - 1);
-                    } else {
-                        // nothing to do
-                    }
-
-                    self.indicator_offset.update_target(selected_top);
-                }
-
-                self.list_offset.update();
-                self.indicator_offset.update();
-
-                self.items
-                    .translate_mut(Point::new(1, -self.list_offset.current()));
-                self.items
-                    .translate_mut(Point::new(0, menu_title.size().height as i32));
+                self.indicator_offset
+                    .update_target(self.items.bounds_of(self.selected).top_left.y);
             }
-            _ => {}
+
+            self.indicator_offset.update();
+
+            // Ensure selection indicator is always visible
+            let top_distance = self.indicator_offset.current() - self.list_offset;
+            self.list_offset += if top_distance > 0 {
+                // Indicator is below display top. We only have to
+                // move if indicator bottom is below display bottom.
+                (top_distance + indicator_height - menu_height).max(0)
+            } else {
+                // We need to move up
+                top_distance
+            };
+
+            self.items
+                .translate_mut(Point::new(1, title_height - self.list_offset));
         }
     }
 }
@@ -675,7 +667,7 @@ where
                     .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
                     .translate(Point::new(
                         0,
-                        self.indicator_offset.current() - self.list_offset.current() + 1,
+                        self.indicator_offset.current() - self.list_offset + 1,
                     )),
                 );
 
@@ -685,7 +677,7 @@ where
                 let mut inverting_overlay = display.invert_area(&Rectangle::new(
                     Point::new(
                         0,
-                        self.indicator_offset.current() - self.list_offset.current()
+                        self.indicator_offset.current() - self.list_offset
                             + 1
                             + menuitem_height as i32,
                     ),
@@ -708,7 +700,7 @@ where
                     // Start scrollbar from y=1, so we have a margin on top instead of bottom
                     Line::new(Point::new(1, 1), Point::new(1, scrollbar_height))
                         .into_styled(thin_stroke)
-                        .translate(Point::new(0, scale(self.list_offset.current())))
+                        .translate(Point::new(0, scale(self.list_offset)))
                         .draw(&mut scrollbar_display)?;
                 }
             }
