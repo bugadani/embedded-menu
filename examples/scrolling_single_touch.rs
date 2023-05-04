@@ -150,6 +150,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut space_pressed = false;
     'running: loop {
         let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        menu.update(&display);
         menu.draw(&mut display).unwrap();
         window.update(&display);
 

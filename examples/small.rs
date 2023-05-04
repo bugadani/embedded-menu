@@ -88,6 +88,7 @@ fn main() -> Result<(), core::convert::Infallible> {
             &mut display,
             Rectangle::new(Point::new(16, 16), Size::new(96, 33)),
         );
+        menu.update(&sub);
         menu.draw(&mut sub).unwrap();
         window.update(&display);
 
