@@ -28,6 +28,7 @@ pub enum MenuDisplayMode {
     Details,
 }
 
+#[derive(Clone, Copy)]
 pub struct Margin<V: View> {
     pub(crate) view: V,
     top: i32,

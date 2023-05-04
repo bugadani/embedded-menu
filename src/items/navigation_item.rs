@@ -1,16 +1,14 @@
-use crate::{Margin, MarginExt, MenuEvent, MenuItemTrait};
+use crate::{items::MenuLine, Margin, MarginExt, MenuEvent, MenuItemTrait};
 
 use embedded_graphics::{
     draw_target::DrawTarget,
     mono_font::{ascii::FONT_6X10, MonoTextStyle},
     pixelcolor::Rgb888,
-    prelude::{PixelColor, Point},
+    prelude::{PixelColor, Point, Size},
     primitives::Rectangle,
-    text::{renderer::TextRenderer, Baseline},
     Drawable,
 };
 use embedded_layout::prelude::*;
-use embedded_text::TextBox;
 
 pub struct NavigationItem<'a, R: Copy, C: PixelColor> {
     style: MonoTextStyle<'a, C>,
@@ -31,10 +29,11 @@ impl<'a, R: Copy, C: PixelColor> NavigationItem<'a, R, C> {
             title_text: title,
             details,
             return_value: value,
-            bounds: style
-                .measure_string(title, Point::zero(), Baseline::Top)
-                .bounding_box
-                .with_margin(1, 0, 0, 1),
+            bounds: Rectangle::new(
+                Point::zero(),
+                Size::new(1, style.font.character_size.height),
+            )
+            .with_margin(1, 0, 0, 1),
         }
     }
 }
@@ -75,27 +74,13 @@ where
     where
         D: DrawTarget<Color = C>,
     {
-        let text_bounds = self.bounds();
-        let display_area = display.bounding_box();
+        let menu_line = MenuLine {
+            title: self.title_text,
+            value: self.marker,
+            bounds: self.bounds,
+            text_style: self.style,
+        };
 
-        if text_bounds.intersection(&display_area).is_zero_sized() {
-            return Ok(());
-        }
-
-        let inner_bounds = self.bounds.inner().bounds();
-
-        TextBox::new(self.title_text, inner_bounds, self.style).draw(display)?;
-
-        TextBox::new(
-            self.marker,
-            self.style
-                .measure_string(self.marker, inner_bounds.top_left, Baseline::Top)
-                .bounding_box,
-            self.style,
-        )
-        .align_to(&display_area, horizontal::Right, vertical::NoAlignment)
-        .draw(display)?;
-
-        Ok(())
+        menu_line.draw(display)
     }
 }
