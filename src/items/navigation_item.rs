@@ -14,6 +14,7 @@ use embedded_text::TextBox;
 
 pub struct NavigationItem<'a, R: Copy, C: PixelColor> {
     style: MonoTextStyle<'a, C>,
+    marker: &'a str,
     title_text: &'a str,
     details: &'a str,
     return_value: R,
@@ -21,10 +22,11 @@ pub struct NavigationItem<'a, R: Copy, C: PixelColor> {
 }
 
 impl<'a, R: Copy, C: PixelColor> NavigationItem<'a, R, C> {
-    pub fn new(title: &'a str, details: &'a str, value: R, color: C) -> Self {
+    pub fn new(marker: &'a str, title: &'a str, details: &'a str, value: R, color: C) -> Self {
         let style = MonoTextStyle::<C>::new(&FONT_6X10, color);
 
         Self {
+            marker,
             style,
             title_text: title,
             details,
@@ -85,7 +87,7 @@ where
         TextBox::new(self.title_text, inner_bounds, self.style).draw(display)?;
 
         TextBox::new(
-            "»",
+            self.marker,
             Rectangle::new(inner_bounds.top_left, inner_bounds.size()),
             self.style,
         )

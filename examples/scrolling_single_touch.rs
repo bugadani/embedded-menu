@@ -3,19 +3,16 @@
 //! Navigate using only the spacebar. Short(ish) press moves on to the next item, long press activates.
 //! Watch the animated selection indicator fill up. Long press is registered as the bar reaches full width.
 
-use embedded_graphics_simulator::{
-    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
-    Window,
-};
-use std::{thread, time::Duration};
-
 use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::{Point, Size},
     primitives::Rectangle,
     Drawable,
 };
-
+use embedded_graphics_simulator::{
+    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
+    Window,
+};
 use embedded_menu::{
     interaction::single_touch::SingleTouch,
     items::{select::SelectValue, NavigationItem, Select},
@@ -53,6 +50,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .show_details_after(300)
         .with_interaction_controller(SingleTouch::new(5, 100))
         .add_item(NavigationItem::new(
+            ">",
             "Foo",
             "Some longer description text",
             (),
@@ -122,6 +120,7 @@ fn main() -> Result<(), core::convert::Infallible> {
             BinaryColor::On,
         ))
         .add_item(NavigationItem::new(
+            ">",
             "Foo",
             "Description",
             (),
@@ -170,8 +169,6 @@ fn main() -> Result<(), core::convert::Infallible> {
         }
 
         menu.interact(space_pressed);
-
-        thread::sleep(Duration::from_millis(10));
     }
 
     Ok(())

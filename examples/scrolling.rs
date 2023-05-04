@@ -10,8 +10,6 @@ use embedded_graphics_simulator::{
     sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
     Window,
 };
-use std::{thread, time::Duration};
-
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, NavigationItem, Select},
@@ -48,6 +46,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = MenuBuilder::<_, _, _, _>::new("Menu", display_area)
         .show_details_after(300)
         .add_item(NavigationItem::new(
+            ">",
             "Foo",
             "Some longer description text",
             (),
@@ -117,6 +116,7 @@ fn main() -> Result<(), core::convert::Infallible> {
             BinaryColor::On,
         ))
         .add_item(NavigationItem::new(
+            ">",
             "Foo",
             "Description",
             (),
@@ -173,8 +173,6 @@ fn main() -> Result<(), core::convert::Infallible> {
         if !had_interaction {
             menu.interact(InteractionType::Nothing);
         }
-
-        thread::sleep(Duration::from_millis(10));
     }
 
     Ok(())
