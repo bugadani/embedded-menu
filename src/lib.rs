@@ -576,7 +576,8 @@ where
             let menu_height = display_size.height as i32 - title_height;
 
             // Height of the selection indicator
-            let indicator_height = self.items.bounds_of(0).size().height as i32 - 1;
+            let menuitem_height = self.items.bounds_of(0).size().height;
+            let indicator_height = menuitem_height as i32 - 1;
 
             // Reset positions
             self.items
@@ -640,7 +641,7 @@ where
 
                 // Height of the first menu item
                 let menuitem_height = self.items.bounds_of(0).size().height;
-                let menuitem_inner_height = menuitem_height - 2;
+                let selection_indicator_height = menuitem_height - 2; // We don't want to extend under the baseline
 
                 let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height))
                     .align_to(&menu_title, horizontal::Right, vertical::TopToBottom);
@@ -662,7 +663,7 @@ where
                 let mut interaction_display = display.cropped(
                     &Rectangle::new(
                         Point::zero(),
-                        Size::new(menu_list_width, menuitem_inner_height),
+                        Size::new(menu_list_width, selection_indicator_height),
                     )
                     .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
                     .translate(Point::new(
@@ -683,7 +684,7 @@ where
                     ),
                     Size::new(
                         self.interaction.fill_area_width(menu_list_width),
-                        menuitem_inner_height,
+                        menuitem_height,
                     ),
                 ));
 
