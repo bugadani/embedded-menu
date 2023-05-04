@@ -648,7 +648,7 @@ where
 
                 let scrollbar_area = Rectangle::new(
                     Point::zero(),
-                    Size::new(2, menu_height as u32),
+                    Size::new(1, menu_height as u32), // 1px width because text rendering has some padding
                 )
                 .align_to(&menu_title, horizontal::Right, vertical::TopToBottom);
 
