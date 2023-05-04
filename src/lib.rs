@@ -542,24 +542,17 @@ where
             }
         }
 
+        let count = ViewGroup::len(&self.items) as u32;
         match self.interaction.update(input) {
             InteractionType::Nothing => MenuEvent::Nothing,
-            InteractionType::Previous => {
-                let selected = if self.selected == 0 {
-                    ViewGroup::len(&self.items) as u32 - 1
-                } else {
-                    self.selected - 1
-                };
+            InteractionType::Next => {
+                let selected = self.selected.checked_sub(1).unwrap_or(count - 1);
 
                 self.change_selected_item(selected);
                 MenuEvent::Nothing
             }
-            InteractionType::Next => {
-                let selected = if self.selected == ViewGroup::len(&self.items) as u32 - 1 {
-                    0
-                } else {
-                    self.selected + 1
-                };
+            InteractionType::Previous => {
+                let selected = (self.selected + 1) % count;
 
                 self.change_selected_item(selected);
                 MenuEvent::Nothing
