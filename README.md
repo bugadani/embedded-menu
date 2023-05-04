@@ -10,5 +10,5 @@ Examples require `SDL2`. Refer to the [`embedded-graphics`] docs for more info o
 
 Published under [`WTFPL`].
 
-[`embedded-graphics`]: https://github.com/jamwaffles/embedded-graphics/
+[`embedded-graphics`]: https://github.com/embedded-graphics/embedded-graphics/
 [`WTFPL`]: https://en.wikipedia.org/wiki/WTFPL
