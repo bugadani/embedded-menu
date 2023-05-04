@@ -1,20 +1,21 @@
 //! Run using `cargo run --example small --target x86_64-pc-windows-msvc`
 //!
 //! Navigate using up/down arrows, interact using the Enter key
-use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+
+use embedded_graphics::{
+    pixelcolor::BinaryColor,
+    prelude::{DrawTargetExt, Point, Size},
+    primitives::Rectangle,
+    Drawable,
 };
-use sdl2::keyboard::Keycode;
-use std::{thread, time::Duration};
-
-use embedded_graphics::{pixelcolor::BinaryColor, primitives::Rectangle};
-use embedded_layout::prelude::*;
-
+use embedded_graphics_simulator::{
+    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
+    Window,
+};
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, NavigationItem, Select},
     MenuBuilder,
-    ConstrainedDrawTarget,
 };
 
 #[derive(Copy, Clone)]
@@ -43,10 +44,11 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let display_area = Rectangle::with_size(Point::zero(), Size::new(128, 64));
-    let mut menu = MenuBuilder::<_, _, _, _>::new("Menu", display_area)
+    let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
+    let mut menu = MenuBuilder::new("Menu", display_area)
         .show_details_after(300)
         .add_item(NavigationItem::new(
+            ">",
             "Foo",
             "Some longer description text",
             (),
@@ -82,17 +84,19 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     'running: loop {
         let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
-        let mut sub = ConstrainedDrawTarget::new(
-            &mut display,
-            Rectangle::with_size(Point::new(16, 16), Size::new(96, 33)),
-        );
+        let mut sub = display.cropped(&Rectangle::new(Point::new(16, 16), Size::new(96, 34)));
+        menu.update(&sub);
         menu.draw(&mut sub).unwrap();
         window.update(&display);
 
         let mut had_interaction = false;
         for event in window.events() {
             match event {
-                SimulatorEvent::KeyUp { keycode, .. } => match keycode {
+                SimulatorEvent::KeyDown {
+                    keycode,
+                    repeat: false,
+                    ..
+                } => match keycode {
                     Keycode::Return => {
                         menu.interact(InteractionType::Select);
                         had_interaction = true;
@@ -114,8 +118,6 @@ fn main() -> Result<(), core::convert::Infallible> {
         if !had_interaction {
             menu.interact(InteractionType::Nothing);
         }
-
-        thread::sleep(Duration::from_millis(10));
     }
 
     Ok(())

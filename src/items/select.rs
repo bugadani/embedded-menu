@@ -1,9 +1,14 @@
-use crate::{MenuEvent, MenuItemTrait};
+use crate::{items::MenuLine, Margin, MarginExt, MenuEvent, MenuItemTrait};
 
-use crate::{Margin, MarginExt, RectangleExt};
-use embedded_graphics::{fonts::Font6x8, primitives::Rectangle, DrawTarget};
+use embedded_graphics::{
+    draw_target::DrawTarget,
+    mono_font::{ascii::FONT_6X10, MonoTextStyle},
+    pixelcolor::Rgb888,
+    prelude::{PixelColor, Point, Size},
+    primitives::Rectangle,
+    Drawable,
+};
 use embedded_layout::prelude::*;
-use embedded_text::{alignment::*, prelude::*, utils::font_ext::FontExt};
 
 pub trait SelectValue: Sized + Copy {
     fn next(self) -> Self;
@@ -27,14 +32,19 @@ impl SelectValue for bool {
 
 pub struct Select<'a, R: Copy, S: SelectValue, C: PixelColor> {
     title_text: &'a str,
-    style: TextBoxStyle<C, Font6x8, LeftAligned, TopAligned>,
+    style: MonoTextStyle<'a, C>,
     bounds: Margin<Rectangle>,
     details: &'a str,
     convert: fn(S) -> R,
     value: S,
 }
 
-impl<'a, R: Copy, S: SelectValue, C: PixelColor> Select<'a, R, S, C> {
+impl<'a, R, S, C> Select<'a, R, S, C>
+where
+    R: Copy,
+    S: SelectValue,
+    C: PixelColor,
+{
     pub fn new(
         title: &'a str,
         details: &'a str,
@@ -42,10 +52,7 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> Select<'a, R, S, C> {
         convert: fn(S) -> R,
         color: C,
     ) -> Self {
-        let style = TextBoxStyleBuilder::new(Font6x8).text_color(color).build();
-
-        let width = Font6x8::str_width(title);
-        let height = Font6x8::CHARACTER_SIZE.height;
+        let style = MonoTextStyle::new(&FONT_6X10, color);
 
         Self {
             title_text: title,
@@ -53,8 +60,11 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> Select<'a, R, S, C> {
             convert,
             value: initial,
             style,
-            bounds: Rectangle::with_size(Point::zero(), Size::new(width, height))
-                .with_margin(2, 0, 1, 1),
+            bounds: Rectangle::new(
+                Point::zero(),
+                Size::new(1, style.font.character_size.height),
+            )
+            .with_margin(1, 0, 0, 1),
         }
     }
 }
@@ -75,15 +85,8 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> MenuItemTrait<R> for Select<'a,
 }
 
 impl<'a, R: Copy, S: SelectValue, C: PixelColor> View for Select<'a, R, S, C> {
-    #[must_use]
-    fn translate(mut self, by: Point) -> Self {
+    fn translate_impl(&mut self, by: Point) {
         self.bounds.translate_mut(by);
-        self
-    }
-
-    fn translate_mut(&mut self, by: Point) -> &mut Self {
-        self.bounds.translate_mut(by);
-        self
     }
 
     fn bounds(&self) -> Rectangle {
@@ -91,34 +94,25 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> View for Select<'a, R, S, C> {
     }
 }
 
-impl<'a, R: Copy, S: SelectValue, C: PixelColor> Drawable<C> for &Select<'a, R, S, C> {
-    fn draw<D: DrawTarget<C>>(self, display: &mut D) -> Result<(), D::Error> {
-        let text_bounds = self.bounds();
-        let display_area = display.display_area();
+impl<'a, R, S, C> Drawable for Select<'a, R, S, C>
+where
+    R: Copy,
+    S: SelectValue,
+    C: PixelColor + From<Rgb888>,
+{
+    type Color = C;
+    type Output = ();
 
-        if !text_bounds.intersects_with(&display_area) {
-            return Ok(());
-        }
-
+    fn draw<D: DrawTarget<Color = C>>(&self, display: &mut D) -> Result<(), D::Error> {
         let value_text = self.value.name();
-        let inner_bounds = self.bounds.inner().bounds();
 
-        TextBox::new(self.title_text, inner_bounds)
-            .into_styled(self.style)
-            .draw(display)?;
+        let menu_line = MenuLine {
+            title: self.title_text,
+            value: value_text,
+            bounds: self.bounds,
+            text_style: self.style,
+        };
 
-        TextBox::new(
-            value_text,
-            Rectangle::with_size(
-                inner_bounds.top_left,
-                Size::new(
-                    Font6x8::str_width(value_text),
-                    Font6x8::CHARACTER_SIZE.height,
-                ),
-            ),
-        )
-        .into_styled(self.style)
-        .align_to(&display_area, horizontal::Right, vertical::NoAlignment)
-        .draw(display)
+        menu_line.draw(display)
     }
 }

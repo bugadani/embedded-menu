@@ -2,15 +2,16 @@
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
-use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+use embedded_graphics::{
+    pixelcolor::BinaryColor,
+    prelude::{Point, Size},
+    primitives::Rectangle,
+    Drawable,
 };
-use sdl2::keyboard::Keycode;
-use std::{thread, time::Duration};
-
-use embedded_graphics::{pixelcolor::BinaryColor, primitives::Rectangle};
-use embedded_layout::prelude::*;
-
+use embedded_graphics_simulator::{
+    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
+    Window,
+};
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, NavigationItem, Select},
@@ -43,10 +44,11 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let display_area = Rectangle::with_size(Point::zero(), Size::new(128, 64));
-    let mut menu = MenuBuilder::<_, _, _, _>::new("Menu", display_area)
+    let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
+    let mut menu = MenuBuilder::new("Menu", display_area)
         .show_details_after(300)
         .add_item(NavigationItem::new(
+            ">",
             "Foo",
             "Lorem ipsum dolor sit amet, in per offendit assueverit adversarium, no sed clita adipisci nominati. Veritus placerat efficiantur mel ea. In splendide reformidans eos. In corpora inciderint duo, unum laudem constituto vis id, in iisque habemus quo. Pri nisl consul facilis te, percipitur deterruisset ne eum.",
             (),
@@ -70,13 +72,18 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     'running: loop {
         let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        menu.update(&display);
         menu.draw(&mut display).unwrap();
         window.update(&display);
 
         let mut had_interaction = false;
         for event in window.events() {
             match event {
-                SimulatorEvent::KeyUp { keycode, .. } => match keycode {
+                SimulatorEvent::KeyDown {
+                    keycode,
+                    repeat: false,
+                    ..
+                } => match keycode {
                     Keycode::Return => {
                         menu.interact(InteractionType::Select);
                         had_interaction = true;
@@ -98,8 +105,6 @@ fn main() -> Result<(), core::convert::Infallible> {
         if !had_interaction {
             menu.interact(InteractionType::Nothing);
         }
-
-        thread::sleep(Duration::from_millis(10));
     }
 
     Ok(())

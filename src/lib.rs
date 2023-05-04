@@ -1,101 +1,34 @@
 #![cfg_attr(not(test), no_std)]
 
+pub mod adapters;
 pub mod interaction;
 pub mod items;
 
 use core::marker::PhantomData;
 use embedded_graphics::{
-    fonts::Font6x8,
-    pixelcolor::BinaryColor,
-    primitives::{Line, Rectangle},
-    style::PrimitiveStyle,
-    DrawTarget,
-    drawable::Pixel,
+    draw_target::DrawTarget,
     geometry::Size,
-    pixelcolor::PixelColor,
+    mono_font::{ascii::FONT_6X10, MonoTextStyle, MonoTextStyleBuilder},
+    pixelcolor::{BinaryColor, PixelColor, Rgb888},
+    prelude::{DrawTargetExt, Point},
+    primitives::{Line, Primitive, PrimitiveStyle, Rectangle, Styled},
+    Drawable,
 };
 use embedded_layout::{
-    layout::{
-        linear::{LayoutElement, LinearLayout, Vertical},
-        Guard, Link, ViewChainElement, ViewGroup,
-    },
+    layout::linear::{LinearLayout, Vertical},
+    object_chain::ChainElement,
     prelude::*,
+    view_group::ViewGroup,
 };
-use embedded_text::prelude::*;
+use embedded_text::TextBox;
 use interaction::{programmed::Programmed, InputType, InteractionController, InteractionType};
-
-pub trait RectangleExt {
-    fn expand(self, by: i32) -> Rectangle;
-    fn contains(&self, p: Point) -> bool;
-    fn intersects_with(&self, other: &Rectangle) -> bool;
-}
-
-impl RectangleExt for Rectangle {
-    #[inline]
-    fn expand(self, by: i32) -> Rectangle {
-        Rectangle::new(
-            Point::new(self.top_left.x - by, self.top_left.y - by),
-            Point::new(self.bottom_right.x + by, self.bottom_right.y + by),
-        )
-    }
-
-    #[inline]
-    fn contains(&self, p: Point) -> bool {
-        self.top_left.x <= p.x
-            && p.x <= self.bottom_right.x
-            && self.top_left.y <= p.y
-            && p.y <= self.bottom_right.y
-    }
-
-    #[inline]
-    fn intersects_with(&self, other: &Rectangle) -> bool {
-        self.top_left.x <= other.bottom_right.x
-            && other.top_left.x <= self.bottom_right.x
-            && self.top_left.y <= other.bottom_right.y
-            && other.top_left.y <= self.bottom_right.y
-    }
-}
-
-pub struct ConstrainedDrawTarget<'a, C: PixelColor, D: DrawTarget<C>> {
-    clipping_rect: Rectangle,
-    display: &'a mut D,
-    _color: PhantomData<C>,
-}
-
-impl<'a, C: PixelColor, D: DrawTarget<C>> ConstrainedDrawTarget<'a, C, D> {
-    pub fn new(display: &'a mut D, bounds: Rectangle) -> Self {
-        Self {
-            display,
-            clipping_rect: bounds,
-            _color: PhantomData,
-        }
-    }
-}
-
-impl<'a, C: PixelColor, D: DrawTarget<C>> DrawTarget<C> for ConstrainedDrawTarget<'a, C, D> {
-    type Error = D::Error;
-
-    /// Returns the dimensions of the `DrawTarget` in pixels.
-    fn size(&self) -> Size {
-        self.clipping_rect.size()
-    }
-
-    fn draw_pixel(&mut self, item: Pixel<C>) -> Result<(), Self::Error> {
-        let item = Pixel(item.0 + self.clipping_rect.top_left, item.1);
-        if self.clipping_rect.contains(item.0) {
-            self.display.draw_pixel(item)
-        } else {
-            Ok(())
-        }
-    }
-}
-
 
 pub enum MenuDisplayMode {
     List,
     Details,
 }
 
+#[derive(Clone, Copy)]
 pub struct Margin<V: View> {
     pub(crate) view: V,
     top: i32,
@@ -127,28 +60,17 @@ impl<V: View> Margin<V> {
 impl<V: View> View for Margin<V> {
     /// Move the origin of an object by a given number of (x, y) pixels,
     /// by returning a new object
-    #[must_use]
-    fn translate(mut self, by: Point) -> Self {
-        self.translate_mut(by);
-        self
-    }
-
-    /// Move the origin of an object by a given number of (x, y) pixels,
-    /// mutating the object in place
-    fn translate_mut(&mut self, by: Point) -> &mut Self {
+    fn translate_impl(&mut self, by: Point) {
         self.view.translate_mut(by);
-        self
     }
 
     /// Returns the bounding box of the `View` as a `Rectangle`
     fn bounds(&self) -> Rectangle {
         let bounds = self.view.bounds();
-        Rectangle::new(
+        let bottom_right = bounds.bottom_right().unwrap_or(bounds.top_left);
+        Rectangle::with_corners(
             Point::new(bounds.top_left.x - self.left, bounds.top_left.y - self.top),
-            Point::new(
-                bounds.bottom_right.x + self.right,
-                bounds.bottom_right.y + self.bottom,
-            ),
+            Point::new(bottom_right.x + self.right, bottom_right.y + self.bottom),
         )
     }
 }
@@ -166,14 +88,19 @@ where
     }
 }
 
-impl<'a, C, V> Drawable<C> for &'a Margin<V>
+impl<'a, C, V> Drawable for Margin<V>
 where
     C: PixelColor,
-    V: View,
-    &'a V: Drawable<C>,
+    V: Drawable<Color = C> + View,
 {
+    type Color = C;
+    type Output = V::Output;
+
     /// Draw the graphics object using the supplied DrawTarget.
-    fn draw<D: DrawTarget<C>>(self, display: &mut D) -> Result<(), D::Error> {
+    fn draw<D>(&self, display: &mut D) -> Result<V::Output, D::Error>
+    where
+        D: DrawTarget<Color = C>,
+    {
         self.view.draw(display)
     }
 }
@@ -230,28 +157,36 @@ pub trait MenuItemTrait<R: Copy>: View {
 }
 
 /// Menu-related extensions for object chain elements
-pub trait MenuExt<R: Copy> {
+pub trait MenuExt<R: Copy>: ChainElement {
     fn bounds_of(&self, nth: u32) -> Rectangle;
     fn title_of(&self, nth: u32) -> &str;
     fn details_of(&self, nth: u32) -> &str;
     fn interact_with(&mut self, nth: u32) -> MenuEvent<R>;
 }
 
-impl<R: Copy> MenuExt<R> for Guard {
-    fn bounds_of(&self, _nth: u32) -> Rectangle {
-        Rectangle::new(Point::zero(), Point::zero())
+impl<I, R: Copy> MenuExt<R> for Chain<I>
+where
+    R: Copy,
+    I: MenuItemTrait<R>,
+{
+    fn bounds_of(&self, nth: u32) -> Rectangle {
+        debug_assert!(nth == 0);
+        self.object.bounds()
     }
 
-    fn interact_with(&mut self, _nth: u32) -> MenuEvent<R> {
-        MenuEvent::Nothing
+    fn interact_with(&mut self, nth: u32) -> MenuEvent<R> {
+        debug_assert!(nth == 0);
+        self.object.interact()
     }
 
-    fn title_of(&self, _nth: u32) -> &str {
-        ""
+    fn title_of(&self, nth: u32) -> &str {
+        debug_assert!(nth == 0);
+        self.object.title()
     }
 
-    fn details_of(&self, _nth: u32) -> &str {
-        ""
+    fn details_of(&self, nth: u32) -> &str {
+        debug_assert!(nth == 0);
+        self.object.details()
     }
 }
 
@@ -259,13 +194,13 @@ impl<I, LE, R> MenuExt<R> for Link<I, LE>
 where
     R: Copy,
     I: MenuItemTrait<R>,
-    LE: LayoutElement<Vertical<horizontal::Left>> + MenuExt<R>,
+    LE: MenuExt<R>,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
         if nth == 0 {
             self.object.bounds()
         } else {
-            self.next.bounds_of(nth - 1)
+            self.parent.bounds_of(nth - 1)
         }
     }
 
@@ -273,7 +208,7 @@ where
         if nth == 0 {
             self.object.interact()
         } else {
-            self.next.interact_with(nth - 1)
+            self.parent.interact_with(nth - 1)
         }
     }
 
@@ -281,7 +216,7 @@ where
         if nth == 0 {
             self.object.title()
         } else {
-            self.next.title_of(nth - 1)
+            self.parent.title_of(nth - 1)
         }
     }
 
@@ -289,30 +224,8 @@ where
         if nth == 0 {
             self.object.details()
         } else {
-            self.next.details_of(nth - 1)
+            self.parent.details_of(nth - 1)
         }
-    }
-}
-
-impl<LE, R> MenuExt<R> for ViewGroup<LE>
-where
-    R: Copy,
-    LE: ViewChainElement + MenuExt<R>,
-{
-    fn bounds_of(&self, nth: u32) -> Rectangle {
-        self.views.bounds_of(self.view_count() - nth - 1)
-    }
-
-    fn interact_with(&mut self, nth: u32) -> MenuEvent<R> {
-        self.views.interact_with(self.view_count() - nth - 1)
-    }
-
-    fn title_of(&self, nth: u32) -> &str {
-        self.views.title_of(self.view_count() - nth - 1)
-    }
-
-    fn details_of(&self, nth: u32) -> &str {
-        self.views.details_of(self.view_count() - nth - 1)
     }
 }
 
@@ -331,29 +244,36 @@ impl<C: PixelColor> MenuStyle<C> {
     }
 }
 
-pub struct MenuBuilder<IT, LE, R, C>
+mod private {
+    pub struct NoItems;
+}
+
+use private::NoItems;
+
+use crate::adapters::invert::BinaryColorDrawTargetExt;
+
+pub struct MenuBuilder<IT, LL, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    LE: LayoutElement<Vertical<horizontal::Left>> + MenuExt<R>,
     C: PixelColor,
 {
     _return_type: PhantomData<R>,
     title: &'static str,
     bounds: Rectangle,
-    items: LinearLayout<Vertical<horizontal::Left>, LE>,
+    items: LL,
     interaction: IT,
     idle_timeout: Option<u16>,
     style: MenuStyle<C>,
 }
 
-impl<R: Copy> MenuBuilder<Programmed, Guard, R, BinaryColor> {
+impl<R: Copy> MenuBuilder<Programmed, NoItems, R, BinaryColor> {
     pub fn new(title: &'static str, bounds: Rectangle) -> Self {
         Self {
             _return_type: PhantomData,
             title,
             bounds,
-            items: LinearLayout::vertical(),
+            items: NoItems,
             interaction: Programmed::new(),
             idle_timeout: None,
             style: MenuStyle {
@@ -364,14 +284,13 @@ impl<R: Copy> MenuBuilder<Programmed, Guard, R, BinaryColor> {
     }
 }
 
-impl<IT, LE, R, C> MenuBuilder<IT, LE, R, C>
+impl<IT, LL, R, C> MenuBuilder<IT, LL, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    LE: LayoutElement<Vertical<horizontal::Left>> + MenuExt<R>,
     C: PixelColor,
 {
-    pub fn show_details_after(self, timeout: u16) -> MenuBuilder<IT, LE, R, C> {
+    pub fn show_details_after(self, timeout: u16) -> MenuBuilder<IT, LL, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -386,7 +305,7 @@ where
     pub fn with_interaction_controller<ITC: InteractionController>(
         self,
         interaction: ITC,
-    ) -> MenuBuilder<ITC, LE, R, C> {
+    ) -> MenuBuilder<ITC, LL, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -398,19 +317,7 @@ where
         }
     }
 
-    pub fn add_item<I: MenuItemTrait<R>>(self, item: I) -> MenuBuilder<IT, Link<I, LE>, R, C> {
-        MenuBuilder {
-            _return_type: PhantomData,
-            title: self.title,
-            bounds: self.bounds,
-            items: self.items.add_view(item),
-            interaction: self.interaction,
-            idle_timeout: self.idle_timeout,
-            style: self.style,
-        }
-    }
-
-    pub fn with_style<CC: PixelColor>(self, style: MenuStyle<CC>) -> MenuBuilder<IT, LE, R, CC> {
+    pub fn with_style<CC: PixelColor>(self, style: MenuStyle<CC>) -> MenuBuilder<IT, LL, R, CC> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -421,15 +328,23 @@ where
             style,
         }
     }
+}
 
-    pub fn build(self) -> Menu<IT, LE, R, C> {
+impl<IT, VG, R, C> MenuBuilder<IT, VG, R, C>
+where
+    R: Copy,
+    IT: InteractionController,
+    VG: ViewGroup + MenuExt<R>,
+    C: PixelColor,
+{
+    pub fn build(self) -> Menu<IT, VG, R, C> {
         Menu {
             _return_type: PhantomData,
             title: self.title,
             bounds: self.bounds,
-            items: self.items.arrange(),
+            selected: (ViewGroup::len(&self.items) as u32).saturating_sub(1),
+            items: LinearLayout::vertical(self.items).arrange().into_inner(),
             interaction: self.interaction,
-            selected: 0,
             recompute_targets: false,
             list_offset: Animated::new(0, 2),
             indicator_offset: Animated::new(0, 2),
@@ -441,17 +356,83 @@ where
     }
 }
 
-pub struct Menu<IT, LE, R, C>
+impl<IT, R, C> MenuBuilder<IT, NoItems, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    LE: ViewChainElement + MenuExt<R>,
+    C: PixelColor,
+{
+    pub fn add_item<I: MenuItemTrait<R>>(self, item: I) -> MenuBuilder<IT, Chain<I>, R, C> {
+        MenuBuilder {
+            _return_type: PhantomData,
+            title: self.title,
+            bounds: self.bounds,
+            items: Chain::new(item),
+            interaction: self.interaction,
+            idle_timeout: self.idle_timeout,
+            style: self.style,
+        }
+    }
+}
+
+impl<IT, CE, R, C> MenuBuilder<IT, Chain<CE>, R, C>
+where
+    R: Copy,
+    IT: InteractionController,
+    CE: MenuItemTrait<R>,
+    C: PixelColor,
+{
+    pub fn add_item<I: MenuItemTrait<R>>(
+        self,
+        item: I,
+    ) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C> {
+        MenuBuilder {
+            _return_type: PhantomData,
+            title: self.title,
+            bounds: self.bounds,
+            items: self.items.append(item),
+            interaction: self.interaction,
+            idle_timeout: self.idle_timeout,
+            style: self.style,
+        }
+    }
+}
+
+impl<IT, P, CE, R, C> MenuBuilder<IT, Link<P, CE>, R, C>
+where
+    R: Copy,
+    IT: InteractionController,
+    P: MenuItemTrait<R>,
+    CE: MenuExt<R>,
+    C: PixelColor,
+{
+    pub fn add_item<I: MenuItemTrait<R>>(
+        self,
+        item: I,
+    ) -> MenuBuilder<IT, Link<I, Link<P, CE>>, R, C> {
+        MenuBuilder {
+            _return_type: PhantomData,
+            title: self.title,
+            bounds: self.bounds,
+            items: self.items.append(item),
+            interaction: self.interaction,
+            idle_timeout: self.idle_timeout,
+            style: self.style,
+        }
+    }
+}
+
+pub struct Menu<IT, VG, R, C>
+where
+    R: Copy,
+    IT: InteractionController,
+    VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
 {
     _return_type: PhantomData<R>,
     title: &'static str,
     bounds: Rectangle,
-    items: ViewGroup<LE>,
+    items: VG,
     interaction: IT,
     selected: u32,
     recompute_targets: bool,
@@ -463,11 +444,11 @@ where
     style: MenuStyle<C>,
 }
 
-impl<IT, LE, R, C> Menu<IT, LE, R, C>
+impl<IT, VG, R, C> Menu<IT, VG, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    LE: ViewChainElement + MenuExt<R>,
+    VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
 {
     fn change_selected_item(&mut self, new_selected: u32) {
@@ -494,24 +475,17 @@ where
             }
         }
 
+        let count = ViewGroup::len(&self.items) as u32;
         match self.interaction.update(input) {
             InteractionType::Nothing => MenuEvent::Nothing,
-            InteractionType::Previous => {
-                let selected = if self.selected == 0 {
-                    self.items.view_count() - 1
-                } else {
-                    self.selected - 1
-                };
+            InteractionType::Next => {
+                let selected = self.selected.checked_sub(1).unwrap_or(count - 1);
 
                 self.change_selected_item(selected);
                 MenuEvent::Nothing
             }
-            InteractionType::Next => {
-                let selected = if self.selected == self.items.view_count() - 1 {
-                    0
-                } else {
-                    self.selected + 1
-                };
+            InteractionType::Previous => {
+                let selected = (self.selected + 1) % count;
 
                 self.change_selected_item(selected);
                 MenuEvent::Nothing
@@ -521,26 +495,17 @@ where
     }
 }
 
-impl<IT, LE, R, C> View for Menu<IT, LE, R, C>
+impl<IT, VG, R, C> View for Menu<IT, VG, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    LE: ViewChainElement + MenuExt<R>,
+    VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
 {
     /// Move the origin of an object by a given number of (x, y) pixels,
     /// by returning a new object
-    #[must_use]
-    fn translate(mut self, by: Point) -> Self {
+    fn translate_impl(&mut self, by: Point) {
         self.bounds.translate_mut(by);
-        self
-    }
-
-    /// Move the origin of an object by a given number of (x, y) pixels,
-    /// mutating the object in place
-    fn translate_mut(&mut self, by: Point) -> &mut Self {
-        self.bounds.translate_mut(by);
-        self
     }
 
     /// Returns the bounding box of the `View` as a `Rectangle`
@@ -549,43 +514,62 @@ where
     }
 }
 
-impl<'a, IT, LE, R, C> Drawable<C> for &'a mut Menu<IT, LE, R, C>
+impl<'a, IT, VG, R, C> Menu<IT, VG, R, C>
 where
     R: Copy,
-    IT: InteractionController,
-    &'a IT: Drawable<C>,
-    LE: ViewChainElement + MenuExt<R>,
-    &'a LE: Drawable<C>,
-    C: PixelColor,
+    IT: InteractionController + Drawable<Color = C>,
+    VG: ViewGroup + MenuExt<R> + Drawable<Color = C>,
+    C: PixelColor + From<Rgb888>,
 {
-    fn draw<D: DrawTarget<C>>(self, display: &mut D) -> Result<(), D::Error> {
-        let display_area = DisplayArea::<C>::display_area(display);
+    fn header<'t, D>(
+        &self,
+        title: &'t str,
+        display: &D,
+    ) -> LinearLayout<
+        Vertical<horizontal::Left>,
+        Link<Styled<Line, PrimitiveStyle<C>>, Chain<TextBox<'t, MonoTextStyle<'static, C>>>>,
+    >
+    where
+        D: DrawTarget<Color = C>,
+    {
+        let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let text_style = TextBoxStyleBuilder::new(Font6x8)
+        let text_style = MonoTextStyleBuilder::<C>::new()
+            .font(&FONT_6X10)
             .text_color(self.style.color)
             .build();
         let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
+        LinearLayout::vertical(
+            Chain::new(TextBox::new(
+                title,
+                Rectangle::new(
+                    Point::zero(),
+                    Size::new(display_size.width, FONT_6X10.character_size.height),
+                ),
+                text_style,
+            ))
+            .append(
+                Line::new(
+                    Point::zero(),
+                    Point::new(display_area.bottom_right().unwrap().x, 0),
+                )
+                .into_styled(thin_stroke),
+            ),
+        )
+        .arrange()
+    }
+
+    pub fn update<D>(&mut self, display: &D)
+    where
+        D: DrawTarget<Color = C>,
+    {
+        let display_area = display.bounding_box();
+        let display_size = display_area.size();
 
         match self.display_mode {
             MenuDisplayMode::List => {
-                let menu_title = LinearLayout::vertical()
-                    .add_view(
-                        TextBox::new(
-                            self.title,
-                            Rectangle::with_size(
-                                Point::zero(),
-                                Size::new(display_size.width, Font6x8::CHARACTER_SIZE.height),
-                            ),
-                        )
-                        .into_styled(text_style),
-                    )
-                    .add_view(
-                        Line::new(Point::zero(), Point::new(display_area.bottom_right.x, 0))
-                            .into_styled(thin_stroke),
-                    )
-                    .arrange();
-                menu_title.draw(display)?;
+                let menu_title = self.header(self.title, display);
 
                 let menu_height = (display_size.height - menu_title.size().height) as i32;
 
@@ -621,14 +605,54 @@ where
                 self.list_offset.update();
                 self.indicator_offset.update();
 
-                let scrollbar_area = Rectangle::with_size(
-                    Point::zero(),
-                    Size::new(2, menu_height as u32),
-                )
-                .align_to(&menu_title, horizontal::Right, vertical::TopToBottom);
+                self.items
+                    .translate_mut(Point::new(1, -self.list_offset.current()));
+                self.items
+                    .translate_mut(Point::new(0, menu_title.size().height as i32));
+            }
+            _ => {}
+        }
+    }
+}
+
+impl<'a, IT, VG, R> Drawable for Menu<IT, VG, R, BinaryColor>
+where
+    R: Copy,
+    IT: InteractionController + Drawable<Color = BinaryColor>,
+    VG: ViewGroup + MenuExt<R> + Drawable<Color = BinaryColor>,
+{
+    type Color = BinaryColor;
+    type Output = ();
+
+    fn draw<D>(&self, display: &mut D) -> Result<(), D::Error>
+    where
+        D: DrawTarget<Color = BinaryColor>,
+    {
+        let display_area = display.bounding_box();
+        let display_size = display_area.size();
+
+        let text_style = MonoTextStyleBuilder::<BinaryColor>::new()
+            .font(&FONT_6X10)
+            .text_color(self.style.color)
+            .build();
+        let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
+
+        match self.display_mode {
+            MenuDisplayMode::List => {
+                let menu_title = self.header(self.title, display);
+                menu_title.draw(display)?;
+
+                let menu_height = display_size.height - menu_title.size().height;
+
+                // Height of the first menu item
+                let menuitem_height = self.items.bounds_of(0).size().height;
+                let menuitem_inner_height = menuitem_height - 2;
+
+                let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height))
+                    .align_to(&menu_title, horizontal::Right, vertical::TopToBottom);
 
                 let list_height = self.items.bounds().size().height;
-                let draw_scrollbar = list_height > scrollbar_area.size().height;
+                let draw_scrollbar = list_height > menu_height;
 
                 let menu_list_width = if draw_scrollbar {
                     display_size.width - scrollbar_area.size().width
@@ -636,29 +660,15 @@ where
                     display_size.width
                 };
 
-                let mut constrained_display = ConstrainedDrawTarget::new(
-                    display,
-                    Rectangle::with_size(
-                        Point::zero(),
-                        Size::new(menu_list_width, menu_height as u32),
-                    )
-                    .align_to(
-                        &display_area,
-                        horizontal::Left,
-                        vertical::Bottom,
-                    ),
-                );
-
-                self.items
-                    .translate_mut(Point::new(2, -self.list_offset.current()))
-                    .draw(&mut constrained_display)?;
+                let menu_display_area =
+                    Rectangle::new(Point::zero(), Size::new(menu_list_width, menu_height))
+                        .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
 
                 // selection indicator
-                let mut interaction_display = ConstrainedDrawTarget::new(
-                    display,
-                    Rectangle::with_size(
+                let mut interaction_display = display.cropped(
+                    &Rectangle::new(
                         Point::zero(),
-                        Size::new(menu_list_width, menuitem_height as u32 - 2),
+                        Size::new(menu_list_width, menuitem_inner_height),
                     )
                     .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
                     .translate(Point::new(
@@ -669,12 +679,29 @@ where
 
                 self.interaction.draw(&mut interaction_display)?;
 
+                // FIXME: this is terrible
+                let mut inverting_overlay = display.invert_area(&Rectangle::new(
+                    Point::new(
+                        0,
+                        self.indicator_offset.current() - self.list_offset.current()
+                            + 1
+                            + menuitem_height as i32,
+                    ),
+                    Size::new(
+                        self.interaction.fill_area_width(menu_list_width),
+                        menuitem_inner_height,
+                    ),
+                ));
+
+                self.items
+                    .draw(&mut inverting_overlay.clipped(&menu_display_area))?;
+
                 if draw_scrollbar {
-                    let scale =
-                        |value| (value as f32 * menu_height as f32 / list_height as f32) as i32;
+                    let scale_factor = menu_height as f32 / list_height as f32;
+                    let scale = |value| (value as f32 * scale_factor) as i32;
 
                     let scrollbar_height = scale(scrollbar_area.size().height as i32).max(1);
-                    let mut scrollbar_display = ConstrainedDrawTarget::new(display, scrollbar_area);
+                    let mut scrollbar_display = display.cropped(&scrollbar_area);
 
                     // Start scrollbar from y=1, so we have a margin on top instead of bottom
                     Line::new(Point::new(1, 1), Point::new(1, scrollbar_height))
@@ -683,39 +710,27 @@ where
                         .draw(&mut scrollbar_display)?;
                 }
             }
-            _ => {
-                let layout = LinearLayout::vertical()
-                    .add_view(
-                        TextBox::new(
-                            self.items.title_of(self.selected),
-                            Rectangle::with_size(
-                                Point::zero(),
-                                Size::new(display_size.width, Font6x8::CHARACTER_SIZE.height),
-                            ),
-                        )
-                        .into_styled(text_style),
-                    )
-                    .add_view(
-                        Line::new(Point::zero(), Point::new(display_area.bottom_right.x, 0))
-                            .into_styled(thin_stroke),
-                    );
+            MenuDisplayMode::Details => {
+                let header = self.header(self.items.title_of(self.selected), display);
 
-                let size = layout.size();
-
-                layout
-                    .add_view(
+                // TODO: embedded-layout should allow appending views at this point
+                let size = header.size();
+                let vg = header.into_inner();
+                LinearLayout::vertical(
+                    vg.append(
                         TextBox::new(
                             self.items.details_of(self.selected),
-                            Rectangle::with_size(
+                            Rectangle::new(
                                 Point::zero(),
                                 Size::new(size.width, display_size.height - size.height - 2),
                             ),
+                            text_style,
                         )
-                        .into_styled(text_style)
-                        .with_margin(2, 0, 0, 0),
-                    )
-                    .arrange()
-                    .draw(display)?;
+                        .with_margin(2, 0, 0, 1),
+                    ),
+                )
+                .arrange()
+                .draw(display)?;
             }
         }
         Ok(())
