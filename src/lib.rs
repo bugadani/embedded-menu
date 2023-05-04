@@ -108,26 +108,27 @@ where
 pub struct Animated {
     current: i32,
     target: i32,
-    delta: i32,
+    frames: i32,
 }
 
 impl Animated {
-    pub fn new(current: i32, delta: i32) -> Self {
+    pub fn new(current: i32, frames: i32) -> Self {
         Self {
             current,
             target: current,
-            delta,
+            frames,
         }
     }
 
     pub fn update(&mut self) {
-        if self.current == self.target {
-            // nothing to do
-        } else if self.current < self.target {
-            self.current = self.current.saturating_add(self.delta).min(self.target);
+        let rounding = if self.current < self.target {
+            self.frames - 1
         } else {
-            self.current = self.current.saturating_sub(self.delta).max(self.target);
-        }
+            1 - self.frames
+        };
+
+        let distance = self.target - self.current;
+        self.current += (distance + rounding) / self.frames;
     }
 
     pub fn update_target(&mut self, target: i32) {
@@ -338,6 +339,7 @@ where
     C: PixelColor,
 {
     pub fn build(self) -> Menu<IT, VG, R, C> {
+        const ANIM_FRAMES: i32 = 10;
         Menu {
             _return_type: PhantomData,
             title: self.title,
@@ -346,8 +348,8 @@ where
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
             interaction: self.interaction,
             recompute_targets: false,
-            list_offset: Animated::new(0, 2),
-            indicator_offset: Animated::new(0, 2),
+            list_offset: Animated::new(0, ANIM_FRAMES),
+            indicator_offset: Animated::new(0, ANIM_FRAMES),
             idle_timeout_threshold: self.idle_timeout,
             idle_timeout: self.idle_timeout.unwrap_or_default(),
             display_mode: MenuDisplayMode::List,
