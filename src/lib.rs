@@ -10,7 +10,7 @@ use embedded_graphics::{
     geometry::Size,
     mono_font::{ascii::FONT_6X10, MonoTextStyle, MonoTextStyleBuilder},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
-    prelude::{Dimensions, Point},
+    prelude::{Dimensions, DrawTargetExt, Point},
     primitives::{Line, Primitive, PrimitiveStyle, Rectangle, Styled},
     Drawable,
 };
@@ -605,7 +605,9 @@ where
                 self.indicator_offset.update();
 
                 self.items
-                    .translate_mut(Point::new(2, -self.list_offset.current()));
+                    .translate_mut(Point::new(1, -self.list_offset.current()));
+                self.items
+                    .translate_mut(Point::new(0, menu_title.size().height as i32));
             }
             _ => {}
         }
@@ -689,20 +691,20 @@ where
                         menuitem_height as u32 - 2,
                     ),
                 ));
-                let mut constrained_display = ConstrainedDrawTarget::new(
-                    &mut inverting_overlay,
-                    Rectangle::new(
-                        Point::zero(),
-                        Size::new(menu_list_width, menu_height as u32),
-                    )
-                    .align_to(
-                        &menu_title,
-                        horizontal::Left,
-                        vertical::TopToBottom,
-                    ),
-                );
 
-                self.items.draw(&mut constrained_display)?;
+                self.items.draw(
+                    &mut inverting_overlay.clipped(
+                        &Rectangle::new(
+                            Point::zero(),
+                            Size::new(menu_list_width, menu_height as u32),
+                        )
+                        .align_to(
+                            &menu_title,
+                            horizontal::Left,
+                            vertical::TopToBottom,
+                        ),
+                    ),
+                )?;
 
                 if draw_scrollbar {
                     let scale =
@@ -734,7 +736,7 @@ where
                             ),
                             text_style,
                         )
-                        .with_margin(2, 0, 0, 0),
+                        .with_margin(2, 0, 0, 1),
                     ),
                 )
                 .arrange()
