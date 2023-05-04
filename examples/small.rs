@@ -4,7 +4,7 @@
 
 use embedded_graphics::{
     pixelcolor::BinaryColor,
-    prelude::{Point, Size},
+    prelude::{DrawTargetExt, Point, Size},
     primitives::Rectangle,
     Drawable,
 };
@@ -15,7 +15,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, NavigationItem, Select},
-    ConstrainedDrawTarget, MenuBuilder,
+    MenuBuilder,
 };
 
 #[derive(Copy, Clone)]
@@ -84,10 +84,7 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     'running: loop {
         let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
-        let mut sub = ConstrainedDrawTarget::new(
-            &mut display,
-            Rectangle::new(Point::new(16, 16), Size::new(96, 33)),
-        );
+        let mut sub = display.cropped(&Rectangle::new(Point::new(16, 16), Size::new(96, 34)));
         menu.update(&sub);
         menu.draw(&mut sub).unwrap();
         window.update(&display);
