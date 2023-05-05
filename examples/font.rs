@@ -59,8 +59,8 @@ fn main() -> Result<(), core::convert::Infallible> {
             .with_marker("»") // not part of the ASCII font
             .with_detail_text("Lorem ipsum dolor sit amet."),
     )
-    .add_item(Select::new("Check this", true).with_detail_text("Description"))
-    .add_item(Select::new("Check this", false).with_detail_text("Description"))
+    .add_item(Select::new("Checkbox", true).with_detail_text("Description"))
+    .add_item(Select::new("Other checkbox", false).with_detail_text("Description"))
     .add_item(Select::new("Multiple options long", TestEnum::A).with_detail_text("Description"))
     .build();
 
