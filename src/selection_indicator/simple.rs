@@ -57,16 +57,17 @@ impl SelectionIndicator for SimpleSelectionIndicator {
         .draw(display)?;
 
         let display_top_left = display.bounding_box().top_left;
-        let display_width = display.bounding_box().size.width;
-        let display_height = display.bounding_box().size.height;
+        let display_size = display.bounding_box().size;
+
+        let margin = Size::new(2, 0);
 
         let mut inverting = display.invert_area(&Rectangle::new(
             Point::new(0, screen_offset),
             Size::new(fill_width, indicator_height),
         ));
         op(&mut inverting.cropped(&Rectangle::new(
-            display_top_left + Point::new(2, 0),
-            Size::new(display_width - 2, display_height),
+            display_top_left + margin,
+            display_size - margin,
         )))
     }
 }
