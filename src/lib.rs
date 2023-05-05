@@ -219,11 +219,6 @@ where
             if input.is_active() {
                 self.idle_timeout = threshold;
                 self.display_mode = MenuDisplayMode::List;
-            } else if self.idle_timeout > 0 {
-                self.idle_timeout -= 1;
-                if self.idle_timeout == 0 {
-                    self.display_mode = MenuDisplayMode::Details;
-                }
             }
         }
 
@@ -306,6 +301,11 @@ where
     }
 
     pub fn update(&mut self, display: &impl Dimensions) {
+        self.idle_timeout = self.idle_timeout.saturating_sub(1);
+        if self.idle_timeout == 0 {
+            self.display_mode = MenuDisplayMode::Details;
+        }
+
         if !self.display_mode.is_list() {
             return;
         }
