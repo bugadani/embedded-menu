@@ -5,7 +5,14 @@ pub mod interaction;
 pub mod items;
 
 mod margin;
+mod plumbing;
 
+use crate::{
+    adapters::invert::BinaryColorDrawTargetExt,
+    interaction::{programmed::Programmed, InputType, InteractionController, InteractionType},
+    margin::MarginExt,
+    plumbing::MenuExt,
+};
 use core::marker::PhantomData;
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -18,12 +25,16 @@ use embedded_graphics::{
 };
 use embedded_layout::{
     layout::linear::{LinearLayout, Vertical},
-    object_chain::ChainElement,
     prelude::*,
     view_group::ViewGroup,
 };
 use embedded_text::TextBox;
-use interaction::{programmed::Programmed, InputType, InteractionController, InteractionType};
+
+pub trait MenuItemTrait<R: Copy>: View {
+    fn interact(&mut self) -> MenuEvent<R>;
+    fn title(&self) -> &str;
+    fn details(&self) -> &str;
+}
 
 pub enum MenuDisplayMode {
     List,
@@ -75,86 +86,6 @@ pub enum MenuEvent<R: Copy> {
     DataEvent(R),
 }
 
-pub trait MenuItemTrait<R: Copy>: View {
-    // Draw itemtype-specific graphics
-    fn interact(&mut self) -> MenuEvent<R>;
-    fn title(&self) -> &str;
-    fn details(&self) -> &str;
-}
-
-/// Menu-related extensions for object chain elements
-pub trait MenuExt<R: Copy>: ChainElement {
-    fn bounds_of(&self, nth: u32) -> Rectangle;
-    fn title_of(&self, nth: u32) -> &str;
-    fn details_of(&self, nth: u32) -> &str;
-    fn interact_with(&mut self, nth: u32) -> MenuEvent<R>;
-}
-
-impl<I, R: Copy> MenuExt<R> for Chain<I>
-where
-    R: Copy,
-    I: MenuItemTrait<R>,
-{
-    fn bounds_of(&self, nth: u32) -> Rectangle {
-        debug_assert!(nth == 0);
-        self.object.bounds()
-    }
-
-    fn interact_with(&mut self, nth: u32) -> MenuEvent<R> {
-        debug_assert!(nth == 0);
-        self.object.interact()
-    }
-
-    fn title_of(&self, nth: u32) -> &str {
-        debug_assert!(nth == 0);
-        self.object.title()
-    }
-
-    fn details_of(&self, nth: u32) -> &str {
-        debug_assert!(nth == 0);
-        self.object.details()
-    }
-}
-
-impl<I, LE, R> MenuExt<R> for Link<I, LE>
-where
-    R: Copy,
-    I: MenuItemTrait<R>,
-    LE: MenuExt<R>,
-{
-    fn bounds_of(&self, nth: u32) -> Rectangle {
-        if nth == 0 {
-            self.object.bounds()
-        } else {
-            self.parent.bounds_of(nth - 1)
-        }
-    }
-
-    fn interact_with(&mut self, nth: u32) -> MenuEvent<R> {
-        if nth == 0 {
-            self.object.interact()
-        } else {
-            self.parent.interact_with(nth - 1)
-        }
-    }
-
-    fn title_of(&self, nth: u32) -> &str {
-        if nth == 0 {
-            self.object.title()
-        } else {
-            self.parent.title_of(nth - 1)
-        }
-    }
-
-    fn details_of(&self, nth: u32) -> &str {
-        if nth == 0 {
-            self.object.details()
-        } else {
-            self.parent.details_of(nth - 1)
-        }
-    }
-}
-
 #[derive(Copy, Clone, Debug)]
 pub enum DisplayScrollbar {
     Display,
@@ -184,8 +115,6 @@ mod private {
 }
 
 use private::NoItems;
-
-use crate::{adapters::invert::BinaryColorDrawTargetExt, margin::MarginExt};
 
 pub struct MenuBuilder<IT, LL, R, C>
 where
