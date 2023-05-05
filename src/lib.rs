@@ -19,7 +19,7 @@ use crate::{
 };
 use core::marker::PhantomData;
 use embedded_graphics::{
-    draw_target::DrawTarget,
+    draw_target::{Cropped, DrawTarget},
     geometry::Size,
     mono_font::{ascii::FONT_6X10, MonoFont, MonoTextStyle},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
@@ -161,8 +161,7 @@ use private::NoItems;
 
 trait SelectionIndicator: Sized {
     type Color: PixelColor;
-    type Display<'a, D: DrawTarget<Color = Self::Color> + 'a>: DrawTarget<Error = D::Error, Color = Self::Color>
-        + 'a;
+    type Display<'a, D: DrawTarget<Color = Self::Color> + 'a>;
 
     fn new(anim_frames: i32) -> Self;
 
@@ -178,7 +177,7 @@ trait SelectionIndicator: Sized {
         screen_offset: i32,
         fill_width: u32,
         display: &'d mut D,
-        op: impl Fn(&mut Self::Display<'d, D>) -> Result<R, D::Error>,
+        op: impl Fn(&mut Cropped<'_, Self::Display<'d, D>>) -> Result<R, D::Error>,
     ) -> Result<R, D::Error>
     where
         D: DrawTarget<Color = Self::Color> + 'd;
@@ -216,7 +215,7 @@ impl SelectionIndicator for SimpleSelectionIndicator {
         screen_offset: i32,
         fill_width: u32,
         display: &'d mut D,
-        op: impl Fn(&mut Self::Display<'d, D>) -> Result<R, D::Error>,
+        op: impl Fn(&mut Cropped<'_, Self::Display<'d, D>>) -> Result<R, D::Error>,
     ) -> Result<R, D::Error>
     where
         D: DrawTarget<Color = Self::Color> + 'd,
@@ -228,10 +227,17 @@ impl SelectionIndicator for SimpleSelectionIndicator {
         .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
         .draw(display)?;
 
-        // TODO: clip the inner display area
-        op(&mut display.invert_area(&Rectangle::new(
+        let display_top_left = display.bounding_box().top_left;
+        let display_width = display.bounding_box().size.width;
+        let display_height = display.bounding_box().size.height;
+
+        let mut inverting = display.invert_area(&Rectangle::new(
             Point::new(0, screen_offset),
             Size::new(fill_width, indicator_height),
+        ));
+        op(&mut inverting.cropped(&Rectangle::new(
+            display_top_left + Point::new(2, 0),
+            Size::new(display_width - 2, display_height),
         )))
     }
 }
@@ -431,8 +437,7 @@ where
             top_distance
         };
 
-        self.items
-            .translate_mut(Point::new(1, title_height - self.list_offset));
+        self.items.translate_mut(Point::new(0, -self.list_offset));
     }
 
     fn display_details<D>(&self, display: &mut D) -> Result<(), D::Error>

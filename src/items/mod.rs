@@ -50,7 +50,7 @@ where
                 Point::zero(),
                 Size::new(1, style.font.character_size.height),
             )
-            .with_margin(0, 0, -1, 1),
+            .with_margin(0, 0, -1, 0),
         }
     }
 }
