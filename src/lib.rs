@@ -310,8 +310,7 @@ where
             top_distance
         };
 
-        self.items
-            .translate_mut(Point::new(1, title_height - self.list_offset));
+        self.items.translate_mut(Point::new(1, -self.list_offset));
     }
 
     fn display_details<D>(&self, display: &mut D) -> Result<(), D::Error>
