@@ -282,8 +282,7 @@ where
         let menu_height = display_size.height as i32 - title_height;
 
         // Height of the selection indicator
-        let menuitem_height = self.items.bounds_of(0).size().height;
-        let indicator_height = menuitem_height as i32 - 1;
+        let selected_item_bounds = self.items.bounds_of(self.selected);
 
         // Reset positions
         self.items
@@ -294,7 +293,7 @@ where
             self.recompute_targets = false;
 
             self.indicator_offset
-                .update_target(self.items.bounds_of(self.selected).top_left.y);
+                .update_target(selected_item_bounds.top_left.y);
         }
 
         self.indicator_offset.update();
@@ -302,6 +301,9 @@ where
         // Ensure selection indicator is always visible
         let top_distance = self.indicator_offset.current() - self.list_offset;
         self.list_offset += if top_distance > 0 {
+            let menuitem_height = selected_item_bounds.size().height;
+            let indicator_height = menuitem_height as i32 - 1;
+
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
             (top_distance + indicator_height - menu_height).max(0)
