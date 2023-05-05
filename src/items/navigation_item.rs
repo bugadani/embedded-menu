@@ -14,12 +14,16 @@ use embedded_graphics::{
 };
 use embedded_layout::prelude::*;
 
-pub struct NavigationItem<'a, R: Copy, C: PixelColor> {
-    style: MonoTextStyle<'a, C>,
-    marker: &'a str,
+pub struct NavigationItemData<'a, R: Copy> {
     title_text: &'a str,
     details: &'a str,
     return_value: R,
+    marker: &'a str,
+}
+
+pub struct NavigationItem<'a, R: Copy, C: PixelColor> {
+    data: NavigationItemData<'a, R>,
+    style: MonoTextStyle<'a, C>,
     bounds: Margin<Rectangle>,
 }
 
@@ -28,11 +32,13 @@ impl<'a, R: Copy, C: PixelColor> NavigationItem<'a, R, C> {
         let style = MonoTextStyle::<C>::new(&FONT_6X10, color);
 
         Self {
-            marker,
+            data: NavigationItemData {
+                marker,
+                title_text: title,
+                details,
+                return_value: value,
+            },
             style,
-            title_text: title,
-            details,
-            return_value: value,
             bounds: Rectangle::new(
                 Point::zero(),
                 Size::new(1, style.font.character_size.height),
@@ -44,15 +50,15 @@ impl<'a, R: Copy, C: PixelColor> NavigationItem<'a, R, C> {
 
 impl<'a, R: Copy, C: PixelColor> MenuItemTrait<R> for NavigationItem<'a, R, C> {
     fn interact(&mut self) -> MenuEvent<R> {
-        MenuEvent::NavigationEvent(self.return_value)
+        MenuEvent::NavigationEvent(self.data.return_value)
     }
 
     fn title(&self) -> &str {
-        self.title_text
+        self.data.title_text
     }
 
     fn details(&self) -> &str {
-        self.details
+        self.data.details
     }
 }
 
@@ -79,8 +85,8 @@ where
         D: DrawTarget<Color = C>,
     {
         let menu_line = MenuLine {
-            title: self.title_text,
-            value: self.marker,
+            title: self.data.title_text,
+            value: self.data.marker,
             bounds: self.bounds,
             text_style: self.style,
         };

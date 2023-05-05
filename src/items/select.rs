@@ -34,13 +34,17 @@ impl SelectValue for bool {
     }
 }
 
-pub struct Select<'a, R: Copy, S: SelectValue, C: PixelColor> {
+pub struct SelectData<'a, R: Copy, S: SelectValue> {
     title_text: &'a str,
-    style: MonoTextStyle<'a, C>,
-    bounds: Margin<Rectangle>,
     details: &'a str,
     convert: fn(S) -> R,
     value: S,
+}
+
+pub struct Select<'a, R: Copy, S: SelectValue, C: PixelColor> {
+    data: SelectData<'a, R, S>,
+    style: MonoTextStyle<'a, C>,
+    bounds: Margin<Rectangle>,
 }
 
 impl<'a, R, S, C> Select<'a, R, S, C>
@@ -59,10 +63,12 @@ where
         let style = MonoTextStyle::new(&FONT_6X10, color);
 
         Self {
-            title_text: title,
-            details,
-            convert,
-            value: initial,
+            data: SelectData {
+                title_text: title,
+                details,
+                convert,
+                value: initial,
+            },
             style,
             bounds: Rectangle::new(
                 Point::zero(),
@@ -75,16 +81,16 @@ where
 
 impl<'a, R: Copy, S: SelectValue, C: PixelColor> MenuItemTrait<R> for Select<'a, R, S, C> {
     fn interact(&mut self) -> MenuEvent<R> {
-        self.value = self.value.next();
-        MenuEvent::DataEvent((self.convert)(self.value))
+        self.data.value = self.data.value.next();
+        MenuEvent::DataEvent((self.data.convert)(self.data.value))
     }
 
     fn title(&self) -> &str {
-        self.title_text
+        self.data.title_text
     }
 
     fn details(&self) -> &str {
-        self.details
+        self.data.details
     }
 }
 
@@ -108,10 +114,10 @@ where
     type Output = ();
 
     fn draw<D: DrawTarget<Color = C>>(&self, display: &mut D) -> Result<(), D::Error> {
-        let value_text = self.value.name();
+        let value_text = self.data.value.name();
 
         let menu_line = MenuLine {
-            title: self.title_text,
+            title: self.data.title_text,
             value: value_text,
             bounds: self.bounds,
             text_style: self.style,
