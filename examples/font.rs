@@ -49,7 +49,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::build_with_style(
         "Menu",
         display_area,
-        MenuStyle::new(BinaryColor::On, BinaryColor::On)
+        MenuStyle::new(BinaryColor::On)
             .with_font(&FONT_6X10)
             .with_title_font(&FONT_8X13_BOLD),
     )

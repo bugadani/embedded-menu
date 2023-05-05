@@ -111,7 +111,6 @@ pub enum DisplayScrollbar {
 #[derive(Copy, Clone, Debug)]
 pub struct MenuStyle<C: PixelColor> {
     pub(crate) color: C,
-    pub(crate) indicator_color: C,
     pub(crate) scrollbar: DisplayScrollbar,
     pub(crate) font: &'static MonoFont<'static>,
     pub(crate) title_font: &'static MonoFont<'static>,
@@ -119,7 +118,7 @@ pub struct MenuStyle<C: PixelColor> {
 
 impl Default for MenuStyle<BinaryColor> {
     fn default() -> Self {
-        Self::new(BinaryColor::On, BinaryColor::On)
+        Self::new(BinaryColor::On)
     }
 }
 
@@ -127,10 +126,9 @@ impl<C> MenuStyle<C>
 where
     C: PixelColor,
 {
-    pub fn new(color: C, indicator_color: C) -> Self {
+    pub fn new(color: C) -> Self {
         Self {
             color,
-            indicator_color,
             scrollbar: DisplayScrollbar::Auto,
             font: &FONT_6X10,
             title_font: &FONT_6X10,
