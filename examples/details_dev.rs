@@ -17,13 +17,12 @@ fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = Menu::builder("Menu", display_area)
         .show_details_after(100)
-        .add_item(NavigationItem::new(
-            ">",
-            "Foo",
-            "Some longer     description text\nfoo\n  foo",
-            (),
-            BinaryColor::On,
-        ))
+        .add_item(
+            NavigationItem::new("Foo", ())
+                .with_marker(">")
+                .with_detail_text("Some longer     description text\nfoo\n  foo")
+                .bind(BinaryColor::On),
+        )
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

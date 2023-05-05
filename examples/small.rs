@@ -47,34 +47,27 @@ fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = Menu::builder("Menu", display_area)
         .show_details_after(300)
-        .add_item(NavigationItem::new(
-            ">",
-            "Foo",
-            "Some longer description text",
-            (),
-            BinaryColor::On,
-        ))
-        .add_item(Select::new(
-            "Check this",
-            "Description",
-            false,
-            |_| (),
-            BinaryColor::On,
-        ))
-        .add_item(Select::new(
-            "Check this",
-            "Description",
-            false,
-            |_| (),
-            BinaryColor::On,
-        ))
-        .add_item(Select::new(
-            "Check this2",
-            "Description",
-            TestEnum::A,
-            |_| (),
-            BinaryColor::On,
-        ))
+        .add_item(
+            NavigationItem::new("Foo", ())
+                .with_marker(">")
+                .with_detail_text("Some longer description text")
+                .bind(BinaryColor::On),
+        )
+        .add_item(
+            Select::new("Check this", false)
+                .with_detail_text("Description")
+                .bind(BinaryColor::On),
+        )
+        .add_item(
+            Select::new("Check this", false)
+                .with_detail_text("Description")
+                .bind(BinaryColor::On),
+        )
+        .add_item(
+            Select::new("Check this too", false)
+                .with_detail_text("Description")
+                .bind(BinaryColor::On),
+        )
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

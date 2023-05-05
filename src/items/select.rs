@@ -1,18 +1,10 @@
-use crate::{
-    items::MenuLine,
-    margin::{Margin, MarginExt},
-    MenuEvent, MenuItem,
-};
+use crate::{items::MenuLine, margin::MarginExt, MenuEvent, MenuItem};
 
 use embedded_graphics::{
-    draw_target::DrawTarget,
     mono_font::{ascii::FONT_6X10, MonoTextStyle},
-    pixelcolor::Rgb888,
     prelude::{PixelColor, Point, Size},
     primitives::Rectangle,
-    Drawable,
 };
-use embedded_layout::prelude::*;
 
 pub trait SelectValue: Sized + Copy {
     fn next(&self) -> Self;
@@ -34,14 +26,55 @@ impl SelectValue for bool {
     }
 }
 
-pub struct SelectData<'a, R: Copy, S: SelectValue> {
+pub struct Select<'a, R: Copy, S: SelectValue> {
     title_text: &'a str,
     details: &'a str,
     convert: fn(S) -> R,
     value: S,
 }
 
-impl<'a, R: Copy, S: SelectValue> MenuItem for SelectData<'a, R, S> {
+impl<'a, S: SelectValue> Select<'a, (), S> {
+    pub fn new(title: &'a str, value: S) -> Self {
+        Self {
+            title_text: title,
+            value,
+            convert: |_| (),
+            details: "",
+        }
+    }
+}
+
+impl<'a, R: Copy, S: SelectValue> Select<'a, R, S> {
+    pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> Select<'a, R2, S> {
+        Select {
+            convert,
+            title_text: self.title_text,
+            value: self.value,
+            details: self.details,
+        }
+    }
+
+    pub fn with_detail_text(self, details: &'a str) -> Self {
+        Self { details, ..self }
+    }
+
+    // TODO: temporary
+    pub fn bind<C: PixelColor>(self, color: C) -> MenuLine<'a, C, Self> {
+        let style = MonoTextStyle::<C>::new(&FONT_6X10, color);
+
+        MenuLine {
+            item: self,
+            text_style: style,
+            bounds: Rectangle::new(
+                Point::zero(),
+                Size::new(1, style.font.character_size.height),
+            )
+            .with_margin(0, 0, -1, 1),
+        }
+    }
+}
+
+impl<'a, R: Copy, S: SelectValue> MenuItem for Select<'a, R, S> {
     type Data = R;
 
     fn interact(&mut self) -> MenuEvent<R> {
@@ -59,94 +92,5 @@ impl<'a, R: Copy, S: SelectValue> MenuItem for SelectData<'a, R, S> {
 
     fn value(&self) -> &str {
         self.value.name()
-    }
-}
-
-pub struct Select<'a, R: Copy, S: SelectValue, C: PixelColor> {
-    data: SelectData<'a, R, S>,
-    style: MonoTextStyle<'a, C>,
-    bounds: Margin<Rectangle>,
-}
-
-impl<'a, R, S, C> Select<'a, R, S, C>
-where
-    R: Copy,
-    S: SelectValue,
-    C: PixelColor,
-{
-    pub fn new(
-        title: &'a str,
-        details: &'a str,
-        initial: S,
-        convert: fn(S) -> R,
-        color: C,
-    ) -> Self {
-        let style = MonoTextStyle::new(&FONT_6X10, color);
-
-        Self {
-            data: SelectData {
-                title_text: title,
-                details,
-                convert,
-                value: initial,
-            },
-            style,
-            bounds: Rectangle::new(
-                Point::zero(),
-                Size::new(1, style.font.character_size.height),
-            )
-            .with_margin(0, 0, -1, 1),
-        }
-    }
-}
-
-impl<'a, R: Copy, S: SelectValue, C: PixelColor> MenuItem for Select<'a, R, S, C> {
-    type Data = R;
-
-    fn interact(&mut self) -> MenuEvent<R> {
-        self.data.interact()
-    }
-
-    fn title(&self) -> &str {
-        self.data.title()
-    }
-
-    fn details(&self) -> &str {
-        self.data.details()
-    }
-
-    fn value(&self) -> &str {
-        self.data.value()
-    }
-}
-
-impl<'a, R: Copy, S: SelectValue, C: PixelColor> View for Select<'a, R, S, C> {
-    fn translate_impl(&mut self, by: Point) {
-        self.bounds.translate_mut(by);
-    }
-
-    fn bounds(&self) -> Rectangle {
-        self.bounds.bounds()
-    }
-}
-
-impl<'a, R, S, C> Drawable for Select<'a, R, S, C>
-where
-    R: Copy,
-    S: SelectValue,
-    C: PixelColor + From<Rgb888>,
-    SelectData<'a, R, S>: MenuItem<Data = R>,
-{
-    type Color = C;
-    type Output = ();
-
-    fn draw<D: DrawTarget<Color = C>>(&self, display: &mut D) -> Result<(), D::Error> {
-        let menu_line = MenuLine {
-            bounds: self.bounds,
-            text_style: self.style,
-            item: &self.data,
-        };
-
-        menu_line.draw(display)
     }
 }

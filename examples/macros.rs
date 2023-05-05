@@ -32,13 +32,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = Menu::builder("Menu", display_area)
         .show_details_after(300)
-        .add_item(Select::new(
-            "Check this2",
-            "Description",
-            TestEnum::A,
-            |_| (),
-            BinaryColor::On,
-        ))
+        .add_item(Select::new("Check this2", TestEnum::A).bind(BinaryColor::On))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

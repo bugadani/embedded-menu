@@ -6,19 +6,33 @@ pub use select::Select;
 
 use crate::{margin::Margin, MenuItem};
 use embedded_graphics::{
-    draw_target::DrawTarget, mono_font::MonoTextStyle, pixelcolor::Rgb888, prelude::PixelColor,
-    primitives::Rectangle, Drawable,
+    draw_target::DrawTarget,
+    mono_font::MonoTextStyle,
+    pixelcolor::Rgb888,
+    prelude::{PixelColor, Point},
+    primitives::Rectangle,
+    Drawable,
 };
 use embedded_layout::prelude::*;
 use embedded_text::{alignment::HorizontalAlignment, style::TextBoxStyleBuilder, TextBox};
 
-struct MenuLine<'a, 'b, C, I> {
-    pub bounds: Margin<Rectangle>,
-    pub text_style: MonoTextStyle<'a, C>,
-    pub item: &'b I,
+pub struct MenuLine<'a, C, I> {
+    pub(crate) bounds: Margin<Rectangle>,
+    pub(crate) text_style: MonoTextStyle<'a, C>,
+    pub(crate) item: I,
 }
 
-impl<C, I> Drawable for MenuLine<'_, '_, C, I>
+impl<'a, C: PixelColor, I> View for MenuLine<'a, C, I> {
+    fn translate_impl(&mut self, by: Point) {
+        self.bounds.translate_mut(by);
+    }
+
+    fn bounds(&self) -> Rectangle {
+        self.bounds.bounds()
+    }
+}
+
+impl<C, I> Drawable for MenuLine<'_, C, I>
 where
     C: PixelColor + From<Rgb888>,
     I: MenuItem,
@@ -54,5 +68,28 @@ where
         .draw(display)?;
 
         Ok(())
+    }
+}
+
+impl<C, I> MenuItem for MenuLine<'_, C, I>
+where
+    I: MenuItem,
+{
+    type Data = I::Data;
+
+    fn interact(&mut self) -> crate::MenuEvent<Self::Data> {
+        self.item.interact()
+    }
+
+    fn title(&self) -> &str {
+        self.item.title()
+    }
+
+    fn details(&self) -> &str {
+        self.item.details()
+    }
+
+    fn value(&self) -> &str {
+        self.item.value()
     }
 }
