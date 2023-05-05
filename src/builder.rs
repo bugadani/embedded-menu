@@ -108,7 +108,7 @@ where
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Chain<MenuLine<C, I>>, R, C> {
+    ) -> MenuBuilder<IT, Chain<MenuLine<I>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -131,7 +131,7 @@ where
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Link<MenuLine<C, I>, Chain<CE>>, R, C> {
+    ) -> MenuBuilder<IT, Link<MenuLine<I>, Chain<CE>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -155,7 +155,7 @@ where
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Link<MenuLine<C, I>, Link<P, CE>>, R, C> {
+    ) -> MenuBuilder<IT, Link<MenuLine<I>, Link<P, CE>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,

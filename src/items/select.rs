@@ -13,7 +13,7 @@ impl SelectValue for bool {
     fn name(&self) -> &'static str {
         match *self {
             // true => "O",
-            // false => "0\r+\r#",
+            // false => "O\r+\r#", // this only works for certain small fonts, unfortunately
             true => "[ ]",
             false => "[X]",
         }

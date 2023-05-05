@@ -7,6 +7,7 @@ pub mod items;
 
 mod margin;
 mod plumbing;
+mod styled;
 
 use crate::{
     adapters::invert::BinaryColorDrawTargetExt,
@@ -14,6 +15,7 @@ use crate::{
     interaction::{programmed::Programmed, InteractionController, InteractionType},
     margin::MarginExt,
     plumbing::MenuExt,
+    styled::StyledMenuItem,
 };
 use core::marker::PhantomData;
 use embedded_graphics::{
@@ -133,6 +135,14 @@ where
             font: &FONT_6X10,
             title_font: &FONT_6X10,
         }
+    }
+
+    pub fn with_font(self, font: &'static MonoFont<'static>) -> Self {
+        Self { font, ..self }
+    }
+
+    pub fn with_title_font(self, title_font: &'static MonoFont<'static>) -> Self {
+        Self { title_font, ..self }
     }
 
     pub fn text_style(&self) -> MonoTextStyle<'static, C> {
@@ -262,7 +272,7 @@ impl<IT, VG, R, C> Menu<IT, VG, R, C>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = C>,
-    VG: ViewGroup + MenuExt<R> + Drawable<Color = C>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
     C: PixelColor + From<Rgb888>,
 {
     fn header<'t>(
@@ -382,7 +392,7 @@ impl<IT, VG, R> Menu<IT, VG, R, BinaryColor>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = BinaryColor>,
-    VG: ViewGroup + MenuExt<R> + Drawable<Color = BinaryColor>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
 {
     fn display_list<D>(&self, display: &mut D) -> Result<(), D::Error>
     where
@@ -449,8 +459,10 @@ where
             .align_to(&selected_item_area, horizontal::Left, vertical::Top),
         );
 
-        self.items
-            .draw(&mut inverting_overlay.clipped(&menu_display_area))?;
+        self.items.draw_styled(
+            &self.style,
+            &mut inverting_overlay.clipped(&menu_display_area),
+        )?;
 
         if draw_scrollbar {
             let scale = |value| (value * menu_height / list_height) as i32;
@@ -473,7 +485,7 @@ impl<IT, VG, R> Drawable for Menu<IT, VG, R, BinaryColor>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = BinaryColor>,
-    VG: ViewGroup + MenuExt<R> + Drawable<Color = BinaryColor>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
 {
     type Color = BinaryColor;
     type Output = ();
