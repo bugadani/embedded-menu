@@ -21,6 +21,26 @@ pub struct NavigationItemData<'a, R: Copy> {
     marker: &'a str,
 }
 
+impl<'a, R: Copy> MenuItem for NavigationItemData<'a, R> {
+    type Data = R;
+
+    fn interact(&mut self) -> MenuEvent<R> {
+        MenuEvent::NavigationEvent(self.return_value)
+    }
+
+    fn title(&self) -> &str {
+        self.title_text
+    }
+
+    fn details(&self) -> &str {
+        self.details
+    }
+
+    fn value(&self) -> &str {
+        self.marker
+    }
+}
+
 pub struct NavigationItem<'a, R: Copy, C: PixelColor> {
     data: NavigationItemData<'a, R>,
     style: MonoTextStyle<'a, C>,
@@ -48,21 +68,23 @@ impl<'a, R: Copy, C: PixelColor> NavigationItem<'a, R, C> {
     }
 }
 
-impl<'a, R: Copy, C: PixelColor> MenuItem<R> for NavigationItem<'a, R, C> {
+impl<'a, R: Copy, C: PixelColor> MenuItem for NavigationItem<'a, R, C> {
+    type Data = R;
+
     fn interact(&mut self) -> MenuEvent<R> {
-        MenuEvent::NavigationEvent(self.data.return_value)
+        self.data.interact()
     }
 
     fn title(&self) -> &str {
-        self.data.title_text
+        self.data.title()
     }
 
     fn details(&self) -> &str {
-        self.data.details
+        self.data.details()
     }
 
     fn value(&self) -> &str {
-        self.data.marker
+        self.data.value()
     }
 }
 
@@ -80,6 +102,7 @@ impl<'a, R, C> Drawable for NavigationItem<'a, R, C>
 where
     R: Copy,
     C: PixelColor + From<Rgb888>,
+    NavigationItemData<'a, R>: MenuItem<Data = R>,
 {
     type Color = C;
     type Output = ();
@@ -89,10 +112,9 @@ where
         D: DrawTarget<Color = C>,
     {
         let menu_line = MenuLine {
-            title: self.data.title_text,
             bounds: self.bounds,
             text_style: self.style,
-            value: self.value(),
+            item: &self.data,
         };
 
         menu_line.draw(display)

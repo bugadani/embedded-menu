@@ -31,8 +31,10 @@ use embedded_text::{
     TextBox,
 };
 
-pub trait MenuItem<R: Copy>: View {
-    fn interact(&mut self) -> MenuEvent<R>;
+pub trait MenuItem {
+    type Data: Copy;
+
+    fn interact(&mut self) -> MenuEvent<Self::Data>;
     fn title(&self) -> &str;
     fn details(&self) -> &str;
     fn value(&self) -> &str;

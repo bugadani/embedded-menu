@@ -119,7 +119,7 @@ where
     IT: InteractionController,
     C: PixelColor,
 {
-    pub fn add_item<I: MenuItem<R>>(self, item: I) -> MenuBuilder<IT, Chain<I>, R, C> {
+    pub fn add_item<I: MenuItem<Data = R>>(self, item: I) -> MenuBuilder<IT, Chain<I>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -136,10 +136,13 @@ impl<IT, CE, R, C> MenuBuilder<IT, Chain<CE>, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    CE: MenuItem<R>,
+    CE: MenuItem<Data = R>,
     C: PixelColor,
 {
-    pub fn add_item<I: MenuItem<R>>(self, item: I) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C> {
+    pub fn add_item<I: MenuItem<Data = R>>(
+        self,
+        item: I,
+    ) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -156,11 +159,14 @@ impl<IT, P, CE, R, C> MenuBuilder<IT, Link<P, CE>, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    P: MenuItem<R>,
+    P: MenuItem<Data = R>,
     CE: MenuExt<R>,
     C: PixelColor,
 {
-    pub fn add_item<I: MenuItem<R>>(self, item: I) -> MenuBuilder<IT, Link<I, Link<P, CE>>, R, C> {
+    pub fn add_item<I: MenuItem<Data = R>>(
+        self,
+        item: I,
+    ) -> MenuBuilder<IT, Link<I, Link<P, CE>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,

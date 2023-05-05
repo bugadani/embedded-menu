@@ -14,7 +14,7 @@ pub trait MenuExt<R: Copy>: ChainElement {
 impl<I, R: Copy> MenuExt<R> for Chain<I>
 where
     R: Copy,
-    I: MenuItem<R>,
+    I: MenuItem<Data = R> + View,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
         debug_assert!(nth == 0);
@@ -40,7 +40,7 @@ where
 impl<I, LE, R> MenuExt<R> for Link<I, LE>
 where
     R: Copy,
-    I: MenuItem<R>,
+    I: MenuItem<Data = R> + View,
     LE: MenuExt<R>,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {

@@ -4,7 +4,7 @@ pub mod select;
 pub use navigation_item::NavigationItem;
 pub use select::Select;
 
-use crate::margin::Margin;
+use crate::{margin::Margin, MenuItem};
 use embedded_graphics::{
     draw_target::DrawTarget, mono_font::MonoTextStyle, pixelcolor::Rgb888, prelude::PixelColor,
     primitives::Rectangle, Drawable,
@@ -12,16 +12,16 @@ use embedded_graphics::{
 use embedded_layout::prelude::*;
 use embedded_text::{alignment::HorizontalAlignment, style::TextBoxStyleBuilder, TextBox};
 
-struct MenuLine<'a, C> {
-    pub title: &'a str,
-    pub value: &'a str,
+struct MenuLine<'a, 'b, C, I> {
     pub bounds: Margin<Rectangle>,
     pub text_style: MonoTextStyle<'a, C>,
+    pub item: &'b I,
 }
 
-impl<'a, C> Drawable for MenuLine<'a, C>
+impl<C, I> Drawable for MenuLine<'_, '_, C, I>
 where
     C: PixelColor + From<Rgb888>,
+    I: MenuItem,
 {
     type Color = C;
     type Output = ();
@@ -41,10 +41,10 @@ where
 
         inner_bounds.size.width = display_area.size.width - self.bounds.left as u32;
 
-        TextBox::new(self.title, inner_bounds, self.text_style).draw(display)?;
+        TextBox::new(self.item.title(), inner_bounds, self.text_style).draw(display)?;
 
         TextBox::with_textbox_style(
-            self.value,
+            self.item.value(),
             inner_bounds,
             self.text_style,
             TextBoxStyleBuilder::new()

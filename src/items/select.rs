@@ -41,6 +41,27 @@ pub struct SelectData<'a, R: Copy, S: SelectValue> {
     value: S,
 }
 
+impl<'a, R: Copy, S: SelectValue> MenuItem for SelectData<'a, R, S> {
+    type Data = R;
+
+    fn interact(&mut self) -> MenuEvent<R> {
+        self.value = self.value.next();
+        MenuEvent::DataEvent((self.convert)(self.value))
+    }
+
+    fn title(&self) -> &str {
+        self.title_text
+    }
+
+    fn details(&self) -> &str {
+        self.details
+    }
+
+    fn value(&self) -> &str {
+        self.value.name()
+    }
+}
+
 pub struct Select<'a, R: Copy, S: SelectValue, C: PixelColor> {
     data: SelectData<'a, R, S>,
     style: MonoTextStyle<'a, C>,
@@ -79,22 +100,23 @@ where
     }
 }
 
-impl<'a, R: Copy, S: SelectValue, C: PixelColor> MenuItem<R> for Select<'a, R, S, C> {
+impl<'a, R: Copy, S: SelectValue, C: PixelColor> MenuItem for Select<'a, R, S, C> {
+    type Data = R;
+
     fn interact(&mut self) -> MenuEvent<R> {
-        self.data.value = self.data.value.next();
-        MenuEvent::DataEvent((self.data.convert)(self.data.value))
+        self.data.interact()
     }
 
     fn title(&self) -> &str {
-        self.data.title_text
+        self.data.title()
     }
 
     fn details(&self) -> &str {
-        self.data.details
+        self.data.details()
     }
 
     fn value(&self) -> &str {
-        self.data.value.name()
+        self.data.value()
     }
 }
 
@@ -113,16 +135,16 @@ where
     R: Copy,
     S: SelectValue,
     C: PixelColor + From<Rgb888>,
+    SelectData<'a, R, S>: MenuItem<Data = R>,
 {
     type Color = C;
     type Output = ();
 
     fn draw<D: DrawTarget<Color = C>>(&self, display: &mut D) -> Result<(), D::Error> {
         let menu_line = MenuLine {
-            title: self.data.title_text,
             bounds: self.bounds,
             text_style: self.style,
-            value: self.value(),
+            item: &self.data,
         };
 
         menu_line.draw(display)
