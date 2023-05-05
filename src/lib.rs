@@ -292,7 +292,6 @@ pub struct Menu<IT, VG, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
 {
     _return_type: PhantomData<R>,
@@ -308,6 +307,15 @@ where
     idle_timeout: u16,
     display_mode: MenuDisplayMode,
     style: MenuStyle<C>,
+}
+
+impl<R: Copy> Menu<Programmed, NoItems, R, BinaryColor> {
+    pub fn builder(
+        title: &'static str,
+        bounds: Rectangle,
+    ) -> MenuBuilder<Programmed, NoItems, R, BinaryColor> {
+        MenuBuilder::new(title, bounds)
+    }
 }
 
 impl<IT, VG, R, C> Menu<IT, VG, R, C>

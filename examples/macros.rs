@@ -15,7 +15,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, Select},
-    MenuBuilder,
+    Menu,
 };
 use embedded_menu_macros::SelectValue;
 
@@ -30,7 +30,7 @@ pub enum TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
-    let mut menu = MenuBuilder::new("Menu", display_area)
+    let mut menu = Menu::builder("Menu", display_area)
         .show_details_after(300)
         .add_item(Select::new(
             "Check this2",

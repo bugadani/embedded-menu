@@ -11,11 +11,11 @@ use embedded_graphics_simulator::{
     Window,
 };
 
-use embedded_menu::{interaction::InteractionType, items::NavigationItem, MenuBuilder};
+use embedded_menu::{interaction::InteractionType, items::NavigationItem, Menu};
 
 fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
-    let mut menu = MenuBuilder::new("Menu", display_area)
+    let mut menu = Menu::builder("Menu", display_area)
         .show_details_after(100)
         .add_item(NavigationItem::new(
             ">",
