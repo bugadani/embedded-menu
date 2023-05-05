@@ -20,8 +20,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")
-                .with_detail_text("Some longer     description text\nfoo\n  foo")
-                .bind(BinaryColor::On),
+                .with_detail_text("Some longer     description text\nfoo\n  foo"),
         )
         .build();
 

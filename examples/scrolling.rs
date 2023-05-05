@@ -48,70 +48,24 @@ fn main() -> Result<(), core::convert::Infallible> {
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")
-                .with_detail_text("Some longer description text")
-                .bind(BinaryColor::On),
+                .with_detail_text("Some longer description text"),
         )
-        .add_item(
-            Select::new("Check this", false)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this", false)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this too", TestEnum::A)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this too", TestEnum::A)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this", true)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this too", true)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this too", TestEnum::A)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this", false)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this too", true)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
+        .add_item(Select::new("Check this", false).with_detail_text("Description"))
+        .add_item(Select::new("Check this", false).with_detail_text("Description"))
+        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
+        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
+        .add_item(Select::new("Check this", true).with_detail_text("Description"))
+        .add_item(Select::new("Check this too", true).with_detail_text("Description"))
+        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
+        .add_item(Select::new("Check this", false).with_detail_text("Description"))
+        .add_item(Select::new("Check this too", true).with_detail_text("Description"))
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")
-                .with_detail_text("Some longer description text")
-                .bind(BinaryColor::On),
+                .with_detail_text("Some longer description text"),
         )
-        .add_item(
-            Select::new("Check this", false)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this too", TestEnum::A)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
+        .add_item(Select::new("Check this", false).with_detail_text("Description"))
+        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

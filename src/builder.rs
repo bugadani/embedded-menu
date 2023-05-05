@@ -1,14 +1,12 @@
 use crate::{
     interaction::{programmed::Programmed, InteractionController},
+    items::MenuLine,
     plumbing::MenuExt,
     private::NoItems,
     Animated, Menu, MenuDisplayMode, MenuItem, MenuStyle,
 };
 use core::marker::PhantomData;
-use embedded_graphics::{
-    pixelcolor::{BinaryColor, PixelColor},
-    primitives::Rectangle,
-};
+use embedded_graphics::{pixelcolor::PixelColor, primitives::Rectangle};
 use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
 
 pub struct MenuBuilder<IT, LL, R, C>
@@ -26,8 +24,8 @@ where
     style: MenuStyle<C>,
 }
 
-impl<R: Copy> MenuBuilder<Programmed, NoItems, R, BinaryColor> {
-    pub fn new(title: &'static str, bounds: Rectangle) -> Self {
+impl<R: Copy, C: PixelColor> MenuBuilder<Programmed, NoItems, R, C> {
+    pub fn new(title: &'static str, bounds: Rectangle, style: MenuStyle<C>) -> Self {
         Self {
             _return_type: PhantomData,
             title,
@@ -35,7 +33,7 @@ impl<R: Copy> MenuBuilder<Programmed, NoItems, R, BinaryColor> {
             items: NoItems,
             interaction: Programmed::new(),
             idle_timeout: None,
-            style: MenuStyle::new(BinaryColor::On, BinaryColor::On),
+            style,
         }
     }
 }
@@ -70,18 +68,6 @@ where
             interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,
-        }
-    }
-
-    pub fn with_style<CC: PixelColor>(self, style: MenuStyle<CC>) -> MenuBuilder<IT, LL, R, CC> {
-        MenuBuilder {
-            _return_type: PhantomData,
-            title: self.title,
-            bounds: self.bounds,
-            items: self.items,
-            interaction: self.interaction,
-            idle_timeout: self.idle_timeout,
-            style,
         }
     }
 }
@@ -119,12 +105,15 @@ where
     IT: InteractionController,
     C: PixelColor,
 {
-    pub fn add_item<I: MenuItem<Data = R>>(self, item: I) -> MenuBuilder<IT, Chain<I>, R, C> {
+    pub fn add_item<I: MenuItem<Data = R>>(
+        self,
+        item: I,
+    ) -> MenuBuilder<IT, Chain<MenuLine<C, I>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
             bounds: self.bounds,
-            items: Chain::new(item),
+            items: Chain::new(MenuLine::new(item, self.style)),
             interaction: self.interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,
@@ -142,12 +131,12 @@ where
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C> {
+    ) -> MenuBuilder<IT, Link<MenuLine<C, I>, Chain<CE>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
             bounds: self.bounds,
-            items: self.items.append(item),
+            items: self.items.append(MenuLine::new(item, self.style)),
             interaction: self.interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,
@@ -166,12 +155,12 @@ where
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Link<I, Link<P, CE>>, R, C> {
+    ) -> MenuBuilder<IT, Link<MenuLine<C, I>, Link<P, CE>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
             bounds: self.bounds,
-            items: self.items.append(item),
+            items: self.items.append(MenuLine::new(item, self.style)),
             interaction: self.interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,

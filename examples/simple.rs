@@ -50,24 +50,13 @@ fn main() -> Result<(), core::convert::Infallible> {
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")
-                .with_detail_text("Lorem ipsum dolor sit amet, in per offendit assueverit adversarium, no sed clita adipisci nominati. Veritus placerat efficiantur mel ea. In splendide reformidans eos. In corpora inciderint duo, unum laudem constituto vis id, in iisque habemus quo. Pri nisl consul facilis te, percipitur deterruisset ne eum.")
-                .bind(BinaryColor::On),
+                .with_detail_text(
+                    "Lorem ipsum dolor sit amet, in per offendit assueverit adversarium, no sed clita adipisci nominati.",
+                ),
         )
-        .add_item(
-            Select::new("Check this", false)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this", false)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
-        .add_item(
-            Select::new("Check this", TestEnum::A)
-                .with_detail_text("Description")
-                .bind(BinaryColor::On),
-        )
+        .add_item(Select::new("Check this", false).with_detail_text("Description"))
+        .add_item(Select::new("Check this", false).with_detail_text("Description"))
+        .add_item(Select::new("Check this", TestEnum::A).with_detail_text("Description"))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

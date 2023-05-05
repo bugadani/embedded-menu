@@ -1,10 +1,4 @@
-use crate::{items::MenuLine, margin::MarginExt, MenuEvent, MenuItem};
-
-use embedded_graphics::{
-    mono_font::{ascii::FONT_6X10, MonoTextStyle},
-    prelude::{PixelColor, Point, Size},
-    primitives::Rectangle,
-};
+use crate::{MenuEvent, MenuItem};
 
 pub struct NavigationItem<'a, R: Copy> {
     title_text: &'a str,
@@ -49,20 +43,5 @@ impl<'a, R: Copy> NavigationItem<'a, R> {
 
     pub fn with_detail_text(self, details: &'a str) -> Self {
         Self { details, ..self }
-    }
-
-    // TODO: temporary
-    pub fn bind<C: PixelColor>(self, color: C) -> MenuLine<'a, C, Self> {
-        let style = MonoTextStyle::<C>::new(&FONT_6X10, color);
-
-        MenuLine {
-            item: self,
-            text_style: style,
-            bounds: Rectangle::new(
-                Point::zero(),
-                Size::new(1, style.font.character_size.height),
-            )
-            .with_margin(0, 0, -1, 1),
-        }
     }
 }

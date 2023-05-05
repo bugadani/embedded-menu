@@ -116,9 +116,15 @@ pub struct MenuStyle<C: PixelColor> {
     pub(crate) title_font: &'static MonoFont<'static>,
 }
 
+impl Default for MenuStyle<BinaryColor> {
+    fn default() -> Self {
+        Self::new(BinaryColor::On, BinaryColor::On)
+    }
+}
+
 impl<C> MenuStyle<C>
 where
-    C: PixelColor + From<Rgb888>,
+    C: PixelColor,
 {
     pub fn new(color: C, indicator_color: C) -> Self {
         Self {
@@ -130,11 +136,11 @@ where
         }
     }
 
-    fn text_style(&self) -> MonoTextStyle<'static, C> {
+    pub fn text_style(&self) -> MonoTextStyle<'static, C> {
         MonoTextStyle::new(self.font, self.color)
     }
 
-    fn title_style(&self) -> MonoTextStyle<'static, C> {
+    pub fn title_style(&self) -> MonoTextStyle<'static, C> {
         MonoTextStyle::new(self.title_font, self.color)
     }
 }
@@ -166,12 +172,23 @@ where
     style: MenuStyle<C>,
 }
 
-impl<R: Copy> Menu<Programmed, NoItems, R, BinaryColor> {
-    pub fn builder(
+impl<R: Copy, C: PixelColor> Menu<Programmed, NoItems, R, C> {
+    pub fn builder(title: &'static str, bounds: Rectangle) -> MenuBuilder<Programmed, NoItems, R, C>
+    where
+        MenuStyle<C>: Default,
+    {
+        Self::build_with_style(title, bounds, MenuStyle::default())
+    }
+
+    pub fn build_with_style(
         title: &'static str,
         bounds: Rectangle,
-    ) -> MenuBuilder<Programmed, NoItems, R, BinaryColor> {
-        MenuBuilder::new(title, bounds)
+        style: MenuStyle<C>,
+    ) -> MenuBuilder<Programmed, NoItems, R, C>
+    where
+        MenuStyle<C>: Default,
+    {
+        MenuBuilder::new(title, bounds, style)
     }
 }
 

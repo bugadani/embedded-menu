@@ -4,25 +4,52 @@ pub mod select;
 pub use navigation_item::NavigationItem;
 pub use select::Select;
 
-use crate::{margin::Margin, MenuItem};
+use crate::{
+    margin::{Margin, MarginExt},
+    MenuEvent, MenuItem, MenuStyle,
+};
 use embedded_graphics::{
     draw_target::DrawTarget,
     mono_font::MonoTextStyle,
     pixelcolor::Rgb888,
-    prelude::{PixelColor, Point},
+    prelude::{PixelColor, Point, Size},
     primitives::Rectangle,
     Drawable,
 };
 use embedded_layout::prelude::*;
 use embedded_text::{alignment::HorizontalAlignment, style::TextBoxStyleBuilder, TextBox};
 
-pub struct MenuLine<'a, C, I> {
+pub struct MenuLine<C, I> {
     pub(crate) bounds: Margin<Rectangle>,
-    pub(crate) text_style: MonoTextStyle<'a, C>,
+    pub(crate) text_style: MonoTextStyle<'static, C>,
     pub(crate) item: I,
 }
 
-impl<'a, C: PixelColor, I> View for MenuLine<'a, C, I> {
+// TODO: MenuLine shouldn't hold on to the style. Instead, whenever referenced, a styled wrapper
+// needs to be created that implements stuff that depends on the style.
+impl<C, I> MenuLine<C, I>
+where
+    C: PixelColor,
+{
+    pub fn new(item: I, style: MenuStyle<C>) -> MenuLine<C, I> {
+        let style = style.text_style();
+
+        MenuLine {
+            item,
+            text_style: style,
+            bounds: Rectangle::new(
+                Point::zero(),
+                Size::new(1, style.font.character_size.height),
+            )
+            .with_margin(0, 0, -1, 1),
+        }
+    }
+}
+
+impl<C, I> View for MenuLine<C, I>
+where
+    C: PixelColor,
+{
     fn translate_impl(&mut self, by: Point) {
         self.bounds.translate_mut(by);
     }
@@ -32,7 +59,7 @@ impl<'a, C: PixelColor, I> View for MenuLine<'a, C, I> {
     }
 }
 
-impl<C, I> Drawable for MenuLine<'_, C, I>
+impl<C, I> Drawable for MenuLine<C, I>
 where
     C: PixelColor + From<Rgb888>,
     I: MenuItem,
@@ -71,13 +98,13 @@ where
     }
 }
 
-impl<C, I> MenuItem for MenuLine<'_, C, I>
+impl<C, I> MenuItem for MenuLine<C, I>
 where
     I: MenuItem,
 {
     type Data = I::Data;
 
-    fn interact(&mut self) -> crate::MenuEvent<Self::Data> {
+    fn interact(&mut self) -> MenuEvent<Self::Data> {
         self.item.interact()
     }
 
