@@ -10,7 +10,7 @@ mod plumbing;
 mod styled;
 
 use crate::{
-    adapters::invert::BinaryColorDrawTargetExt,
+    adapters::invert::{BinaryColorDrawTargetExt, ColorInvertingOverlay},
     builder::MenuBuilder,
     interaction::{programmed::Programmed, InteractionController, InteractionType},
     margin::MarginExt,
@@ -159,6 +159,83 @@ mod private {
 
 use private::NoItems;
 
+trait SelectionIndicator: Sized {
+    type Color: PixelColor;
+    type Display<'a, D: DrawTarget<Color = Self::Color> + 'a>: DrawTarget<Error = D::Error, Color = Self::Color>
+        + 'a;
+
+    fn new(anim_frames: i32) -> Self;
+
+    fn update_target(&mut self, y: i32);
+
+    fn offset(&self) -> i32;
+
+    fn update(&mut self);
+
+    fn draw<'d, D, R>(
+        &self,
+        indicator_height: u32,
+        screen_offset: i32,
+        fill_width: u32,
+        display: &'d mut D,
+        op: impl Fn(&mut Self::Display<'d, D>) -> Result<R, D::Error>,
+    ) -> Result<R, D::Error>
+    where
+        D: DrawTarget<Color = Self::Color> + 'd;
+}
+
+struct SimpleSelectionIndicator {
+    y_offset: Animated,
+}
+
+impl SelectionIndicator for SimpleSelectionIndicator {
+    type Color = BinaryColor;
+    type Display<'a, D: DrawTarget<Color = Self::Color> + 'a> = ColorInvertingOverlay<'a, D>;
+
+    fn new(anim_frames: i32) -> Self {
+        Self {
+            y_offset: Animated::new(0, anim_frames),
+        }
+    }
+
+    fn update_target(&mut self, y: i32) {
+        self.y_offset.update_target(y);
+    }
+
+    fn offset(&self) -> i32 {
+        self.y_offset.current()
+    }
+
+    fn update(&mut self) {
+        self.y_offset.update();
+    }
+
+    fn draw<'d, D, R>(
+        &self,
+        indicator_height: u32,
+        screen_offset: i32,
+        fill_width: u32,
+        display: &'d mut D,
+        op: impl Fn(&mut Self::Display<'d, D>) -> Result<R, D::Error>,
+    ) -> Result<R, D::Error>
+    where
+        D: DrawTarget<Color = Self::Color> + 'd,
+    {
+        Rectangle::new(
+            Point::new(0, screen_offset),
+            Size::new(fill_width.max(1), indicator_height),
+        )
+        .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
+        .draw(display)?;
+
+        // TODO: clip the inner display area
+        op(&mut display.invert_area(&Rectangle::new(
+            Point::new(0, screen_offset),
+            Size::new(fill_width, indicator_height),
+        )))
+    }
+}
+
 pub struct Menu<IT, VG, R, C>
 where
     R: Copy,
@@ -173,11 +250,11 @@ where
     selected: u32,
     recompute_targets: bool,
     list_offset: i32,
-    indicator_offset: Animated,
     idle_timeout_threshold: Option<u16>,
     idle_timeout: u16,
     display_mode: MenuDisplayMode,
     style: MenuStyle<C>,
+    indicator: SimpleSelectionIndicator,
 }
 
 impl<R: Copy, C: PixelColor> Menu<Programmed, NoItems, R, C> {
@@ -335,14 +412,14 @@ where
         if self.recompute_targets {
             self.recompute_targets = false;
 
-            self.indicator_offset
+            self.indicator
                 .update_target(selected_item_bounds.top_left.y);
         }
 
-        self.indicator_offset.update();
+        self.indicator.update();
 
         // Ensure selection indicator is always visible
-        let top_distance = self.indicator_offset.current() - self.list_offset;
+        let top_distance = self.indicator.offset() - self.list_offset;
         self.list_offset += if top_distance > 0 {
             let indicator_height = selected_item_bounds.size().height as i32;
 
@@ -435,32 +512,12 @@ where
         )
         .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
 
-        // selection indicator
-        let selected_item_area =
-            Rectangle::new(Point::zero(), Size::new(menu_list_width, menuitem_height))
-                .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
-                .translate(Point::new(
-                    0,
-                    self.indicator_offset.current() - self.list_offset,
-                ));
-
-        let mut interaction_display = display.cropped(&selected_item_area);
-        self.interaction.draw(&mut interaction_display)?;
-
-        let mut inverting_overlay = display.invert_area(
-            &Rectangle::new(
-                Point::zero(),
-                Size::new(
-                    self.interaction.fill_area_width(menu_list_width),
-                    menuitem_height,
-                ),
-            )
-            .align_to(&selected_item_area, horizontal::Left, vertical::Top),
-        );
-
-        self.items.draw_styled(
-            &self.style,
-            &mut inverting_overlay.clipped(&menu_display_area),
+        self.indicator.draw(
+            menuitem_height,
+            self.indicator.offset() - self.list_offset + menu_title.size().height as i32,
+            self.interaction.fill_area_width(menu_list_width),
+            &mut display.clipped(&menu_display_area),
+            |display| self.items.draw_styled(&self.style, display),
         )?;
 
         if draw_scrollbar {

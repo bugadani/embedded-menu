@@ -3,7 +3,7 @@ use crate::{
     items::MenuLine,
     plumbing::MenuExt,
     private::NoItems,
-    Animated, Menu, MenuDisplayMode, MenuItem, MenuStyle,
+    Menu, MenuDisplayMode, MenuItem, MenuStyle, SelectionIndicator,
 };
 use core::marker::PhantomData;
 use embedded_graphics::{pixelcolor::PixelColor, primitives::Rectangle};
@@ -90,7 +90,7 @@ where
             interaction: self.interaction,
             recompute_targets: true,
             list_offset: 0,
-            indicator_offset: Animated::new(0, ANIM_FRAMES),
+            indicator: SelectionIndicator::new(ANIM_FRAMES),
             idle_timeout_threshold: self.idle_timeout,
             idle_timeout: self.idle_timeout.unwrap_or_default(),
             display_mode: MenuDisplayMode::List,

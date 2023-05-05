@@ -46,10 +46,10 @@ impl InteractionController for SingleTouch {
             let time = (self.interaction_time - self.ignore_time) as f32
                 / ((self.max_time - self.ignore_time) as f32 * 0.9);
 
-            ((time * (max - 1) as f32) as u32).max(1)
+            ((time * (max - 1) as f32) as u32).max(0)
         } else {
             // Don't draw anything
-            1
+            0
         }
     }
 
