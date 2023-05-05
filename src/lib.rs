@@ -4,6 +4,8 @@ pub mod adapters;
 pub mod interaction;
 pub mod items;
 
+mod margin;
+
 use core::marker::PhantomData;
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -26,83 +28,6 @@ use interaction::{programmed::Programmed, InputType, InteractionController, Inte
 pub enum MenuDisplayMode {
     List,
     Details,
-}
-
-#[derive(Clone, Copy)]
-pub struct Margin<V: View> {
-    pub(crate) view: V,
-    top: i32,
-    right: i32,
-    bottom: i32,
-    left: i32,
-}
-
-impl<V: View> Margin<V> {
-    pub fn new(view: V, top: i32, right: i32, bottom: i32, left: i32) -> Self {
-        Self {
-            view,
-            top,
-            right,
-            bottom,
-            left,
-        }
-    }
-
-    pub fn inner(&self) -> &V {
-        &self.view
-    }
-
-    pub fn inner_mut(&mut self) -> &mut V {
-        &mut self.view
-    }
-}
-
-impl<V: View> View for Margin<V> {
-    /// Move the origin of an object by a given number of (x, y) pixels,
-    /// by returning a new object
-    fn translate_impl(&mut self, by: Point) {
-        self.view.translate_mut(by);
-    }
-
-    /// Returns the bounding box of the `View` as a `Rectangle`
-    fn bounds(&self) -> Rectangle {
-        let bounds = self.view.bounds();
-        let bottom_right = bounds.bottom_right().unwrap_or(bounds.top_left);
-        Rectangle::with_corners(
-            Point::new(bounds.top_left.x - self.left, bounds.top_left.y - self.top),
-            Point::new(bottom_right.x + self.right, bottom_right.y + self.bottom),
-        )
-    }
-}
-
-pub trait MarginExt: View + Sized {
-    fn with_margin(self, top: i32, right: i32, bottom: i32, left: i32) -> Margin<Self>;
-}
-
-impl<T> MarginExt for T
-where
-    T: View,
-{
-    fn with_margin(self, top: i32, right: i32, bottom: i32, left: i32) -> Margin<Self> {
-        Margin::new(self, top, right, bottom, left)
-    }
-}
-
-impl<C, V> Drawable for Margin<V>
-where
-    C: PixelColor,
-    V: Drawable<Color = C> + View,
-{
-    type Color = C;
-    type Output = V::Output;
-
-    /// Draw the graphics object using the supplied DrawTarget.
-    fn draw<D>(&self, display: &mut D) -> Result<V::Output, D::Error>
-    where
-        D: DrawTarget<Color = C>,
-    {
-        self.view.draw(display)
-    }
 }
 
 pub struct Animated {
@@ -260,7 +185,7 @@ mod private {
 
 use private::NoItems;
 
-use crate::adapters::invert::BinaryColorDrawTargetExt;
+use crate::{adapters::invert::BinaryColorDrawTargetExt, margin::MarginExt};
 
 pub struct MenuBuilder<IT, LL, R, C>
 where

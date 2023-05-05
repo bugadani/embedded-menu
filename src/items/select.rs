@@ -1,4 +1,8 @@
-use crate::{items::MenuLine, Margin, MarginExt, MenuEvent, MenuItemTrait};
+use crate::{
+    items::MenuLine,
+    margin::{Margin, MarginExt},
+    MenuEvent, MenuItemTrait,
+};
 
 use embedded_graphics::{
     draw_target::DrawTarget,

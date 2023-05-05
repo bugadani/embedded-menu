@@ -4,7 +4,7 @@ pub mod select;
 pub use navigation_item::NavigationItem;
 pub use select::Select;
 
-use crate::Margin;
+use crate::margin::Margin;
 use embedded_graphics::{
     draw_target::DrawTarget, mono_font::MonoTextStyle, pixelcolor::Rgb888, prelude::PixelColor,
     primitives::Rectangle, Drawable,
@@ -37,7 +37,7 @@ where
             return Ok(());
         }
 
-        let mut inner_bounds = self.bounds.inner().bounds();
+        let mut inner_bounds = self.bounds.inner.bounds();
 
         inner_bounds.size.width = display_area.size.width - self.bounds.left as u32;
 
