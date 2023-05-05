@@ -40,6 +40,7 @@ pub trait MenuItem {
     fn title(&self) -> &str;
     fn details(&self) -> &str;
     fn value(&self) -> &str;
+    fn longest_value_str(&self) -> &str;
 }
 
 enum MenuDisplayMode {

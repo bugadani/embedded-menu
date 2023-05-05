@@ -19,7 +19,7 @@ use embedded_menu::{
     Menu,
 };
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
     A,
     B,

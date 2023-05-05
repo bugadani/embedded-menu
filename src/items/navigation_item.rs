@@ -25,6 +25,10 @@ impl<'a, R: Copy> MenuItem for NavigationItem<'a, R> {
     fn value(&self) -> &str {
         self.marker
     }
+
+    fn longest_value_str(&self) -> &str {
+        self.value()
+    }
 }
 
 impl<'a, R: Copy> NavigationItem<'a, R> {

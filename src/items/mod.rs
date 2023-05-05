@@ -20,19 +20,32 @@ use embedded_layout::prelude::*;
 use embedded_text::{alignment::HorizontalAlignment, style::TextBoxStyleBuilder, TextBox};
 
 pub struct MenuLine<I> {
-    pub(crate) bounds: Margin<Rectangle>,
-    pub(crate) item: I,
+    bounds: Margin<Rectangle>,
+    value_width: u32,
+    item: I,
 }
 
-impl<I> MenuLine<I> {
+impl<I> MenuLine<I>
+where
+    I: MenuItem,
+{
     pub fn new<C>(item: I, style: MenuStyle<C>) -> MenuLine<I>
     where
         C: PixelColor,
     {
         let style = style.text_style();
 
+        let longest_value = item.longest_value_str();
+
+        let value_width = style
+            .measure_string(longest_value, Point::zero(), Baseline::Top)
+            .bounding_box
+            .size
+            .width;
+
         MenuLine {
             item,
+            value_width,
             bounds: Rectangle::new(
                 Point::zero(),
                 Size::new(1, style.font.character_size.height),
@@ -72,6 +85,10 @@ where
 
     fn value(&self) -> &str {
         self.item.value()
+    }
+
+    fn longest_value_str(&self) -> &str {
+        self.item.longest_value_str()
     }
 }
 
@@ -113,13 +130,7 @@ where
         )
         .draw(display)?;
 
-        let value_width = text_style
-            .measure_string(value_text, Point::zero(), Baseline::Top)
-            .bounding_box
-            .size
-            .width;
-
-        inner_bounds.size.width -= value_width;
+        inner_bounds.size.width -= self.value_width;
         TextBox::new(self.item.title(), inner_bounds, text_style).draw(display)?;
 
         Ok(())

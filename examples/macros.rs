@@ -19,7 +19,7 @@ use embedded_menu::{
 };
 use embedded_menu_macros::SelectValue;
 
-#[derive(Copy, Clone, SelectValue)]
+#[derive(Copy, Clone, PartialEq, SelectValue)]
 pub enum TestEnum {
     A,
     #[display_as("AB")]

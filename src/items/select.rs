@@ -1,6 +1,6 @@
 use crate::{MenuEvent, MenuItem};
 
-pub trait SelectValue: Sized + Copy {
+pub trait SelectValue: Sized + Copy + PartialEq {
     fn next(&self) -> Self;
     fn name(&self) -> &'static str;
 }
@@ -71,5 +71,20 @@ impl<'a, R: Copy, S: SelectValue> MenuItem for Select<'a, R, S> {
 
     fn value(&self) -> &str {
         self.value.name()
+    }
+
+    fn longest_value_str(&self) -> &str {
+        let initial = self.value;
+        let mut longest_str = initial.name();
+
+        let mut current = initial.next();
+        while current != initial {
+            if current.name().len() > longest_str.len() {
+                longest_str = current.name();
+            }
+            current = current.next();
+        }
+
+        longest_str
     }
 }
