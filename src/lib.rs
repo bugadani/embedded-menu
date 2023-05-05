@@ -21,16 +21,15 @@ use embedded_graphics::{
     geometry::Size,
     mono_font::{ascii::FONT_6X10, MonoTextStyle, MonoTextStyleBuilder},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
-    prelude::{DrawTargetExt, Point},
+    prelude::{Dimensions, DrawTargetExt, Point},
     primitives::{Line, Primitive, PrimitiveStyle, Rectangle, Styled},
     Drawable,
 };
-use embedded_layout::{
-    layout::linear::{LinearLayout, Vertical},
-    prelude::*,
-    view_group::ViewGroup,
+use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
+use embedded_text::{
+    style::{HeightMode, TextBoxStyleBuilder},
+    TextBox,
 };
-use embedded_text::TextBox;
 
 pub trait MenuItemTrait<R: Copy>: View {
     fn interact(&mut self) -> MenuEvent<R>;
@@ -38,9 +37,15 @@ pub trait MenuItemTrait<R: Copy>: View {
     fn details(&self) -> &str;
 }
 
-pub enum MenuDisplayMode {
+enum MenuDisplayMode {
     List,
     Details,
+}
+
+impl MenuDisplayMode {
+    fn is_list(&self) -> bool {
+        matches!(self, Self::List)
+    }
 }
 
 pub struct Animated {
@@ -225,33 +230,32 @@ where
     VG: ViewGroup + MenuExt<R> + Drawable<Color = C>,
     C: PixelColor + From<Rgb888>,
 {
-    fn header<'t, D>(
+    fn header<'t>(
         &self,
         title: &'t str,
-        display: &D,
-    ) -> LinearLayout<
-        Vertical<horizontal::Left>,
-        Link<Styled<Line, PrimitiveStyle<C>>, Chain<TextBox<'t, MonoTextStyle<'static, C>>>>,
-    >
-    where
-        D: DrawTarget<Color = C>,
-    {
+        display: &impl Dimensions,
+    ) -> Link<Styled<Line, PrimitiveStyle<C>>, Chain<TextBox<'t, MonoTextStyle<'static, C>>>> {
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
+        let font = &FONT_6X10;
+
         let text_style = MonoTextStyleBuilder::<C>::new()
-            .font(&FONT_6X10)
+            .font(font)
             .text_color(self.style.color)
             .build();
         let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
         LinearLayout::vertical(
-            Chain::new(TextBox::new(
+            Chain::new(TextBox::with_textbox_style(
                 title,
                 Rectangle::new(
                     Point::zero(),
-                    Size::new(display_size.width, FONT_6X10.character_size.height),
+                    Size::new(display_size.width, font.character_size.height),
                 ),
                 text_style,
+                TextBoxStyleBuilder::new()
+                    .height_mode(HeightMode::FitToText)
+                    .build(),
             ))
             .append(
                 Line::new(
@@ -262,53 +266,52 @@ where
             ),
         )
         .arrange()
+        .into_inner()
     }
 
-    pub fn update<D>(&mut self, display: &D)
-    where
-        D: DrawTarget<Color = C>,
-    {
-        if let MenuDisplayMode::List = self.display_mode {
-            let display_area = display.bounding_box();
-            let display_size = display_area.size();
-
-            let menu_title = self.header(self.title, display);
-            let title_height = menu_title.size().height as i32;
-
-            let menu_height = display_size.height as i32 - title_height;
-
-            // Height of the selection indicator
-            let menuitem_height = self.items.bounds_of(0).size().height;
-            let indicator_height = menuitem_height as i32 - 1;
-
-            // Reset positions
-            self.items
-                .align_to_mut(&display_area, horizontal::Left, vertical::Top);
-
-            // animations
-            if self.recompute_targets {
-                self.recompute_targets = false;
-
-                self.indicator_offset
-                    .update_target(self.items.bounds_of(self.selected).top_left.y);
-            }
-
-            self.indicator_offset.update();
-
-            // Ensure selection indicator is always visible
-            let top_distance = self.indicator_offset.current() - self.list_offset;
-            self.list_offset += if top_distance > 0 {
-                // Indicator is below display top. We only have to
-                // move if indicator bottom is below display bottom.
-                (top_distance + indicator_height - menu_height).max(0)
-            } else {
-                // We need to move up
-                top_distance
-            };
-
-            self.items
-                .translate_mut(Point::new(1, title_height - self.list_offset));
+    pub fn update(&mut self, display: &impl Dimensions) {
+        if !self.display_mode.is_list() {
+            return;
         }
+
+        let display_size = display.bounding_box().size();
+
+        let menu_title = self.header(self.title, display);
+        let title_height = menu_title.size().height as i32;
+
+        let menu_height = display_size.height as i32 - title_height;
+
+        // Height of the selection indicator
+        let menuitem_height = self.items.bounds_of(0).size().height;
+        let indicator_height = menuitem_height as i32 - 1;
+
+        // Reset positions
+        self.items
+            .align_to_mut(&menu_title, horizontal::Left, vertical::TopToBottom);
+
+        // animations
+        if self.recompute_targets {
+            self.recompute_targets = false;
+
+            self.indicator_offset
+                .update_target(self.items.bounds_of(self.selected).top_left.y);
+        }
+
+        self.indicator_offset.update();
+
+        // Ensure selection indicator is always visible
+        let top_distance = self.indicator_offset.current() - self.list_offset;
+        self.list_offset += if top_distance > 0 {
+            // Indicator is below display top. We only have to
+            // move if indicator bottom is below display bottom.
+            (top_distance + indicator_height - menu_height).max(0)
+        } else {
+            // We need to move up
+            top_distance
+        };
+
+        self.items
+            .translate_mut(Point::new(1, title_height - self.list_offset));
     }
 }
 
@@ -415,9 +418,8 @@ where
 
                 // TODO: embedded-layout should allow appending views at this point
                 let size = header.size();
-                let vg = header.into_inner();
                 LinearLayout::vertical(
-                    vg.append(
+                    header.append(
                         TextBox::new(
                             self.items.details_of(self.selected),
                             Rectangle::new(
