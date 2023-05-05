@@ -1,21 +1,30 @@
 use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::{DrawTarget, DrawTargetExt, Point, Size},
-    primitives::{Primitive, PrimitiveStyle, Rectangle, StyledDrawable},
-    Drawable,
+    primitives::{Rectangle, StyledDrawable},
 };
 
 use crate::{
-    adapters::invert::BinaryColorDrawTargetExt, selection_indicator::SelectionIndicator, MenuStyle,
+    adapters::invert::BinaryColorDrawTargetExt,
+    selection_indicator::{IndicatorStyle, SelectionIndicator},
+    MenuStyle,
 };
 
 pub struct SimpleSelectionIndicator {
     y_offset: i32,
+    style: IndicatorStyle,
 }
 
 impl SimpleSelectionIndicator {
     pub fn new() -> Self {
-        Self { y_offset: 0 }
+        Self {
+            y_offset: 0,
+            style: IndicatorStyle::Line,
+        }
+    }
+
+    pub fn with_indicator_style(self, style: IndicatorStyle) -> Self {
+        Self { style, ..self }
     }
 }
 
@@ -44,17 +53,17 @@ impl SelectionIndicator for SimpleSelectionIndicator {
     where
         D: DrawTarget<Color = Self::Color>,
     {
-        Rectangle::new(
-            Point::new(0, screen_offset),
-            Size::new(fill_width.max(1), indicator_height),
-        )
-        .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
-        .draw(display)?;
+        let margin = self.style.margin();
+        self.style.draw(
+            fill_width,
+            &mut display.cropped(&Rectangle::new(
+                Point::new(0, screen_offset),
+                Size::new(display.bounding_box().size.width, indicator_height),
+            )),
+        )?;
 
         let display_top_left = display.bounding_box().top_left;
         let display_size = display.bounding_box().size;
-
-        let margin = Size::new(2, 0);
 
         let mut inverting = display.invert_area(&Rectangle::new(
             Point::new(0, screen_offset),
@@ -62,10 +71,7 @@ impl SelectionIndicator for SimpleSelectionIndicator {
         ));
         items.draw_styled(
             style,
-            &mut inverting.cropped(&Rectangle::new(
-                display_top_left + margin,
-                display_size - margin,
-            )),
+            &mut inverting.cropped(&Rectangle::new(display_top_left + margin, display_size)),
         )
     }
 }

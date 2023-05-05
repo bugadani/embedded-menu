@@ -16,6 +16,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::single_touch::SingleTouch,
     items::{select::SelectValue, NavigationItem, Select},
+    selection_indicator::{animated::AnimatedSelectionIndicator, IndicatorStyle},
     Menu,
 };
 
@@ -49,6 +50,9 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::builder("Menu with even longer title", display_area)
         .show_details_after(100)
         .with_interaction_controller(SingleTouch::new(5, 100))
+        .with_selection_indicator(
+            AnimatedSelectionIndicator::new(10).with_indicator_style(IndicatorStyle::Line),
+        )
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")
