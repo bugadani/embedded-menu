@@ -338,11 +338,11 @@ where
                     self.items.details_of(self.selected),
                     Rectangle::new(
                         Point::zero(),
-                        Size::new(size.width, display_size.height - size.height - 2),
+                        Size::new(size.width, display_size.height - size.height),
                     ),
                     text_style,
                 )
-                .with_margin(2, 0, 0, 1),
+                .with_margin(0, 0, 0, 1),
             ),
         )
         .arrange()
