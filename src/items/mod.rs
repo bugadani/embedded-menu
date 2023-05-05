@@ -13,6 +13,7 @@ use embedded_graphics::{
     pixelcolor::Rgb888,
     prelude::{PixelColor, Point, Size},
     primitives::{Rectangle, StyledDrawable},
+    text::{renderer::TextRenderer, Baseline},
     Drawable,
 };
 use embedded_layout::prelude::*;
@@ -97,21 +98,29 @@ where
             return Ok(());
         }
 
+        let text_style = style.text_style();
+        let value_text = self.item.value();
+
         let mut inner_bounds = self.bounds.inner.bounds();
-
         inner_bounds.size.width = display_area.size.width - self.bounds.left as u32;
-
-        TextBox::new(self.item.title(), inner_bounds, style.text_style()).draw(display)?;
-
         TextBox::with_textbox_style(
-            self.item.value(),
+            value_text,
             inner_bounds,
-            style.text_style(),
+            text_style,
             TextBoxStyleBuilder::new()
                 .alignment(HorizontalAlignment::Right)
                 .build(),
         )
         .draw(display)?;
+
+        let value_width = text_style
+            .measure_string(value_text, Point::zero(), Baseline::Top)
+            .bounding_box
+            .size
+            .width;
+
+        inner_bounds.size.width -= value_width;
+        TextBox::new(self.item.title(), inner_bounds, text_style).draw(display)?;
 
         Ok(())
     }

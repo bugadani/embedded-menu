@@ -61,7 +61,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     )
     .add_item(Select::new("Check this", true).with_detail_text("Description"))
     .add_item(Select::new("Check this", false).with_detail_text("Description"))
-    .add_item(Select::new("Multiple options", TestEnum::A).with_detail_text("Description"))
+    .add_item(Select::new("Multiple options long", TestEnum::A).with_detail_text("Description"))
     .build();
 
     let output_settings = OutputSettingsBuilder::new()
