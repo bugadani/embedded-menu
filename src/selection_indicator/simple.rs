@@ -18,7 +18,8 @@ pub struct SimpleSelectionIndicator {
 
 impl SelectionIndicator for SimpleSelectionIndicator {
     type Color = BinaryColor;
-    type Display<'a, D: DrawTarget<Color = Self::Color> + 'a> = ColorInvertingOverlay<'a, D>;
+    type Display<'a, D: DrawTarget<Color = Self::Color> + 'a> =
+        ColorInvertingOverlay<'a, D, Rectangle>;
 
     fn new(anim_frames: i32) -> Self {
         Self {
