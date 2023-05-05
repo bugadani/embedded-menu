@@ -88,7 +88,7 @@ where
     }
 }
 
-impl<'a, C, V> Drawable for Margin<V>
+impl<C, V> Drawable for Margin<V>
 where
     C: PixelColor,
     V: Drawable<Color = C> + View,
@@ -480,7 +480,7 @@ where
                 self.idle_timeout = threshold;
                 self.display_mode = MenuDisplayMode::List;
             } else if self.idle_timeout > 0 {
-                self.idle_timeout = self.idle_timeout - 1;
+                self.idle_timeout -= 1;
                 if self.idle_timeout == 0 {
                     self.display_mode = MenuDisplayMode::Details;
                 }
@@ -526,7 +526,7 @@ where
     }
 }
 
-impl<'a, IT, VG, R, C> Menu<IT, VG, R, C>
+impl<IT, VG, R, C> Menu<IT, VG, R, C>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = C>,
@@ -620,7 +620,7 @@ where
     }
 }
 
-impl<'a, IT, VG, R> Drawable for Menu<IT, VG, R, BinaryColor>
+impl<IT, VG, R> Drawable for Menu<IT, VG, R, BinaryColor>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = BinaryColor>,
