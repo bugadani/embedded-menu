@@ -2,7 +2,7 @@ use crate::{
     interaction::{programmed::Programmed, InteractionController},
     plumbing::MenuExt,
     private::NoItems,
-    Animated, Menu, MenuDisplayMode, MenuItemTrait, MenuStyle,
+    Animated, Menu, MenuDisplayMode, MenuItem, MenuStyle,
 };
 use core::marker::PhantomData;
 use embedded_graphics::{
@@ -119,7 +119,7 @@ where
     IT: InteractionController,
     C: PixelColor,
 {
-    pub fn add_item<I: MenuItemTrait<R>>(self, item: I) -> MenuBuilder<IT, Chain<I>, R, C> {
+    pub fn add_item<I: MenuItem<R>>(self, item: I) -> MenuBuilder<IT, Chain<I>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -136,13 +136,10 @@ impl<IT, CE, R, C> MenuBuilder<IT, Chain<CE>, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    CE: MenuItemTrait<R>,
+    CE: MenuItem<R>,
     C: PixelColor,
 {
-    pub fn add_item<I: MenuItemTrait<R>>(
-        self,
-        item: I,
-    ) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C> {
+    pub fn add_item<I: MenuItem<R>>(self, item: I) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -159,14 +156,11 @@ impl<IT, P, CE, R, C> MenuBuilder<IT, Link<P, CE>, R, C>
 where
     R: Copy,
     IT: InteractionController,
-    P: MenuItemTrait<R>,
+    P: MenuItem<R>,
     CE: MenuExt<R>,
     C: PixelColor,
 {
-    pub fn add_item<I: MenuItemTrait<R>>(
-        self,
-        item: I,
-    ) -> MenuBuilder<IT, Link<I, Link<P, CE>>, R, C> {
+    pub fn add_item<I: MenuItem<R>>(self, item: I) -> MenuBuilder<IT, Link<I, Link<P, CE>>, R, C> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,

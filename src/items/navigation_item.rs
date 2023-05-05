@@ -1,7 +1,7 @@
 use crate::{
     items::MenuLine,
     margin::{Margin, MarginExt},
-    MenuEvent, MenuItemTrait,
+    MenuEvent, MenuItem,
 };
 
 use embedded_graphics::{
@@ -48,7 +48,7 @@ impl<'a, R: Copy, C: PixelColor> NavigationItem<'a, R, C> {
     }
 }
 
-impl<'a, R: Copy, C: PixelColor> MenuItemTrait<R> for NavigationItem<'a, R, C> {
+impl<'a, R: Copy, C: PixelColor> MenuItem<R> for NavigationItem<'a, R, C> {
     fn interact(&mut self) -> MenuEvent<R> {
         MenuEvent::NavigationEvent(self.data.return_value)
     }
@@ -59,6 +59,10 @@ impl<'a, R: Copy, C: PixelColor> MenuItemTrait<R> for NavigationItem<'a, R, C> {
 
     fn details(&self) -> &str {
         self.data.details
+    }
+
+    fn value(&self) -> &str {
+        self.data.marker
     }
 }
 
@@ -86,9 +90,9 @@ where
     {
         let menu_line = MenuLine {
             title: self.data.title_text,
-            value: self.data.marker,
             bounds: self.bounds,
             text_style: self.style,
+            value: self.value(),
         };
 
         menu_line.draw(display)

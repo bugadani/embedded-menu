@@ -31,10 +31,11 @@ use embedded_text::{
     TextBox,
 };
 
-pub trait MenuItemTrait<R: Copy>: View {
+pub trait MenuItem<R: Copy>: View {
     fn interact(&mut self) -> MenuEvent<R>;
     fn title(&self) -> &str;
     fn details(&self) -> &str;
+    fn value(&self) -> &str;
 }
 
 enum MenuDisplayMode {

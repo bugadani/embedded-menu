@@ -1,7 +1,7 @@
 use crate::{
     items::MenuLine,
     margin::{Margin, MarginExt},
-    MenuEvent, MenuItemTrait,
+    MenuEvent, MenuItem,
 };
 
 use embedded_graphics::{
@@ -79,7 +79,7 @@ where
     }
 }
 
-impl<'a, R: Copy, S: SelectValue, C: PixelColor> MenuItemTrait<R> for Select<'a, R, S, C> {
+impl<'a, R: Copy, S: SelectValue, C: PixelColor> MenuItem<R> for Select<'a, R, S, C> {
     fn interact(&mut self) -> MenuEvent<R> {
         self.data.value = self.data.value.next();
         MenuEvent::DataEvent((self.data.convert)(self.data.value))
@@ -91,6 +91,10 @@ impl<'a, R: Copy, S: SelectValue, C: PixelColor> MenuItemTrait<R> for Select<'a,
 
     fn details(&self) -> &str {
         self.data.details
+    }
+
+    fn value(&self) -> &str {
+        self.data.value.name()
     }
 }
 
@@ -114,13 +118,11 @@ where
     type Output = ();
 
     fn draw<D: DrawTarget<Color = C>>(&self, display: &mut D) -> Result<(), D::Error> {
-        let value_text = self.data.value.name();
-
         let menu_line = MenuLine {
             title: self.data.title_text,
-            value: value_text,
             bounds: self.bounds,
             text_style: self.style,
+            value: self.value(),
         };
 
         menu_line.draw(display)

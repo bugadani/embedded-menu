@@ -1,7 +1,7 @@
 use embedded_graphics::primitives::Rectangle;
 use embedded_layout::{object_chain::ChainElement, prelude::*};
 
-use crate::{MenuEvent, MenuItemTrait};
+use crate::{MenuEvent, MenuItem};
 
 /// Menu-related extensions for object chain elements
 pub trait MenuExt<R: Copy>: ChainElement {
@@ -14,7 +14,7 @@ pub trait MenuExt<R: Copy>: ChainElement {
 impl<I, R: Copy> MenuExt<R> for Chain<I>
 where
     R: Copy,
-    I: MenuItemTrait<R>,
+    I: MenuItem<R>,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
         debug_assert!(nth == 0);
@@ -40,7 +40,7 @@ where
 impl<I, LE, R> MenuExt<R> for Link<I, LE>
 where
     R: Copy,
-    I: MenuItemTrait<R>,
+    I: MenuItem<R>,
     LE: MenuExt<R>,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
