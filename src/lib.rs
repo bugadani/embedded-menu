@@ -46,6 +46,10 @@ impl MenuDisplayMode {
     fn is_list(&self) -> bool {
         matches!(self, Self::List)
     }
+
+    fn is_details(&self) -> bool {
+        matches!(self, Self::Details)
+    }
 }
 
 pub struct Animated {
@@ -184,6 +188,10 @@ where
 
     pub fn reset_interaction(&mut self) {
         self.interaction.reset();
+    }
+
+    fn selected_has_details(&self) -> bool {
+        !self.items.details_of(self.selected).is_empty()
     }
 
     pub fn interact(&mut self, input: IT::Input) -> MenuEvent<R> {
@@ -457,9 +465,10 @@ where
     where
         D: DrawTarget<Color = BinaryColor>,
     {
-        match self.display_mode {
-            MenuDisplayMode::List => self.display_list(display),
-            MenuDisplayMode::Details => self.display_details(display),
+        if self.display_mode.is_details() && self.selected_has_details() {
+            self.display_details(display)
+        } else {
+            self.display_list(display)
         }
     }
 }
