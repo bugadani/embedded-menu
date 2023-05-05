@@ -313,6 +313,135 @@ where
         self.items
             .translate_mut(Point::new(1, title_height - self.list_offset));
     }
+
+    fn display_details<D>(&self, display: &mut D) -> Result<(), D::Error>
+    where
+        D: DrawTarget<Color = C>,
+    {
+        let display_area = display.bounding_box();
+        let display_size = display_area.size();
+
+        let text_style = MonoTextStyleBuilder::<C>::new()
+            .font(&FONT_6X10)
+            .text_color(self.style.color)
+            .build();
+
+        let header = self.header(self.items.title_of(self.selected), display);
+
+        // TODO: embedded-layout should allow appending views to linear layout at this point
+        let size = header.size();
+        LinearLayout::vertical(
+            header.append(
+                TextBox::new(
+                    self.items.details_of(self.selected),
+                    Rectangle::new(
+                        Point::zero(),
+                        Size::new(size.width, display_size.height - size.height - 2),
+                    ),
+                    text_style,
+                )
+                .with_margin(2, 0, 0, 1),
+            ),
+        )
+        .arrange()
+        .draw(display)
+    }
+}
+
+impl<IT, VG, R> Menu<IT, VG, R, BinaryColor>
+where
+    R: Copy,
+    IT: InteractionController + Drawable<Color = BinaryColor>,
+    VG: ViewGroup + MenuExt<R> + Drawable<Color = BinaryColor>,
+{
+    fn display_list<D>(&self, display: &mut D) -> Result<(), D::Error>
+    where
+        D: DrawTarget<Color = BinaryColor>,
+    {
+        let display_area = display.bounding_box();
+        let display_size = display_area.size();
+
+        let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
+
+        let menu_title = self.header(self.title, display);
+        menu_title.draw(display)?;
+
+        let menu_height = display_size.height - menu_title.size().height;
+
+        // Height of the first menu item
+        let menuitem_height = self.items.bounds_of(0).size().height;
+        let selection_indicator_height = menuitem_height - 2; // We don't want to extend under the baseline
+
+        let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height)).align_to(
+            &menu_title,
+            horizontal::Right,
+            vertical::TopToBottom,
+        );
+
+        let list_height = self.items.bounds().size().height;
+        let draw_scrollbar = match self.style.scrollbar {
+            DisplayScrollbar::Display => true,
+            DisplayScrollbar::Hide => false,
+            DisplayScrollbar::Auto => list_height > menu_height,
+        };
+
+        let menu_list_width = if draw_scrollbar {
+            display_size.width - scrollbar_area.size().width
+        } else {
+            display_size.width
+        };
+
+        let menu_display_area = Rectangle::new(
+            Point::zero(),
+            Size::new(menu_list_width, menu_height),
+        )
+        .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
+
+        // selection indicator
+        let mut interaction_display = display.cropped(
+            &Rectangle::new(
+                Point::zero(),
+                Size::new(menu_list_width, selection_indicator_height),
+            )
+            .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
+            .translate(Point::new(
+                0,
+                self.indicator_offset.current() - self.list_offset + 1,
+            )),
+        );
+
+        self.interaction.draw(&mut interaction_display)?;
+
+        // FIXME: this is terrible
+        let mut inverting_overlay = display.invert_area(&Rectangle::new(
+            Point::new(
+                0,
+                self.indicator_offset.current() - self.list_offset + 1 + menuitem_height as i32,
+            ),
+            Size::new(
+                self.interaction.fill_area_width(menu_list_width),
+                menuitem_height,
+            ),
+        ));
+
+        self.items
+            .draw(&mut inverting_overlay.clipped(&menu_display_area))?;
+
+        if draw_scrollbar {
+            let scale = |value| (value * menu_height / list_height) as i32;
+
+            let scrollbar_height = scale(menu_height).max(1);
+            let mut scrollbar_display = display.cropped(&scrollbar_area);
+
+            // Start scrollbar from y=1, so we have a margin on top instead of bottom
+            Line::new(Point::new(0, 1), Point::new(0, scrollbar_height))
+                .into_styled(thin_stroke)
+                .translate(Point::new(1, scale(self.list_offset as u32)))
+                .draw(&mut scrollbar_display)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl<IT, VG, R> Drawable for Menu<IT, VG, R, BinaryColor>
@@ -328,113 +457,9 @@ where
     where
         D: DrawTarget<Color = BinaryColor>,
     {
-        let display_area = display.bounding_box();
-        let display_size = display_area.size();
-
-        let text_style = MonoTextStyleBuilder::<BinaryColor>::new()
-            .font(&FONT_6X10)
-            .text_color(self.style.color)
-            .build();
-        let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
-
         match self.display_mode {
-            MenuDisplayMode::List => {
-                let menu_title = self.header(self.title, display);
-                menu_title.draw(display)?;
-
-                let menu_height = display_size.height - menu_title.size().height;
-
-                // Height of the first menu item
-                let menuitem_height = self.items.bounds_of(0).size().height;
-                let selection_indicator_height = menuitem_height - 2; // We don't want to extend under the baseline
-
-                let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height))
-                    .align_to(&menu_title, horizontal::Right, vertical::TopToBottom);
-
-                let list_height = self.items.bounds().size().height;
-                let draw_scrollbar = match self.style.scrollbar {
-                    DisplayScrollbar::Display => true,
-                    DisplayScrollbar::Hide => false,
-                    DisplayScrollbar::Auto => list_height > menu_height,
-                };
-
-                let menu_list_width = if draw_scrollbar {
-                    display_size.width - scrollbar_area.size().width
-                } else {
-                    display_size.width
-                };
-
-                let menu_display_area =
-                    Rectangle::new(Point::zero(), Size::new(menu_list_width, menu_height))
-                        .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
-
-                // selection indicator
-                let mut interaction_display = display.cropped(
-                    &Rectangle::new(
-                        Point::zero(),
-                        Size::new(menu_list_width, selection_indicator_height),
-                    )
-                    .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
-                    .translate(Point::new(
-                        0,
-                        self.indicator_offset.current() - self.list_offset + 1,
-                    )),
-                );
-
-                self.interaction.draw(&mut interaction_display)?;
-
-                // FIXME: this is terrible
-                let mut inverting_overlay = display.invert_area(&Rectangle::new(
-                    Point::new(
-                        0,
-                        self.indicator_offset.current() - self.list_offset
-                            + 1
-                            + menuitem_height as i32,
-                    ),
-                    Size::new(
-                        self.interaction.fill_area_width(menu_list_width),
-                        menuitem_height,
-                    ),
-                ));
-
-                self.items
-                    .draw(&mut inverting_overlay.clipped(&menu_display_area))?;
-
-                if draw_scrollbar {
-                    let scale = |value| (value * menu_height / list_height) as i32;
-
-                    let scrollbar_height = scale(menu_height).max(1);
-                    let mut scrollbar_display = display.cropped(&scrollbar_area);
-
-                    // Start scrollbar from y=1, so we have a margin on top instead of bottom
-                    Line::new(Point::new(0, 1), Point::new(0, scrollbar_height))
-                        .into_styled(thin_stroke)
-                        .translate(Point::new(1, scale(self.list_offset as u32)))
-                        .draw(&mut scrollbar_display)?;
-                }
-            }
-            MenuDisplayMode::Details => {
-                let header = self.header(self.items.title_of(self.selected), display);
-
-                // TODO: embedded-layout should allow appending views at this point
-                let size = header.size();
-                LinearLayout::vertical(
-                    header.append(
-                        TextBox::new(
-                            self.items.details_of(self.selected),
-                            Rectangle::new(
-                                Point::zero(),
-                                Size::new(size.width, display_size.height - size.height - 2),
-                            ),
-                            text_style,
-                        )
-                        .with_margin(2, 0, 0, 1),
-                    ),
-                )
-                .arrange()
-                .draw(display)?;
-            }
+            MenuDisplayMode::List => self.display_list(display),
+            MenuDisplayMode::Details => self.display_details(display),
         }
-        Ok(())
     }
 }
