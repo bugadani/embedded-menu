@@ -160,11 +160,12 @@ mod private {
 
 use private::NoItems;
 
-pub struct Menu<IT, VG, R, C>
+pub struct Menu<IT, VG, R, C, SI>
 where
     R: Copy,
     IT: InteractionController,
     C: PixelColor,
+    SI: SelectionIndicator,
 {
     _return_type: PhantomData<R>,
     title: &'static str,
@@ -178,11 +179,18 @@ where
     idle_timeout: u16,
     display_mode: MenuDisplayMode,
     style: MenuStyle<C>,
-    indicator: SimpleSelectionIndicator,
+    indicator: SI,
 }
 
-impl<R: Copy, C: PixelColor> Menu<Programmed, NoItems, R, C> {
-    pub fn builder(title: &'static str, bounds: Rectangle) -> MenuBuilder<Programmed, NoItems, R, C>
+impl<R, C> Menu<Programmed, NoItems, R, C, SimpleSelectionIndicator>
+where
+    R: Copy,
+    C: PixelColor,
+{
+    pub fn builder(
+        title: &'static str,
+        bounds: Rectangle,
+    ) -> MenuBuilder<Programmed, NoItems, R, C, SimpleSelectionIndicator>
     where
         MenuStyle<C>: Default,
     {
@@ -193,7 +201,7 @@ impl<R: Copy, C: PixelColor> Menu<Programmed, NoItems, R, C> {
         title: &'static str,
         bounds: Rectangle,
         style: MenuStyle<C>,
-    ) -> MenuBuilder<Programmed, NoItems, R, C>
+    ) -> MenuBuilder<Programmed, NoItems, R, C, SimpleSelectionIndicator>
     where
         MenuStyle<C>: Default,
     {
@@ -201,12 +209,13 @@ impl<R: Copy, C: PixelColor> Menu<Programmed, NoItems, R, C> {
     }
 }
 
-impl<IT, VG, R, C> Menu<IT, VG, R, C>
+impl<IT, VG, R, C, SI> Menu<IT, VG, R, C, SI>
 where
     R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
+    SI: SelectionIndicator,
 {
     fn change_selected_item(&mut self, new_selected: u32) {
         if new_selected != self.selected {
@@ -249,12 +258,13 @@ where
     }
 }
 
-impl<IT, VG, R, C> View for Menu<IT, VG, R, C>
+impl<IT, VG, R, C, SI> View for Menu<IT, VG, R, C, SI>
 where
     R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
+    SI: SelectionIndicator,
 {
     /// Move the origin of an object by a given number of (x, y) pixels,
     /// by returning a new object
@@ -268,12 +278,13 @@ where
     }
 }
 
-impl<IT, VG, R, C> Menu<IT, VG, R, C>
+impl<IT, VG, R, C, SI> Menu<IT, VG, R, C, SI>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = C>,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
     C: PixelColor + From<Rgb888>,
+    SI: SelectionIndicator,
 {
     fn header<'t>(
         &self,
@@ -387,15 +398,17 @@ where
     }
 }
 
-impl<IT, VG, R> Menu<IT, VG, R, BinaryColor>
+impl<IT, VG, R, SI> Menu<IT, VG, R, BinaryColor, SI>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = BinaryColor>,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
+    SI: SelectionIndicator,
 {
     fn display_list<D>(&self, display: &mut D) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
+        SI: SelectionIndicator<Color = BinaryColor>,
     {
         let display_area = display.bounding_box();
         let display_size = display_area.size();
@@ -440,7 +453,8 @@ where
             self.indicator.offset() - self.list_offset + menu_title.size().height as i32,
             self.interaction.fill_area_width(menu_list_width),
             &mut display.clipped(&menu_display_area),
-            |display| self.items.draw_styled(&self.style, display),
+            &self.items,
+            &self.style,
         )?;
 
         if draw_scrollbar {
@@ -460,11 +474,12 @@ where
     }
 }
 
-impl<IT, VG, R> Drawable for Menu<IT, VG, R, BinaryColor>
+impl<IT, VG, R, SI> Drawable for Menu<IT, VG, R, BinaryColor, SI>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = BinaryColor>,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
+    SI: SelectionIndicator<Color = BinaryColor>,
 {
     type Color = BinaryColor;
     type Output = ();

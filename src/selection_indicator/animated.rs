@@ -6,31 +6,36 @@ use embedded_graphics::{
 };
 
 use crate::{
-    adapters::invert::BinaryColorDrawTargetExt, selection_indicator::SelectionIndicator, MenuStyle,
+    adapters::invert::BinaryColorDrawTargetExt, selection_indicator::SelectionIndicator, Animated,
+    MenuStyle,
 };
 
-pub struct SimpleSelectionIndicator {
-    y_offset: i32,
+pub struct AnimatedSelectionIndicator {
+    y_offset: Animated,
 }
 
-impl SimpleSelectionIndicator {
-    pub fn new() -> Self {
-        Self { y_offset: 0 }
+impl AnimatedSelectionIndicator {
+    pub fn new(anim_frames: i32) -> Self {
+        Self {
+            y_offset: Animated::new(0, anim_frames),
+        }
     }
 }
 
-impl SelectionIndicator for SimpleSelectionIndicator {
+impl SelectionIndicator for AnimatedSelectionIndicator {
     type Color = BinaryColor;
 
     fn update_target(&mut self, y: i32) {
-        self.y_offset = y;
+        self.y_offset.update_target(y);
     }
 
     fn offset(&self) -> i32 {
-        self.y_offset
+        self.y_offset.current()
     }
 
-    fn update(&mut self) {}
+    fn update(&mut self) {
+        self.y_offset.update();
+    }
 
     fn draw<D>(
         &self,

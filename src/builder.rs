@@ -10,7 +10,7 @@ use core::marker::PhantomData;
 use embedded_graphics::{pixelcolor::PixelColor, primitives::Rectangle};
 use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
 
-pub struct MenuBuilder<IT, LL, R, C>
+pub struct MenuBuilder<IT, LL, R, C, SI>
 where
     R: Copy,
     IT: InteractionController,
@@ -23,9 +23,10 @@ where
     interaction: IT,
     idle_timeout: Option<u16>,
     style: MenuStyle<C>,
+    indicator: SI,
 }
 
-impl<R: Copy, C: PixelColor> MenuBuilder<Programmed, NoItems, R, C> {
+impl<R: Copy, C: PixelColor> MenuBuilder<Programmed, NoItems, R, C, SimpleSelectionIndicator> {
     pub fn new(title: &'static str, bounds: Rectangle, style: MenuStyle<C>) -> Self {
         Self {
             _return_type: PhantomData,
@@ -35,17 +36,19 @@ impl<R: Copy, C: PixelColor> MenuBuilder<Programmed, NoItems, R, C> {
             interaction: Programmed,
             idle_timeout: None,
             style,
+            indicator: SimpleSelectionIndicator::new(),
         }
     }
 }
 
-impl<IT, LL, R, C> MenuBuilder<IT, LL, R, C>
+impl<IT, LL, R, C, SI> MenuBuilder<IT, LL, R, C, SI>
 where
     R: Copy,
     IT: InteractionController,
     C: PixelColor,
+    SI: SelectionIndicator,
 {
-    pub fn show_details_after(self, timeout: u16) -> MenuBuilder<IT, LL, R, C> {
+    pub fn show_details_after(self, timeout: u16) -> MenuBuilder<IT, LL, R, C, SI> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -54,13 +57,27 @@ where
             interaction: self.interaction,
             idle_timeout: Some(timeout),
             style: self.style,
+            indicator: self.indicator,
+        }
+    }
+
+    pub fn with_selection_indicator<SI2>(self, indicator: SI2) -> MenuBuilder<IT, LL, R, C, SI2> {
+        MenuBuilder {
+            _return_type: PhantomData,
+            title: self.title,
+            bounds: self.bounds,
+            items: self.items,
+            interaction: self.interaction,
+            idle_timeout: self.idle_timeout,
+            style: self.style,
+            indicator: indicator,
         }
     }
 
     pub fn with_interaction_controller<ITC: InteractionController>(
         self,
         interaction: ITC,
-    ) -> MenuBuilder<ITC, LL, R, C> {
+    ) -> MenuBuilder<ITC, LL, R, C, SI> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -69,19 +86,20 @@ where
             interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,
+            indicator: self.indicator,
         }
     }
 }
 
-impl<IT, VG, R, C> MenuBuilder<IT, VG, R, C>
+impl<IT, VG, R, C, SI> MenuBuilder<IT, VG, R, C, SI>
 where
     R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
+    SI: SelectionIndicator,
 {
-    pub fn build(self) -> Menu<IT, VG, R, C> {
-        const ANIM_FRAMES: i32 = 10;
+    pub fn build(self) -> Menu<IT, VG, R, C, SI> {
         Menu {
             _return_type: PhantomData,
             title: self.title,
@@ -91,7 +109,7 @@ where
             interaction: self.interaction,
             recompute_targets: true,
             list_offset: 0,
-            indicator: SimpleSelectionIndicator::new(ANIM_FRAMES),
+            indicator: self.indicator,
             idle_timeout_threshold: self.idle_timeout,
             idle_timeout: self.idle_timeout.unwrap_or_default(),
             display_mode: MenuDisplayMode::List,
@@ -100,16 +118,17 @@ where
     }
 }
 
-impl<IT, R, C> MenuBuilder<IT, NoItems, R, C>
+impl<IT, R, C, SI> MenuBuilder<IT, NoItems, R, C, SI>
 where
     R: Copy,
     IT: InteractionController,
     C: PixelColor,
+    SI: SelectionIndicator,
 {
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Chain<MenuLine<I>>, R, C> {
+    ) -> MenuBuilder<IT, Chain<MenuLine<I>>, R, C, SI> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -118,21 +137,23 @@ where
             interaction: self.interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,
+            indicator: self.indicator,
         }
     }
 }
 
-impl<IT, CE, R, C> MenuBuilder<IT, Chain<CE>, R, C>
+impl<IT, CE, R, C, SI> MenuBuilder<IT, Chain<CE>, R, C, SI>
 where
     R: Copy,
     IT: InteractionController,
     CE: MenuItem<Data = R>,
     C: PixelColor,
+    SI: SelectionIndicator,
 {
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Link<MenuLine<I>, Chain<CE>>, R, C> {
+    ) -> MenuBuilder<IT, Link<MenuLine<I>, Chain<CE>>, R, C, SI> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -141,22 +162,24 @@ where
             interaction: self.interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,
+            indicator: self.indicator,
         }
     }
 }
 
-impl<IT, P, CE, R, C> MenuBuilder<IT, Link<P, CE>, R, C>
+impl<IT, P, CE, R, C, SI> MenuBuilder<IT, Link<P, CE>, R, C, SI>
 where
     R: Copy,
     IT: InteractionController,
     P: MenuItem<Data = R>,
     CE: MenuExt<R>,
     C: PixelColor,
+    SI: SelectionIndicator,
 {
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Link<MenuLine<I>, Link<P, CE>>, R, C> {
+    ) -> MenuBuilder<IT, Link<MenuLine<I>, Link<P, CE>>, R, C, SI> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -165,6 +188,7 @@ where
             interaction: self.interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,
+            indicator: self.indicator,
         }
     }
 }

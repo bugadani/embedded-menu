@@ -13,6 +13,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, NavigationItem, Select},
+    selection_indicator::animated::AnimatedSelectionIndicator,
     Menu,
 };
 
@@ -45,6 +46,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = Menu::builder("Menu", display_area)
         .show_details_after(300)
+        .with_selection_indicator(AnimatedSelectionIndicator::new(10))
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")
