@@ -19,7 +19,7 @@ use core::marker::PhantomData;
 use embedded_graphics::{
     draw_target::DrawTarget,
     geometry::Size,
-    mono_font::{ascii::FONT_6X10, MonoTextStyle, MonoTextStyleBuilder},
+    mono_font::{ascii::FONT_6X10, MonoFont, MonoTextStyle},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
     prelude::{Dimensions, DrawTargetExt, Point},
     primitives::{Line, Primitive, PrimitiveStyle, Rectangle, Styled},
@@ -27,7 +27,7 @@ use embedded_graphics::{
 };
 use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
 use embedded_text::{
-    style::{HeightMode, TextBoxStyleBuilder},
+    style::{HeightMode, TextBoxStyle},
     TextBox,
 };
 
@@ -105,15 +105,30 @@ pub struct MenuStyle<C: PixelColor> {
     pub(crate) color: C,
     pub(crate) indicator_color: C,
     pub(crate) scrollbar: DisplayScrollbar,
+    pub(crate) font: &'static MonoFont<'static>,
+    pub(crate) title_font: &'static MonoFont<'static>,
 }
 
-impl<C: PixelColor> MenuStyle<C> {
+impl<C> MenuStyle<C>
+where
+    C: PixelColor + From<Rgb888>,
+{
     pub fn new(color: C, indicator_color: C) -> Self {
         Self {
             color,
             indicator_color,
             scrollbar: DisplayScrollbar::Auto,
+            font: &FONT_6X10,
+            title_font: &FONT_6X10,
         }
+    }
+
+    fn text_style(&self) -> MonoTextStyle<'static, C> {
+        MonoTextStyle::new(self.font, self.color)
+    }
+
+    fn title_style(&self) -> MonoTextStyle<'static, C> {
+        MonoTextStyle::new(self.title_font, self.color)
     }
 }
 
@@ -238,24 +253,17 @@ where
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let font = &FONT_6X10;
-
-        let text_style = MonoTextStyleBuilder::<C>::new()
-            .font(font)
-            .text_color(self.style.color)
-            .build();
+        let text_style = self.style.title_style();
         let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
         LinearLayout::vertical(
             Chain::new(TextBox::with_textbox_style(
                 title,
                 Rectangle::new(
                     Point::zero(),
-                    Size::new(display_size.width, font.character_size.height),
+                    Size::new(display_size.width, text_style.font.character_size.height),
                 ),
                 text_style,
-                TextBoxStyleBuilder::new()
-                    .height_mode(HeightMode::FitToText)
-                    .build(),
+                TextBoxStyle::with_height_mode(HeightMode::FitToText),
             ))
             .append(
                 Line::new(
@@ -323,11 +331,6 @@ where
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let text_style = MonoTextStyleBuilder::<C>::new()
-            .font(&FONT_6X10)
-            .text_color(self.style.color)
-            .build();
-
         let header = self.header(self.items.title_of(self.selected), display);
 
         // TODO: embedded-layout should allow appending views to linear layout at this point
@@ -340,7 +343,7 @@ where
                         Point::zero(),
                         Size::new(size.width, display_size.height - size.height),
                     ),
-                    text_style,
+                    self.style.text_style(),
                 )
                 .with_margin(0, 0, 0, 1),
             ),
