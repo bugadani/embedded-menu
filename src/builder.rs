@@ -102,7 +102,7 @@ where
             selected: (ViewGroup::len(&self.items) as u32).saturating_sub(1),
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
             interaction: self.interaction,
-            recompute_targets: false,
+            recompute_targets: true,
             list_offset: 0,
             indicator_offset: Animated::new(0, ANIM_FRAMES),
             idle_timeout_threshold: self.idle_timeout,
