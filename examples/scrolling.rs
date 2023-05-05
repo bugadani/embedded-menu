@@ -24,7 +24,7 @@ pub enum TestEnum {
 }
 
 impl SelectValue for TestEnum {
-    fn next(self) -> Self {
+    fn next(&self) -> Self {
         match self {
             TestEnum::A => TestEnum::B,
             TestEnum::B => TestEnum::C,
@@ -32,7 +32,7 @@ impl SelectValue for TestEnum {
         }
     }
 
-    fn name(self) -> &'static str {
+    fn name(&self) -> &'static str {
         match self {
             TestEnum::A => "A",
             TestEnum::B => "AB",

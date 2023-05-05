@@ -11,17 +11,17 @@ use embedded_graphics::{
 use embedded_layout::prelude::*;
 
 pub trait SelectValue: Sized + Copy {
-    fn next(self) -> Self;
-    fn name(self) -> &'static str;
+    fn next(&self) -> Self;
+    fn name(&self) -> &'static str;
 }
 
 impl SelectValue for bool {
-    fn next(self) -> Self {
-        !self
+    fn next(&self) -> Self {
+        !*self
     }
 
-    fn name(self) -> &'static str {
-        match self {
+    fn name(&self) -> &'static str {
+        match *self {
             // true => "O",
             // false => "0\r+\r#",
             true => "[ ]",

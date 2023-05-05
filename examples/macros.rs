@@ -1,10 +1,10 @@
-//! Run using `cargo run --example small --target x86_64-pc-windows-msvc`
+//! Run using `cargo run --example simple --target x86_64-pc-windows-msvc`
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
 use embedded_graphics::{
     pixelcolor::BinaryColor,
-    prelude::{DrawTargetExt, Point, Size},
+    prelude::{Point, Size},
     primitives::Rectangle,
     Drawable,
 };
@@ -14,60 +14,24 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::InteractionType,
-    items::{select::SelectValue, NavigationItem, Select},
+    items::{select::SelectValue, Select},
     MenuBuilder,
 };
+use embedded_menu_macros::SelectValue;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, SelectValue)]
 pub enum TestEnum {
     A,
+    #[display_as("AB")]
     B,
+    #[display_as("ABC")]
     C,
-}
-
-impl SelectValue for TestEnum {
-    fn next(&self) -> Self {
-        match self {
-            TestEnum::A => TestEnum::B,
-            TestEnum::B => TestEnum::C,
-            TestEnum::C => TestEnum::A,
-        }
-    }
-
-    fn name(&self) -> &'static str {
-        match self {
-            TestEnum::A => "A",
-            TestEnum::B => "AB",
-            TestEnum::C => "ABC",
-        }
-    }
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = MenuBuilder::new("Menu", display_area)
         .show_details_after(300)
-        .add_item(NavigationItem::new(
-            ">",
-            "Foo",
-            "Some longer description text",
-            (),
-            BinaryColor::On,
-        ))
-        .add_item(Select::new(
-            "Check this",
-            "Description",
-            false,
-            |_| (),
-            BinaryColor::On,
-        ))
-        .add_item(Select::new(
-            "Check this",
-            "Description",
-            false,
-            |_| (),
-            BinaryColor::On,
-        ))
         .add_item(Select::new(
             "Check this2",
             "Description",
@@ -84,9 +48,8 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     'running: loop {
         let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
-        let mut sub = display.cropped(&Rectangle::new(Point::new(16, 16), Size::new(96, 34)));
-        menu.update(&sub);
-        menu.draw(&mut sub).unwrap();
+        menu.update(&display);
+        menu.draw(&mut display).unwrap();
         window.update(&display);
 
         let mut had_interaction = false;
