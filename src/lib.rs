@@ -372,7 +372,7 @@ where
         let menu_height = display_size.height - menu_title.size().height;
 
         // Height of the first menu item
-        let menuitem_height = self.items.bounds_of(0).size().height;
+        let menuitem_height = self.items.bounds_of(self.selected).size().height;
         let selection_indicator_height = (menuitem_height as i32 - SELECTOR_MARGIN) as u32; // We don't want to extend under the baseline
 
         let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height)).align_to(
