@@ -223,8 +223,6 @@ where
     }
 }
 
-const SELECTOR_MARGIN: i32 = 2;
-
 impl<IT, VG, R, C> Menu<IT, VG, R, C>
 where
     R: Copy,
@@ -276,7 +274,8 @@ where
             return;
         }
 
-        let display_size = display.bounding_box().size();
+        let display_area = display.bounding_box();
+        let display_size = display_area.size();
 
         let menu_title = self.header(self.title, display);
         let title_height = menu_title.size().height as i32;
@@ -285,7 +284,7 @@ where
 
         // Reset positions
         self.items
-            .align_to_mut(&menu_title, horizontal::Left, vertical::TopToBottom);
+            .align_to_mut(&display_area, horizontal::Left, vertical::Top);
 
         // Height of the selection indicator
         let selected_item_bounds = self.items.bounds_of(self.selected);
@@ -295,7 +294,7 @@ where
             self.recompute_targets = false;
 
             self.indicator_offset
-                .update_target(selected_item_bounds.top_left.y + SELECTOR_MARGIN);
+                .update_target(selected_item_bounds.top_left.y);
         }
 
         self.indicator_offset.update();
@@ -303,8 +302,7 @@ where
         // Ensure selection indicator is always visible
         let top_distance = self.indicator_offset.current() - self.list_offset;
         self.list_offset += if top_distance > 0 {
-            let menuitem_height = selected_item_bounds.size().height as i32;
-            let indicator_height = menuitem_height - SELECTOR_MARGIN;
+            let indicator_height = selected_item_bounds.size().height as i32;
 
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
@@ -314,7 +312,8 @@ where
             top_distance
         };
 
-        self.items.translate_mut(Point::new(1, -self.list_offset));
+        self.items
+            .translate_mut(Point::new(1, title_height - self.list_offset));
     }
 
     fn display_details<D>(&self, display: &mut D) -> Result<(), D::Error>
@@ -373,7 +372,6 @@ where
 
         // Height of the first menu item
         let menuitem_height = self.items.bounds_of(self.selected).size().height;
-        let selection_indicator_height = (menuitem_height as i32 - SELECTOR_MARGIN) as u32; // We don't want to extend under the baseline
 
         let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height)).align_to(
             &menu_title,
@@ -401,15 +399,13 @@ where
         .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
 
         // selection indicator
-        let selected_item_area = Rectangle::new(
-            Point::zero(),
-            Size::new(menu_list_width, selection_indicator_height),
-        )
-        .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
-        .translate(Point::new(
-            0,
-            self.indicator_offset.current() - self.list_offset,
-        ));
+        let selected_item_area =
+            Rectangle::new(Point::zero(), Size::new(menu_list_width, menuitem_height))
+                .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
+                .translate(Point::new(
+                    0,
+                    self.indicator_offset.current() - self.list_offset,
+                ));
 
         let mut interaction_display = display.cropped(&selected_item_area);
         self.interaction.draw(&mut interaction_display)?;
@@ -419,7 +415,7 @@ where
                 Point::zero(),
                 Size::new(
                     self.interaction.fill_area_width(menu_list_width),
-                    selection_indicator_height,
+                    menuitem_height,
                 ),
             )
             .align_to(&selected_item_area, horizontal::Left, vertical::Top),
