@@ -399,31 +399,29 @@ where
         .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
 
         // selection indicator
-        let mut interaction_display = display.cropped(
-            &Rectangle::new(
-                Point::zero(),
-                Size::new(menu_list_width, selection_indicator_height),
-            )
-            .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
-            .translate(Point::new(
-                0,
-                self.indicator_offset.current() - self.list_offset + 1,
-            )),
-        );
+        let selected_item_area = Rectangle::new(
+            Point::zero(),
+            Size::new(menu_list_width, selection_indicator_height),
+        )
+        .align_to(&menu_title, horizontal::Left, vertical::TopToBottom)
+        .translate(Point::new(
+            0,
+            self.indicator_offset.current() - self.list_offset + 2, // Why 2?
+        ));
 
+        let mut interaction_display = display.cropped(&selected_item_area);
         self.interaction.draw(&mut interaction_display)?;
 
-        // FIXME: this is terrible
-        let mut inverting_overlay = display.invert_area(&Rectangle::new(
-            Point::new(
-                0,
-                self.indicator_offset.current() - self.list_offset + 1 + menuitem_height as i32,
-            ),
-            Size::new(
-                self.interaction.fill_area_width(menu_list_width),
-                menuitem_height,
-            ),
-        ));
+        let mut inverting_overlay = display.invert_area(
+            &Rectangle::new(
+                Point::zero(),
+                Size::new(
+                    self.interaction.fill_area_width(menu_list_width),
+                    selection_indicator_height,
+                ),
+            )
+            .align_to(&selected_item_area, horizontal::Left, vertical::Top),
+        );
 
         self.items
             .draw(&mut inverting_overlay.clipped(&menu_display_area))?;
