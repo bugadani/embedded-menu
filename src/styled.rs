@@ -18,7 +18,7 @@ impl<T, C: PixelColor> StyledMenuItem<C> for T where
 {
 }
 
-impl<'a, C, V, VC> StyledDrawable<MenuStyle<C>> for Link<V, VC>
+impl<C, V, VC> StyledDrawable<MenuStyle<C>> for Link<V, VC>
 where
     C: PixelColor,
     V: StyledMenuItem<C>,
@@ -43,7 +43,7 @@ where
     }
 }
 
-impl<'a, C, V> StyledDrawable<MenuStyle<C>> for Chain<V>
+impl<C, V> StyledDrawable<MenuStyle<C>> for Chain<V>
 where
     C: PixelColor,
     V: StyledMenuItem<C>,
