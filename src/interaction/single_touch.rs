@@ -53,29 +53,29 @@ impl InteractionController for SingleTouch {
         }
     }
 
-    fn update(&mut self, action: Self::Input) -> InteractionType {
+    fn update(&mut self, action: Self::Input) -> Option<InteractionType> {
         if action {
             if self.interaction_time < self.max_time {
                 self.interaction_time = self.interaction_time.saturating_add(1);
 
                 if self.interaction_time == self.max_time {
-                    InteractionType::Select
+                    Some(InteractionType::Select)
                 } else {
-                    InteractionType::Nothing
+                    None
                 }
             } else {
                 // holding input after event has fired
-                InteractionType::Nothing
+                None
             }
         } else {
             let time = core::mem::replace(&mut self.interaction_time, 0);
             if time <= self.ignore_time {
-                InteractionType::Nothing
+                None
             } else if time < self.max_time {
-                InteractionType::Next
+                Some(InteractionType::Next)
             } else {
                 // Already interacted
-                InteractionType::Nothing
+                None
             }
         }
     }
@@ -107,37 +107,28 @@ mod test {
         // ignore 1 long pulses, accept 2-4 as short press, 5- as long press
         let mut controller = SingleTouch::new(1, 5);
 
-        let expectations: [&[(usize, bool, InteractionType)]; 6] = [
-            &[(5, false, InteractionType::Nothing)],
+        let expectations: [&[_]; 6] = [
+            &[(5, false, None)],
             // repeated short pulse ignored
             &[
-                (1, true, InteractionType::Nothing),
-                (1, false, InteractionType::Nothing),
-                (1, true, InteractionType::Nothing),
-                (1, false, InteractionType::Nothing),
-                (1, true, InteractionType::Nothing),
-                (1, false, InteractionType::Nothing),
+                (1, true, None),
+                (1, false, None),
+                (1, true, None),
+                (1, false, None),
+                (1, true, None),
+                (1, false, None),
             ],
             // longer pulse recongised as Next event on falling edge
-            &[
-                (2, true, InteractionType::Nothing),
-                (1, false, InteractionType::Next),
-            ],
-            &[
-                (3, true, InteractionType::Nothing),
-                (1, false, InteractionType::Next),
-            ],
+            &[(2, true, None), (1, false, Some(InteractionType::Next))],
+            &[(3, true, None), (1, false, Some(InteractionType::Next))],
             // long pulse NOT recognised as Select event on falling edge
-            &[
-                (4, true, InteractionType::Nothing),
-                (1, false, InteractionType::Next),
-            ],
+            &[(4, true, None), (1, false, Some(InteractionType::Next))],
             // long pulse recognised as Select event immediately
             &[
-                (4, true, InteractionType::Nothing),
-                (1, true, InteractionType::Select),
-                (10, true, InteractionType::Nothing),
-                (1, false, InteractionType::Nothing),
+                (4, true, None),
+                (1, true, Some(InteractionType::Select)),
+                (10, true, None),
+                (1, false, None),
             ],
         ];
 

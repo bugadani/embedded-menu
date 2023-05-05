@@ -9,13 +9,7 @@ use embedded_graphics::{
     Drawable,
 };
 
-pub struct Programmed {}
-
-impl Programmed {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
+pub struct Programmed;
 
 impl InteractionController for Programmed {
     type Input = InteractionType;
@@ -24,8 +18,8 @@ impl InteractionController for Programmed {
     fn fill_area_width(&self, _max: u32) -> u32 {
         1
     }
-    fn update(&mut self, action: Self::Input) -> InteractionType {
-        action
+    fn update(&mut self, action: Self::Input) -> Option<InteractionType> {
+        Some(action)
     }
 }
 

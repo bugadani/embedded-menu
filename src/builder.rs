@@ -31,7 +31,7 @@ impl<R: Copy, C: PixelColor> MenuBuilder<Programmed, NoItems, R, C> {
             title,
             bounds,
             items: NoItems,
-            interaction: Programmed::new(),
+            interaction: Programmed,
             idle_timeout: None,
             style,
         }

@@ -70,7 +70,6 @@ fn main() -> Result<(), core::convert::Infallible> {
         menu.draw(&mut display).unwrap();
         window.update(&display);
 
-        let mut had_interaction = false;
         for event in window.events() {
             match event {
                 SimulatorEvent::KeyDown {
@@ -78,26 +77,14 @@ fn main() -> Result<(), core::convert::Infallible> {
                     repeat: false,
                     ..
                 } => match keycode {
-                    Keycode::Return => {
-                        menu.interact(InteractionType::Select);
-                        had_interaction = true;
-                    }
-                    Keycode::Up => {
-                        menu.interact(InteractionType::Previous);
-                        had_interaction = true;
-                    }
-                    Keycode::Down => {
-                        menu.interact(InteractionType::Next);
-                        had_interaction = true;
-                    }
-                    _ => {}
+                    Keycode::Return => menu.interact(InteractionType::Select),
+                    Keycode::Up => menu.interact(InteractionType::Previous),
+                    Keycode::Down => menu.interact(InteractionType::Next),
+                    _ => None,
                 },
                 SimulatorEvent::Quit => break 'running,
-                _ => {}
-            }
-        }
-        if !had_interaction {
-            menu.interact(InteractionType::Nothing);
+                _ => None,
+            };
         }
     }
 

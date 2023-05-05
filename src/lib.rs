@@ -11,7 +11,7 @@ mod plumbing;
 use crate::{
     adapters::invert::BinaryColorDrawTargetExt,
     builder::MenuBuilder,
-    interaction::{programmed::Programmed, InputType, InteractionController, InteractionType},
+    interaction::{programmed::Programmed, InteractionController, InteractionType},
     margin::MarginExt,
     plumbing::MenuExt,
 };
@@ -95,7 +95,6 @@ impl Animated {
 }
 
 pub enum MenuEvent<R: Copy> {
-    Nothing,
     NavigationEvent(R),
     DataEvent(R),
 }
@@ -214,30 +213,28 @@ where
         !self.items.details_of(self.selected).is_empty()
     }
 
-    pub fn interact(&mut self, input: IT::Input) -> MenuEvent<R> {
+    pub fn interact(&mut self, input: IT::Input) -> Option<MenuEvent<R>> {
         if let Some(threshold) = self.idle_timeout_threshold {
-            if input.is_active() {
-                self.idle_timeout = threshold;
-                self.display_mode = MenuDisplayMode::List;
-            }
+            self.idle_timeout = threshold;
+            self.display_mode = MenuDisplayMode::List;
         }
 
         let count = ViewGroup::len(&self.items) as u32;
         match self.interaction.update(input) {
-            InteractionType::Nothing => MenuEvent::Nothing,
-            InteractionType::Next => {
+            Some(InteractionType::Next) => {
                 let selected = self.selected.checked_sub(1).unwrap_or(count - 1);
 
                 self.change_selected_item(selected);
-                MenuEvent::Nothing
+                None
             }
-            InteractionType::Previous => {
+            Some(InteractionType::Previous) => {
                 let selected = (self.selected + 1) % count;
 
                 self.change_selected_item(selected);
-                MenuEvent::Nothing
+                None
             }
-            InteractionType::Select => self.items.interact_with(self.selected),
+            Some(InteractionType::Select) => Some(self.items.interact_with(self.selected)),
+            _ => None,
         }
     }
 }
