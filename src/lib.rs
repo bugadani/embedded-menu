@@ -281,12 +281,12 @@ where
 
         let menu_height = display_size.height as i32 - title_height;
 
-        // Height of the selection indicator
-        let selected_item_bounds = self.items.bounds_of(self.selected);
-
         // Reset positions
         self.items
             .align_to_mut(&menu_title, horizontal::Left, vertical::TopToBottom);
+
+        // Height of the selection indicator
+        let selected_item_bounds = self.items.bounds_of(self.selected);
 
         // animations
         if self.recompute_targets {
