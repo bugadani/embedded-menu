@@ -346,14 +346,16 @@ where
         // Height of the selection indicator
         let selected_item_bounds = self.items.bounds_of(self.selected);
 
-        let indicator_position = self.indicator.position_mut();
-
         // animations
         if self.recompute_targets {
             self.recompute_targets = false;
-            indicator_position.update_target(selected_item_bounds.top_left.y);
+            self.indicator
+                .position_mut()
+                .update_target(selected_item_bounds.top_left.y);
         }
-        indicator_position.update();
+
+        self.indicator
+            .update(self.interaction.fill_area_width(display_size.width));
 
         // Ensure selection indicator is always visible
         let top_distance = self.indicator.position().offset() - self.list_offset;

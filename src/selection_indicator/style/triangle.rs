@@ -43,14 +43,15 @@ pub struct Arrow {
     tip: TriangleShape,
 }
 
+const SHRINK: i32 = 1;
+
 impl Arrow {
-    fn new(bounds: Rectangle, fill_width: u32) -> Self {
+    pub fn new(bounds: Rectangle, fill_width: u32) -> Self {
         let body = Rectangle::new(bounds.top_left, Size::new(fill_width, bounds.size.height));
 
-        const SHRINK: i32 = 1;
         let tip = TriangleShape::new(
             Point::new(0, SHRINK),
-            Point::new(0, bounds.size.height as i32 - 1 - SHRINK),
+            Point::new(0, Self::tip_width(bounds)),
             Point::new(
                 bounds.size.height as i32 / 2 - SHRINK,
                 bounds.size.height as i32 / 2,
@@ -62,11 +63,29 @@ impl Arrow {
 
         Self { body, tip }
     }
+
+    pub fn tip_width(bounds: Rectangle) -> i32 {
+        bounds.size.height as i32 - 1 - SHRINK
+    }
 }
 
 impl ContainsPoint for Arrow {
     fn contains(&self, point: Point) -> bool {
         self.body.contains(point) || self.tip.contains(point)
+    }
+}
+
+impl View for Arrow {
+    fn translate_impl(&mut self, by: Point) {
+        self.body.translate_mut(by);
+        self.tip.translate_mut(by);
+    }
+
+    fn bounds(&self) -> Rectangle {
+        Rectangle::new(
+            self.body.top_left,
+            self.body.size + Size::new(self.tip.size().width, 0),
+        )
     }
 }
 

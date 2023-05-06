@@ -93,6 +93,8 @@ pub trait SelectionIndicator: Sized {
 
     fn item_height(&self, menuitem_height: u32) -> u32;
 
+    fn update(&mut self, fill_width: u32);
+
     fn draw<D>(
         &self,
         indicator_height: u32,
@@ -150,6 +152,11 @@ where
 
     fn position_mut(&mut self) -> &mut Self::Controller {
         &mut self.position
+    }
+
+    fn update(&mut self, fill_width: u32) {
+        self.position.update();
+        self.style.update(fill_width);
     }
 
     fn item_height(&self, menuitem_height: u32) -> u32 {
