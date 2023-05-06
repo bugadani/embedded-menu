@@ -5,8 +5,7 @@
 use embedded_graphics::{
     mono_font::{ascii::FONT_8X13_BOLD, iso_8859_1::FONT_6X10},
     pixelcolor::BinaryColor,
-    prelude::{Point, Size},
-    primitives::Rectangle,
+    prelude::Size,
     Drawable,
 };
 use embedded_graphics_simulator::{
@@ -45,10 +44,8 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = Menu::build_with_style(
         "Menu",
-        display_area,
         MenuStyle::new(BinaryColor::On)
             .with_font(&FONT_6X10)
             .with_title_font(&FONT_8X13_BOLD)

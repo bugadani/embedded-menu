@@ -1,11 +1,6 @@
 //! Run using `cargo run --example details_dev --target x86_64-pc-windows-msvc`
 
-use embedded_graphics::{
-    pixelcolor::BinaryColor,
-    prelude::{Point, Size},
-    primitives::Rectangle,
-    Drawable,
-};
+use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
     Window,
@@ -14,8 +9,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{interaction::InteractionType, items::NavigationItem, Menu};
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
-    let mut menu = Menu::builder("Menu", display_area)
+    let mut menu = Menu::builder("Menu")
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")

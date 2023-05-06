@@ -138,7 +138,6 @@ where
 {
     _return_type: PhantomData<R>,
     title: &'static str,
-    bounds: Rectangle,
     items: VG,
     interaction: IT,
     selected: u32,
@@ -157,23 +156,21 @@ where
 {
     pub fn builder(
         title: &'static str,
-        bounds: Rectangle,
     ) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, LineIndicator>
     where
         MenuStyle<C>: Default,
     {
-        Self::build_with_style(title, bounds, MenuStyle::default())
+        Self::build_with_style(title, MenuStyle::default())
     }
 
     pub fn build_with_style(
         title: &'static str,
-        bounds: Rectangle,
         style: MenuStyle<C>,
     ) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, LineIndicator>
     where
         MenuStyle<C>: Default,
     {
-        MenuBuilder::new(title, bounds, style)
+        MenuBuilder::new(title, style)
     }
 }
 
@@ -224,27 +221,6 @@ where
             Some(InteractionType::Select) => Some(self.items.interact_with(self.selected)),
             _ => None,
         }
-    }
-}
-
-impl<IT, VG, R, C, P, S> View for Menu<IT, VG, R, C, P, S>
-where
-    R: Copy,
-    IT: InteractionController,
-    VG: ViewGroup + MenuExt<R>,
-    C: PixelColor,
-    P: SelectionIndicatorController,
-    S: IndicatorStyle,
-{
-    /// Move the origin of an object by a given number of (x, y) pixels,
-    /// by returning a new object
-    fn translate_impl(&mut self, by: Point) {
-        self.bounds.translate_mut(by);
-    }
-
-    /// Returns the bounding box of the `View` as a `Rectangle`
-    fn bounds(&self) -> Rectangle {
-        self.bounds
     }
 }
 

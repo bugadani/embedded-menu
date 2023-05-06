@@ -3,12 +3,7 @@
 //! Navigate using only the spacebar. Short(ish) press moves on to the next item, long press activates.
 //! Watch the animated selection indicator fill up. Long press is registered as the bar reaches full width.
 
-use embedded_graphics::{
-    pixelcolor::BinaryColor,
-    prelude::{Point, Size},
-    primitives::Rectangle,
-    Drawable,
-};
+use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
     Window,
@@ -46,8 +41,7 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
-    let mut menu = Menu::builder("Menu with even longer title", display_area)
+    let mut menu = Menu::builder("Menu with even longer title")
         .with_interaction_controller(SingleTouch::new(10, 100))
         .with_selection_indicator_style(AnimatedTriangle::new(160))
         .with_animated_selection_indicator(10)

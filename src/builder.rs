@@ -9,7 +9,7 @@ use crate::{
     Menu, MenuDisplayMode, MenuItem, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
-use embedded_graphics::{pixelcolor::PixelColor, primitives::Rectangle};
+use embedded_graphics::pixelcolor::PixelColor;
 use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
 
 pub struct MenuBuilder<IT, LL, R, C, P, S>
@@ -20,7 +20,6 @@ where
 {
     _return_type: PhantomData<R>,
     title: &'static str,
-    bounds: Rectangle,
     items: LL,
     interaction: IT,
     style: MenuStyle<C>,
@@ -32,11 +31,10 @@ where
     R: Copy,
     C: PixelColor,
 {
-    pub fn new(title: &'static str, bounds: Rectangle, style: MenuStyle<C>) -> Self {
+    pub fn new(title: &'static str, style: MenuStyle<C>) -> Self {
         Self {
             _return_type: PhantomData,
             title,
-            bounds,
             items: NoItems,
             interaction: Programmed,
             style,
@@ -60,7 +58,6 @@ where
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            bounds: self.bounds,
             items: self.items,
             interaction: self.interaction,
             style: self.style,
@@ -75,7 +72,6 @@ where
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            bounds: self.bounds,
             items: self.items,
             interaction: self.interaction,
             style: self.style,
@@ -90,7 +86,6 @@ where
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            bounds: self.bounds,
             items: self.items,
             interaction,
             style: self.style,
@@ -112,7 +107,6 @@ where
         Menu {
             _return_type: PhantomData,
             title: self.title,
-            bounds: self.bounds,
             selected: (ViewGroup::len(&self.items) as u32).saturating_sub(1),
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
             interaction: self.interaction,
@@ -141,7 +135,6 @@ where
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            bounds: self.bounds,
             items: Chain::new(MenuLine::new(item, self.style)),
             interaction: self.interaction,
             style: self.style,
@@ -166,7 +159,6 @@ where
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            bounds: self.bounds,
             items: self.items.append(MenuLine::new(item, self.style)),
             interaction: self.interaction,
             style: self.style,
@@ -192,7 +184,6 @@ where
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            bounds: self.bounds,
             items: self.items.append(MenuLine::new(item, self.style)),
             interaction: self.interaction,
             style: self.style,
