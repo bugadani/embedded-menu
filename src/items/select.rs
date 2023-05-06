@@ -20,7 +20,7 @@ impl SelectValue for bool {
     }
 }
 
-pub struct Select<'a, R: Copy, S: SelectValue> {
+pub struct Select<'a, R, S: SelectValue> {
     title_text: &'a str,
     details: &'a str,
     convert: fn(S) -> R,
@@ -38,7 +38,7 @@ impl<'a, S: SelectValue> Select<'a, (), S> {
     }
 }
 
-impl<'a, R: Copy, S: SelectValue> Select<'a, R, S> {
+impl<'a, R, S: SelectValue> Select<'a, R, S> {
     pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> Select<'a, R2, S> {
         Select {
             convert,
@@ -53,7 +53,7 @@ impl<'a, R: Copy, S: SelectValue> Select<'a, R, S> {
     }
 }
 
-impl<'a, R: Copy, S: SelectValue> MenuItem for Select<'a, R, S> {
+impl<'a, R, S: SelectValue> MenuItem for Select<'a, R, S> {
     type Data = R;
 
     fn interact(&mut self) -> R {

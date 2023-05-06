@@ -38,7 +38,7 @@ use embedded_text::{
 };
 
 pub trait MenuItem {
-    type Data: Copy;
+    type Data;
 
     fn interact(&mut self) -> Self::Data;
     fn title(&self) -> &str;
@@ -198,7 +198,6 @@ pub struct NoItems;
 
 pub struct Menu<IT, VG, R, C, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     C: PixelColor,
     P: SelectionIndicatorController,
@@ -219,7 +218,6 @@ where
 
 impl<R, C, S> Menu<Programmed, NoItems, R, C, StaticPosition, S>
 where
-    R: Copy,
     C: PixelColor,
     S: IndicatorStyle,
 {
@@ -233,7 +231,6 @@ where
 
 impl<IT, R, C, P, S> Menu<IT, NoItems, R, C, P, S>
 where
-    R: Copy,
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
@@ -249,7 +246,6 @@ where
 
 impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
@@ -303,7 +299,6 @@ where
 
 impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     C: PixelColor + From<Rgb888>,
@@ -429,7 +424,6 @@ where
 
 impl<IT, VG, R, P, S> Menu<IT, VG, R, BinaryColor, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,
@@ -507,7 +501,6 @@ where
 
 impl<IT, VG, R, P, S> Drawable for Menu<IT, VG, R, BinaryColor, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,

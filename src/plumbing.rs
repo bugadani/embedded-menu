@@ -4,10 +4,7 @@ use embedded_layout::{object_chain::ChainElement, prelude::*};
 use crate::{items::MenuLine, MenuItem};
 
 /// Menu-related extensions for object chain elements
-pub trait MenuExt<R>: ChainElement
-where
-    R: Copy,
-{
+pub trait MenuExt<R>: ChainElement {
     fn bounds_of(&self, nth: u32) -> Rectangle;
     fn title_of(&self, nth: u32) -> &str;
     fn details_of(&self, nth: u32) -> &str;
@@ -16,7 +13,6 @@ where
 
 impl<I, R> MenuExt<R> for Chain<MenuLine<I>>
 where
-    R: Copy,
     I: MenuItem<Data = R>,
     MenuLine<I>: View,
 {
@@ -43,7 +39,6 @@ where
 
 impl<I, LE, R> MenuExt<R> for Link<MenuLine<I>, LE>
 where
-    R: Copy,
     I: MenuItem<Data = R>,
     MenuLine<I>: View,
     LE: MenuExt<R>,

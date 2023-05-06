@@ -11,7 +11,6 @@ use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::View
 
 pub struct MenuBuilder<IT, LL, R, C, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     C: PixelColor,
     S: IndicatorStyle,
@@ -25,7 +24,6 @@ where
 
 impl<R, C, S, IT, P> MenuBuilder<IT, NoItems, R, C, P, S>
 where
-    R: Copy,
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
@@ -43,7 +41,6 @@ where
 
 impl<IT, R, C, P, S> MenuBuilder<IT, NoItems, R, C, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     C: PixelColor,
     P: SelectionIndicatorController,
@@ -64,7 +61,6 @@ where
 
 impl<IT, CE, R, C, P, S> MenuBuilder<IT, Chain<CE>, R, C, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     Chain<CE>: MenuExt<R>,
     C: PixelColor,
@@ -86,7 +82,6 @@ where
 
 impl<IT, I, CE, R, C, P, S> MenuBuilder<IT, Link<I, CE>, R, C, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     Link<I, CE>: MenuExt<R>,
     CE: MenuExt<R>,
@@ -109,7 +104,6 @@ where
 
 impl<IT, VG, R, C, P, S> MenuBuilder<IT, VG, R, C, P, S>
 where
-    R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
