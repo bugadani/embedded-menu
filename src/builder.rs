@@ -3,7 +3,7 @@ use crate::{
     items::MenuLine,
     plumbing::MenuExt,
     private::NoItems,
-    selection_indicator::{simple::Indicator, SelectionIndicator, StaticPosition},
+    selection_indicator::{Indicator, SelectionIndicator, StaticPosition},
     Menu, MenuDisplayMode, MenuItem, MenuStyle,
 };
 use core::marker::PhantomData;

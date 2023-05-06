@@ -16,7 +16,7 @@ use crate::{
     margin::MarginExt,
     plumbing::MenuExt,
     selection_indicator::{
-        simple::Indicator, SelectionIndicator, SelectionIndicatorController, StaticPosition,
+        Indicator, SelectionIndicator, SelectionIndicatorController, StaticPosition,
     },
     styled::StyledMenuItem,
 };

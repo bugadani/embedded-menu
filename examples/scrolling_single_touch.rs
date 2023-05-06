@@ -16,7 +16,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::single_touch::SingleTouch,
     items::{select::SelectValue, NavigationItem, Select},
-    selection_indicator::{simple::Indicator, IndicatorStyle},
+    selection_indicator::{Indicator, IndicatorStyle},
     Menu,
 };
 

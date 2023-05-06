@@ -13,7 +13,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, NavigationItem, Select},
-    selection_indicator::simple::Indicator,
+    selection_indicator::Indicator,
     Menu,
 };
 
