@@ -44,7 +44,6 @@ impl SelectValue for TestEnum {
 fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = Menu::builder("Menu", display_area)
-        .show_details_after(300)
         .with_animated_selection_indicator(10)
         .add_item(
             NavigationItem::new("Foo", ())

@@ -51,9 +51,9 @@ fn main() -> Result<(), core::convert::Infallible> {
         display_area,
         MenuStyle::new(BinaryColor::On)
             .with_font(&FONT_6X10)
-            .with_title_font(&FONT_8X13_BOLD),
+            .with_title_font(&FONT_8X13_BOLD)
+            .with_details_delay(100),
     )
-    .show_details_after(100)
     .add_item(
         NavigationItem::new("Nav item", ())
             .with_marker("»") // not part of the ASCII font

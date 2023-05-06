@@ -16,7 +16,6 @@ use embedded_menu::{interaction::InteractionType, items::NavigationItem, Menu};
 fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = Menu::builder("Menu", display_area)
-        .show_details_after(100)
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")

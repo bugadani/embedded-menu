@@ -24,7 +24,6 @@ where
     bounds: Rectangle,
     items: LL,
     interaction: IT,
-    idle_timeout: Option<u16>,
     style: MenuStyle<C>,
     indicator: Indicator<P, S>,
 }
@@ -41,7 +40,6 @@ where
             bounds,
             items: NoItems,
             interaction: Programmed,
-            idle_timeout: None,
             style,
             indicator: Indicator::new(),
         }
@@ -56,19 +54,6 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn show_details_after(self, timeout: u16) -> MenuBuilder<IT, LL, R, C, P, S> {
-        MenuBuilder {
-            _return_type: PhantomData,
-            title: self.title,
-            bounds: self.bounds,
-            items: self.items,
-            interaction: self.interaction,
-            idle_timeout: Some(timeout),
-            style: self.style,
-            indicator: self.indicator,
-        }
-    }
-
     pub fn with_selection_indicator_style<S2>(self, style: S2) -> MenuBuilder<IT, LL, R, C, P, S2>
     where
         S2: IndicatorStyle,
@@ -79,7 +64,6 @@ where
             bounds: self.bounds,
             items: self.items,
             interaction: self.interaction,
-            idle_timeout: self.idle_timeout,
             style: self.style,
             indicator: self.indicator.with_indicator_style(style),
         }
@@ -95,7 +79,6 @@ where
             bounds: self.bounds,
             items: self.items,
             interaction: self.interaction,
-            idle_timeout: self.idle_timeout,
             style: self.style,
             indicator: self.indicator.with_animated_selection_indicator(frames),
         }
@@ -111,7 +94,6 @@ where
             bounds: self.bounds,
             items: self.items,
             interaction,
-            idle_timeout: self.idle_timeout,
             style: self.style,
             indicator: self.indicator,
         }
@@ -138,8 +120,7 @@ where
             recompute_targets: true,
             list_offset: 0,
             indicator: self.indicator,
-            idle_timeout_threshold: self.idle_timeout,
-            idle_timeout: self.idle_timeout.unwrap_or_default(),
+            idle_timeout: self.style.details_delay.unwrap_or_default(),
             display_mode: MenuDisplayMode::List,
             style: self.style,
         }
@@ -164,7 +145,6 @@ where
             bounds: self.bounds,
             items: Chain::new(MenuLine::new(item, self.style)),
             interaction: self.interaction,
-            idle_timeout: self.idle_timeout,
             style: self.style,
             indicator: self.indicator,
         }
@@ -190,7 +170,6 @@ where
             bounds: self.bounds,
             items: self.items.append(MenuLine::new(item, self.style)),
             interaction: self.interaction,
-            idle_timeout: self.idle_timeout,
             style: self.style,
             indicator: self.indicator,
         }
@@ -217,7 +196,6 @@ where
             bounds: self.bounds,
             items: self.items.append(MenuLine::new(item, self.style)),
             interaction: self.interaction,
-            idle_timeout: self.idle_timeout,
             style: self.style,
             indicator: self.indicator,
         }

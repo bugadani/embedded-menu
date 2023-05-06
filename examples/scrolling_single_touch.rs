@@ -48,7 +48,6 @@ impl SelectValue for TestEnum {
 fn main() -> Result<(), core::convert::Infallible> {
     let display_area = Rectangle::new(Point::zero(), Size::new(128, 64));
     let mut menu = Menu::builder("Menu with even longer title", display_area)
-        .show_details_after(100)
         .with_interaction_controller(SingleTouch::new(10, 100))
         .with_selection_indicator_style(AnimatedTriangle::new(160))
         .with_animated_selection_indicator(10)

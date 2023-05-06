@@ -80,6 +80,7 @@ pub struct MenuStyle<C: PixelColor> {
     pub(crate) scrollbar: DisplayScrollbar,
     pub(crate) font: &'static MonoFont<'static>,
     pub(crate) title_font: &'static MonoFont<'static>,
+    pub(crate) details_delay: Option<u16>,
 }
 
 impl Default for MenuStyle<BinaryColor> {
@@ -98,6 +99,7 @@ where
             scrollbar: DisplayScrollbar::Auto,
             font: &FONT_6X10,
             title_font: &FONT_6X10,
+            details_delay: None,
         }
     }
 
@@ -111,6 +113,13 @@ where
 
     pub const fn with_scrollbar_style(self, scrollbar: DisplayScrollbar) -> Self {
         Self { scrollbar, ..self }
+    }
+
+    pub const fn with_details_delay(self, frames: u16) -> Self {
+        Self {
+            details_delay: Some(frames),
+            ..self
+        }
     }
 
     pub fn text_style(&self) -> MonoTextStyle<'static, C> {
@@ -144,7 +153,6 @@ where
     selected: u32,
     recompute_targets: bool,
     list_offset: i32,
-    idle_timeout_threshold: Option<u16>,
     idle_timeout: u16,
     display_mode: MenuDisplayMode,
     style: MenuStyle<C>,
@@ -203,7 +211,7 @@ where
     }
 
     pub fn interact(&mut self, input: IT::Input) -> Option<MenuEvent<R>> {
-        if let Some(threshold) = self.idle_timeout_threshold {
+        if let Some(threshold) = self.style.details_delay {
             self.idle_timeout = threshold;
             self.display_mode = MenuDisplayMode::List;
         }
