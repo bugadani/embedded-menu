@@ -356,7 +356,11 @@ where
         // Ensure selection indicator is always visible
         let top_distance = self.indicator.offset() - self.list_offset;
         self.list_offset += if top_distance > 0 {
-            let indicator_height = selected_item_bounds.size().height as i32;
+            let indicator_style = self.indicator.style();
+            let indicator_insets = indicator_style.margin();
+            let indicator_height = selected_item_bounds.size().height as i32
+                + indicator_insets.top
+                + indicator_insets.bottom;
 
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
@@ -420,7 +424,7 @@ where
 
         let menu_height = display_size.height - menu_title.size().height;
 
-        // Height of the first menu item
+        // Height of the selected menu item
         let menuitem_height = self.items.bounds_of(self.selected).size().height;
 
         let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height)).align_to(
@@ -449,7 +453,7 @@ where
         .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
 
         self.indicator.draw(
-            menuitem_height,
+            menuitem_height as u32,
             self.indicator.offset() - self.list_offset + menu_title.size().height as i32,
             self.interaction.fill_area_width(menu_list_width),
             &mut display.clipped(&menu_display_area),

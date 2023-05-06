@@ -6,7 +6,7 @@ use embedded_graphics::{
 
 use crate::{
     adapters::invert::BinaryColorDrawTargetExt,
-    selection_indicator::{IndicatorStyle, SelectionIndicator},
+    selection_indicator::{IndicatorStyle, Insets, SelectionIndicator},
     MenuStyle,
 };
 
@@ -39,11 +39,15 @@ impl SelectionIndicator for SimpleSelectionIndicator {
         self.y_offset
     }
 
+    fn style(&self) -> IndicatorStyle {
+        self.style
+    }
+
     fn update(&mut self) {}
 
     fn draw<D>(
         &self,
-        indicator_height: u32,
+        selected_height: u32,
         screen_offset: i32,
         fill_width: u32,
         display: &mut D,
@@ -53,12 +57,21 @@ impl SelectionIndicator for SimpleSelectionIndicator {
     where
         D: DrawTarget<Color = Self::Color>,
     {
-        let margin = self.style.margin();
+        let Insets {
+            left: margin_left,
+            top: margin_top,
+            right: margin_right,
+            bottom: margin_bottom,
+        } = self.style.margin();
+
         self.style.draw(
             fill_width,
             &mut display.cropped(&Rectangle::new(
                 Point::new(0, screen_offset),
-                Size::new(display.bounding_box().size.width, indicator_height),
+                Size::new(
+                    display.bounding_box().size.width,
+                    (selected_height as i32 + margin_top + margin_bottom) as u32,
+                ),
             )),
         )?;
 
@@ -67,11 +80,17 @@ impl SelectionIndicator for SimpleSelectionIndicator {
 
         let mut inverting = display.invert_area(&Rectangle::new(
             Point::new(0, screen_offset),
-            Size::new(fill_width, indicator_height),
+            Size::new(fill_width, selected_height),
         ));
         items.draw_styled(
             style,
-            &mut inverting.cropped(&Rectangle::new(display_top_left + margin, display_size)),
+            &mut inverting.cropped(&Rectangle::new(
+                display_top_left + Point::new(margin_left, margin_top),
+                Size::new(
+                    (display_size.width as i32 - margin_left - margin_right) as u32,
+                    display_size.height,
+                ),
+            )),
         )
     }
 }

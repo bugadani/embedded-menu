@@ -10,16 +10,35 @@ use crate::MenuStyle;
 pub mod animated;
 pub mod simple;
 
+pub struct Insets {
+    pub left: i32,
+    pub top: i32,
+    pub right: i32,
+    pub bottom: i32,
+}
+
+impl Insets {
+    pub fn new(left: i32, top: i32, right: i32, bottom: i32) -> Self {
+        Self {
+            left,
+            top,
+            right,
+            bottom,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
 pub enum IndicatorStyle {
     Line,
-    // Border,
+    Border,
 }
 
 impl IndicatorStyle {
-    fn margin(&self) -> Size {
+    pub fn margin(&self) -> Insets {
         match self {
-            IndicatorStyle::Line => Size::new(2, 0),
-            // IndicatorStyle::Border => Size::new(2, 1),
+            IndicatorStyle::Line => Insets::new(2, 0, 0, 0),
+            IndicatorStyle::Border => Insets::new(2, 1, 1, 1),
         }
     }
 }
@@ -38,13 +57,13 @@ impl IndicatorStyle {
             IndicatorStyle::Line => Rectangle::new(fill.top_left, fill.size + Size::new(1, 0))
                 .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
                 .draw(display),
-            // IndicatorStyle::Border => {
-            //     display_area
-            //         .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
-            //         .draw(display)?;
-            //     fill.into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
-            //         .draw(display)
-            // }
+            IndicatorStyle::Border => {
+                display_area
+                    .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
+                    .draw(display)?;
+                fill.into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
+                    .draw(display)
+            }
         }
     }
 }
@@ -55,6 +74,8 @@ pub trait SelectionIndicator: Sized {
     fn update_target(&mut self, y: i32);
 
     fn offset(&self) -> i32;
+
+    fn style(&self) -> IndicatorStyle;
 
     fn update(&mut self);
 
