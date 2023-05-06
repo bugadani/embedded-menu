@@ -7,7 +7,7 @@ use embedded_graphics::{
 };
 use embedded_layout::prelude::{horizontal::LeftToRight, vertical::Center, Align};
 
-use crate::MenuStyle;
+use crate::{Animated, MenuStyle};
 
 pub mod animated;
 pub mod simple;
@@ -94,16 +94,68 @@ impl IndicatorStyle {
     }
 }
 
+pub trait SelectionIndicatorController {
+    fn update_target(&mut self, y: i32);
+    fn offset(&self) -> i32;
+    fn update(&mut self);
+}
+
+pub struct StaticPosition {
+    y_offset: i32,
+}
+
+impl StaticPosition {
+    pub fn new() -> Self {
+        Self { y_offset: 0 }
+    }
+}
+
+impl SelectionIndicatorController for StaticPosition {
+    fn update_target(&mut self, y: i32) {
+        self.y_offset = y;
+    }
+
+    fn offset(&self) -> i32 {
+        self.y_offset
+    }
+
+    fn update(&mut self) {}
+}
+
+pub struct AnimatedPosition {
+    y_offset: Animated,
+}
+
+impl AnimatedPosition {
+    pub fn new(frames: i32) -> Self {
+        Self {
+            y_offset: Animated::new(0, frames),
+        }
+    }
+}
+
+impl SelectionIndicatorController for AnimatedPosition {
+    fn update_target(&mut self, y: i32) {
+        self.y_offset.update_target(y);
+    }
+
+    fn offset(&self) -> i32 {
+        self.y_offset.current()
+    }
+
+    fn update(&mut self) {
+        self.y_offset.update()
+    }
+}
+
 pub trait SelectionIndicator: Sized {
     type Color: PixelColor;
+    type Controller: SelectionIndicatorController;
 
-    fn update_target(&mut self, y: i32);
+    fn position(&self) -> &Self::Controller;
+    fn position_mut(&mut self) -> &mut Self::Controller;
 
-    fn offset(&self) -> i32;
-
-    fn style(&self) -> IndicatorStyle;
-
-    fn update(&mut self);
+    fn item_height(&self, menuitem_height: u32) -> u32;
 
     fn draw<D>(
         &self,

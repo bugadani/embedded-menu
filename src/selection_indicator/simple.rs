@@ -6,19 +6,19 @@ use embedded_graphics::{
 
 use crate::{
     adapters::invert::BinaryColorDrawTargetExt,
-    selection_indicator::{IndicatorStyle, Insets, SelectionIndicator},
+    selection_indicator::{IndicatorStyle, Insets, SelectionIndicator, StaticPosition},
     MenuStyle,
 };
 
 pub struct SimpleSelectionIndicator {
-    y_offset: i32,
+    position: StaticPosition,
     style: IndicatorStyle,
 }
 
 impl SimpleSelectionIndicator {
     pub fn new() -> Self {
         Self {
-            y_offset: 0,
+            position: StaticPosition::new(),
             style: IndicatorStyle::Line,
         }
     }
@@ -30,20 +30,20 @@ impl SimpleSelectionIndicator {
 
 impl SelectionIndicator for SimpleSelectionIndicator {
     type Color = BinaryColor;
+    type Controller = StaticPosition;
 
-    fn update_target(&mut self, y: i32) {
-        self.y_offset = y;
+    fn position(&self) -> &Self::Controller {
+        &self.position
     }
 
-    fn offset(&self) -> i32 {
-        self.y_offset
+    fn position_mut(&mut self) -> &mut Self::Controller {
+        &mut self.position
     }
 
-    fn style(&self) -> IndicatorStyle {
-        self.style
+    fn item_height(&self, menuitem_height: u32) -> u32 {
+        let indicator_insets = self.style.margin(menuitem_height);
+        (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
     }
-
-    fn update(&mut self) {}
 
     fn draw<D>(
         &self,

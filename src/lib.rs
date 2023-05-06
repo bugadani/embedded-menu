@@ -15,7 +15,9 @@ use crate::{
     interaction::{programmed::Programmed, InteractionController, InteractionType},
     margin::MarginExt,
     plumbing::MenuExt,
-    selection_indicator::{simple::SimpleSelectionIndicator, SelectionIndicator},
+    selection_indicator::{
+        simple::SimpleSelectionIndicator, SelectionIndicator, SelectionIndicatorController,
+    },
     styled::StyledMenuItem,
 };
 use core::marker::PhantomData;
@@ -343,24 +345,21 @@ where
         // Height of the selection indicator
         let selected_item_bounds = self.items.bounds_of(self.selected);
 
+        let indicator_position = self.indicator.position_mut();
+
         // animations
         if self.recompute_targets {
             self.recompute_targets = false;
-
-            self.indicator
-                .update_target(selected_item_bounds.top_left.y);
+            indicator_position.update_target(selected_item_bounds.top_left.y);
         }
-
-        self.indicator.update();
+        indicator_position.update();
 
         // Ensure selection indicator is always visible
-        let top_distance = self.indicator.offset() - self.list_offset;
+        let top_distance = self.indicator.position().offset() - self.list_offset;
         self.list_offset += if top_distance > 0 {
-            let indicator_style = self.indicator.style();
-            let indicator_insets = indicator_style.margin(selected_item_bounds.size().height);
-            let indicator_height = selected_item_bounds.size().height as i32
-                + indicator_insets.top
-                + indicator_insets.bottom;
+            let indicator_height =
+                self.indicator
+                    .item_height(selected_item_bounds.size().height) as i32;
 
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
@@ -454,7 +453,7 @@ where
 
         self.indicator.draw(
             menuitem_height as u32,
-            self.indicator.offset() - self.list_offset + menu_title.size().height as i32,
+            self.indicator.position().offset() - self.list_offset + menu_title.size().height as i32,
             self.interaction.fill_area_width(menu_list_width),
             &mut display.clipped(&menu_display_area),
             &self.items,
