@@ -1,4 +1,4 @@
-use crate::{MenuEvent, MenuItem};
+use crate::MenuItem;
 
 pub trait SelectValue: Sized + Copy + PartialEq {
     fn next(&self) -> Self;
@@ -56,9 +56,9 @@ impl<'a, R: Copy, S: SelectValue> Select<'a, R, S> {
 impl<'a, R: Copy, S: SelectValue> MenuItem for Select<'a, R, S> {
     type Data = R;
 
-    fn interact(&mut self) -> MenuEvent<R> {
+    fn interact(&mut self) -> R {
         self.value = self.value.next();
-        MenuEvent::DataEvent((self.convert)(self.value))
+        (self.convert)(self.value)
     }
 
     fn title(&self) -> &str {

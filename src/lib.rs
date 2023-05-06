@@ -40,7 +40,7 @@ use embedded_text::{
 pub trait MenuItem {
     type Data: Copy;
 
-    fn interact(&mut self) -> MenuEvent<Self::Data>;
+    fn interact(&mut self) -> Self::Data;
     fn title(&self) -> &str;
     fn details(&self) -> &str;
     fn value(&self) -> &str;
@@ -60,11 +60,6 @@ impl MenuDisplayMode {
     fn is_details(&self) -> bool {
         matches!(self, Self::Details)
     }
-}
-
-pub enum MenuEvent<R: Copy> {
-    NavigationEvent(R),
-    DataEvent(R),
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -206,7 +201,7 @@ where
         !self.items.details_of(self.selected).is_empty()
     }
 
-    pub fn interact(&mut self, input: IT::Input) -> Option<MenuEvent<R>> {
+    pub fn interact(&mut self, input: IT::Input) -> Option<R> {
         if let Some(threshold) = self.style.details_delay {
             self.idle_timeout = threshold;
             self.display_mode = MenuDisplayMode::List;

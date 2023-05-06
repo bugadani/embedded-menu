@@ -6,7 +6,7 @@ pub use select::Select;
 
 use crate::{
     margin::{Margin, MarginExt},
-    MenuEvent, MenuItem, MenuStyle,
+    MenuItem, MenuStyle,
 };
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -71,7 +71,7 @@ where
 {
     type Data = I::Data;
 
-    fn interact(&mut self) -> MenuEvent<Self::Data> {
+    fn interact(&mut self) -> Self::Data {
         self.item.interact()
     }
 

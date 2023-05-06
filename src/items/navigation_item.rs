@@ -1,4 +1,4 @@
-use crate::{MenuEvent, MenuItem};
+use crate::MenuItem;
 
 pub struct NavigationItem<'a, R: Copy> {
     title_text: &'a str,
@@ -10,8 +10,8 @@ pub struct NavigationItem<'a, R: Copy> {
 impl<'a, R: Copy> MenuItem for NavigationItem<'a, R> {
     type Data = R;
 
-    fn interact(&mut self) -> MenuEvent<R> {
-        MenuEvent::NavigationEvent(self.return_value)
+    fn interact(&mut self) -> R {
+        self.return_value
     }
 
     fn title(&self) -> &str {

@@ -1,7 +1,7 @@
 use embedded_graphics::primitives::Rectangle;
 use embedded_layout::{object_chain::ChainElement, prelude::*};
 
-use crate::{MenuEvent, MenuItem};
+use crate::MenuItem;
 
 /// Menu-related extensions for object chain elements
 pub trait MenuExt<R>: ChainElement
@@ -11,7 +11,7 @@ where
     fn bounds_of(&self, nth: u32) -> Rectangle;
     fn title_of(&self, nth: u32) -> &str;
     fn details_of(&self, nth: u32) -> &str;
-    fn interact_with(&mut self, nth: u32) -> MenuEvent<R>;
+    fn interact_with(&mut self, nth: u32) -> R;
 }
 
 impl<I, R> MenuExt<R> for Chain<I>
@@ -24,7 +24,7 @@ where
         self.object.bounds()
     }
 
-    fn interact_with(&mut self, nth: u32) -> MenuEvent<R> {
+    fn interact_with(&mut self, nth: u32) -> R {
         debug_assert!(nth == 0);
         self.object.interact()
     }
@@ -54,7 +54,7 @@ where
         }
     }
 
-    fn interact_with(&mut self, nth: u32) -> MenuEvent<R> {
+    fn interact_with(&mut self, nth: u32) -> R {
         if nth == 0 {
             self.object.interact()
         } else {
