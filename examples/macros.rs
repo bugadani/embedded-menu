@@ -24,7 +24,7 @@ pub enum TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::builder("Menu")
+    let mut menu = Menu::new("Menu")
         .add_item(Select::new("Check this2", TestEnum::A))
         .build();
 

@@ -46,7 +46,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .with_interaction_controller(SingleTouch::new(10, 100))
         .with_animated_selection_indicator(10);
 
-    let mut menu = Menu::build_with_style("Menu with even longer title", style)
+    let mut menu = Menu::with_style("Menu with even longer title", style)
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")

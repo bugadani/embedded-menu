@@ -9,7 +9,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{interaction::InteractionType, items::NavigationItem, Menu};
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::builder("Menu")
+    let mut menu = Menu::new("Menu")
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")

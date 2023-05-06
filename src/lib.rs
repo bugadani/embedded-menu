@@ -223,11 +223,11 @@ where
     C: PixelColor,
     S: IndicatorStyle,
 {
-    pub fn builder(title: &'static str) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S>
+    pub fn new(title: &'static str) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S>
     where
         MenuStyle<C, S, Programmed, StaticPosition>: Default,
     {
-        Self::build_with_style(title, MenuStyle::default())
+        Self::with_style(title, MenuStyle::default())
     }
 }
 
@@ -239,7 +239,7 @@ where
     IT: InteractionController,
     P: SelectionIndicatorController,
 {
-    pub fn build_with_style(
+    pub fn with_style(
         title: &'static str,
         style: MenuStyle<C, S, IT, P>,
     ) -> MenuBuilder<IT, NoItems, R, C, P, S> {

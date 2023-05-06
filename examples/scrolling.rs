@@ -39,7 +39,7 @@ impl SelectValue for TestEnum {
 fn main() -> Result<(), core::convert::Infallible> {
     let style = MenuStyle::new(BinaryColor::On).with_animated_selection_indicator(10);
 
-    let mut menu = Menu::build_with_style("Menu", style)
+    let mut menu = Menu::with_style("Menu", style)
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")
