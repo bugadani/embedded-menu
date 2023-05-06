@@ -16,7 +16,8 @@ use crate::{
     margin::MarginExt,
     plumbing::MenuExt,
     selection_indicator::{
-        style::line::Line as LineIndicator, Indicator, SelectionIndicator, StaticPosition,
+        style::{line::Line as LineIndicator, IndicatorStyle},
+        Indicator, SelectionIndicatorController, StaticPosition,
     },
     styled::StyledMenuItem,
 };
@@ -162,12 +163,13 @@ mod private {
 
 use private::NoItems;
 
-pub struct Menu<IT, VG, R, C, SI>
+pub struct Menu<IT, VG, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
     C: PixelColor,
-    SI: SelectionIndicator,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
     _return_type: PhantomData<R>,
     title: &'static str,
@@ -181,10 +183,10 @@ where
     idle_timeout: u16,
     display_mode: MenuDisplayMode,
     style: MenuStyle<C>,
-    indicator: SI,
+    indicator: Indicator<P, S>,
 }
 
-impl<R, C> Menu<Programmed, NoItems, R, C, Indicator<StaticPosition, LineIndicator>>
+impl<R, C> Menu<Programmed, NoItems, R, C, StaticPosition, LineIndicator>
 where
     R: Copy,
     C: PixelColor,
@@ -192,7 +194,7 @@ where
     pub fn builder(
         title: &'static str,
         bounds: Rectangle,
-    ) -> MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition, LineIndicator>>
+    ) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, LineIndicator>
     where
         MenuStyle<C>: Default,
     {
@@ -203,7 +205,7 @@ where
         title: &'static str,
         bounds: Rectangle,
         style: MenuStyle<C>,
-    ) -> MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition, LineIndicator>>
+    ) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, LineIndicator>
     where
         MenuStyle<C>: Default,
     {
@@ -211,13 +213,14 @@ where
     }
 }
 
-impl<IT, VG, R, C, SI> Menu<IT, VG, R, C, SI>
+impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
-    SI: SelectionIndicator,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
     fn change_selected_item(&mut self, new_selected: u32) {
         if new_selected != self.selected {
@@ -260,13 +263,14 @@ where
     }
 }
 
-impl<IT, VG, R, C, SI> View for Menu<IT, VG, R, C, SI>
+impl<IT, VG, R, C, P, S> View for Menu<IT, VG, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
-    SI: SelectionIndicator,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
     /// Move the origin of an object by a given number of (x, y) pixels,
     /// by returning a new object
@@ -280,13 +284,14 @@ where
     }
 }
 
-impl<IT, VG, R, C, SI> Menu<IT, VG, R, C, SI>
+impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = C>,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
     C: PixelColor + From<Rgb888>,
-    SI: SelectionIndicator,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
     fn header<'t>(
         &self,
@@ -402,17 +407,17 @@ where
     }
 }
 
-impl<IT, VG, R, SI> Menu<IT, VG, R, BinaryColor, SI>
+impl<IT, VG, R, P, S> Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = BinaryColor>,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
-    SI: SelectionIndicator,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
     fn display_list<D>(&self, display: &mut D) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
-        SI: SelectionIndicator<Color = BinaryColor>,
     {
         let display_area = display.bounding_box();
         let display_size = display_area.size();
@@ -478,12 +483,13 @@ where
     }
 }
 
-impl<IT, VG, R, SI> Drawable for Menu<IT, VG, R, BinaryColor, SI>
+impl<IT, VG, R, P, S> Drawable for Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
     IT: InteractionController + Drawable<Color = BinaryColor>,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
-    SI: SelectionIndicator<Color = BinaryColor>,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
     type Color = BinaryColor;
     type Output = ();

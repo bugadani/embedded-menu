@@ -3,14 +3,17 @@ use crate::{
     items::MenuLine,
     plumbing::MenuExt,
     private::NoItems,
-    selection_indicator::{style::line::Line, Indicator, SelectionIndicator, StaticPosition},
+    selection_indicator::{
+        style::{line::Line, IndicatorStyle},
+        Indicator, SelectionIndicatorController, StaticPosition,
+    },
     Menu, MenuDisplayMode, MenuItem, MenuStyle,
 };
 use core::marker::PhantomData;
 use embedded_graphics::{pixelcolor::PixelColor, primitives::Rectangle};
 use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
 
-pub struct MenuBuilder<IT, LL, R, C, SI>
+pub struct MenuBuilder<IT, LL, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
@@ -23,12 +26,10 @@ where
     interaction: IT,
     idle_timeout: Option<u16>,
     style: MenuStyle<C>,
-    indicator: SI,
+    indicator: Indicator<P, S>,
 }
 
-impl<R: Copy, C: PixelColor>
-    MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition, Line>>
-{
+impl<R: Copy, C: PixelColor> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, Line> {
     pub fn new(title: &'static str, bounds: Rectangle, style: MenuStyle<C>) -> Self {
         Self {
             _return_type: PhantomData,
@@ -43,14 +44,13 @@ impl<R: Copy, C: PixelColor>
     }
 }
 
-impl<IT, LL, R, C, SI> MenuBuilder<IT, LL, R, C, SI>
+impl<IT, LL, R, C, P, S> MenuBuilder<IT, LL, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
     C: PixelColor,
-    SI: SelectionIndicator,
 {
-    pub fn show_details_after(self, timeout: u16) -> MenuBuilder<IT, LL, R, C, SI> {
+    pub fn show_details_after(self, timeout: u16) -> MenuBuilder<IT, LL, R, C, P, S> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -63,7 +63,14 @@ where
         }
     }
 
-    pub fn with_selection_indicator<SI2>(self, indicator: SI2) -> MenuBuilder<IT, LL, R, C, SI2> {
+    pub fn with_selection_indicator<P2, S2>(
+        self,
+        indicator: Indicator<P2, S2>,
+    ) -> MenuBuilder<IT, LL, R, C, P2, S2>
+    where
+        P2: SelectionIndicatorController,
+        S2: IndicatorStyle,
+    {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -79,7 +86,7 @@ where
     pub fn with_interaction_controller<ITC: InteractionController>(
         self,
         interaction: ITC,
-    ) -> MenuBuilder<ITC, LL, R, C, SI> {
+    ) -> MenuBuilder<ITC, LL, R, C, P, S> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -93,15 +100,16 @@ where
     }
 }
 
-impl<IT, VG, R, C, SI> MenuBuilder<IT, VG, R, C, SI>
+impl<IT, VG, R, C, P, S> MenuBuilder<IT, VG, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
     VG: ViewGroup + MenuExt<R>,
     C: PixelColor,
-    SI: SelectionIndicator,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
-    pub fn build(self) -> Menu<IT, VG, R, C, SI> {
+    pub fn build(self) -> Menu<IT, VG, R, C, P, S> {
         Menu {
             _return_type: PhantomData,
             title: self.title,
@@ -120,17 +128,18 @@ where
     }
 }
 
-impl<IT, R, C, SI> MenuBuilder<IT, NoItems, R, C, SI>
+impl<IT, R, C, P, S> MenuBuilder<IT, NoItems, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
     C: PixelColor,
-    SI: SelectionIndicator,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Chain<MenuLine<I>>, R, C, SI> {
+    ) -> MenuBuilder<IT, Chain<MenuLine<I>>, R, C, P, S> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -144,18 +153,19 @@ where
     }
 }
 
-impl<IT, CE, R, C, SI> MenuBuilder<IT, Chain<CE>, R, C, SI>
+impl<IT, CE, R, C, P, S> MenuBuilder<IT, Chain<CE>, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
     CE: MenuItem<Data = R>,
     C: PixelColor,
-    SI: SelectionIndicator,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
         item: I,
-    ) -> MenuBuilder<IT, Link<MenuLine<I>, Chain<CE>>, R, C, SI> {
+    ) -> MenuBuilder<IT, Link<MenuLine<I>, Chain<CE>>, R, C, P, S> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
@@ -169,19 +179,20 @@ where
     }
 }
 
-impl<IT, P, CE, R, C, SI> MenuBuilder<IT, Link<P, CE>, R, C, SI>
+impl<IT, I, CE, R, C, P, S> MenuBuilder<IT, Link<I, CE>, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    P: MenuItem<Data = R>,
+    I: MenuItem<Data = R>,
     CE: MenuExt<R>,
     C: PixelColor,
-    SI: SelectionIndicator,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
-    pub fn add_item<I: MenuItem<Data = R>>(
+    pub fn add_item<I2: MenuItem<Data = R>>(
         self,
-        item: I,
-    ) -> MenuBuilder<IT, Link<MenuLine<I>, Link<P, CE>>, R, C, SI> {
+        item: I2,
+    ) -> MenuBuilder<IT, Link<MenuLine<I2>, Link<I, CE>>, R, C, P, S> {
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,

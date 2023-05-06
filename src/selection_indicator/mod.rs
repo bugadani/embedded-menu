@@ -5,7 +5,7 @@ use crate::{
 };
 use embedded_graphics::{
     pixelcolor::BinaryColor,
-    prelude::{DrawTarget, DrawTargetExt, PixelColor, Point, Size},
+    prelude::{DrawTarget, DrawTargetExt, Point, Size},
     primitives::{Rectangle, StyledDrawable},
 };
 
@@ -84,31 +84,6 @@ impl SelectionIndicatorController for AnimatedPosition {
     }
 }
 
-pub trait SelectionIndicator: Sized {
-    type Color: PixelColor;
-    type Controller: SelectionIndicatorController;
-
-    fn offset(&self) -> i32;
-
-    fn change_selected_item(&mut self, pos: i32);
-
-    fn item_height(&self, menuitem_height: u32) -> u32;
-
-    fn update(&mut self, fill_width: u32);
-
-    fn draw<D>(
-        &self,
-        indicator_height: u32,
-        screen_offset: i32,
-        fill_width: u32,
-        display: &mut D,
-        items: &impl StyledDrawable<MenuStyle<Self::Color>, Color = Self::Color, Output = ()>,
-        style: &MenuStyle<Self::Color>,
-    ) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = Self::Color>;
-}
-
 pub struct Indicator<P, S> {
     position: P,
     style: S,
@@ -130,53 +105,48 @@ impl Indicator<StaticPosition, Line> {
     }
 }
 
-impl<P, S> Indicator<P, S> {
+impl<P, S> Indicator<P, S>
+where
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
     pub fn with_indicator_style<S2: IndicatorStyle>(self, style: S2) -> Indicator<P, S2> {
         Indicator {
             position: self.position,
             style,
         }
     }
-}
 
-impl<P, S> SelectionIndicator for Indicator<P, S>
-where
-    P: SelectionIndicatorController,
-    S: IndicatorStyle,
-{
-    type Color = BinaryColor;
-    type Controller = P;
-
-    fn offset(&self) -> i32 {
+    pub fn offset(&self) -> i32 {
         self.position.offset()
     }
 
-    fn change_selected_item(&mut self, pos: i32) {
+    pub fn change_selected_item(&mut self, pos: i32) {
         self.position.update_target(pos);
         self.style.on_target_changed();
     }
 
-    fn update(&mut self, fill_width: u32) {
+    pub fn update(&mut self, fill_width: u32) {
         self.position.update();
         self.style.update(fill_width);
     }
 
-    fn item_height(&self, menuitem_height: u32) -> u32 {
+    pub fn item_height(&self, menuitem_height: u32) -> u32 {
         let indicator_insets = self.style.margin(menuitem_height);
         (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
     }
 
-    fn draw<D>(
+    pub fn draw<D>(
         &self,
         selected_height: u32,
         screen_offset: i32,
         fill_width: u32,
         display: &mut D,
-        items: &impl StyledDrawable<MenuStyle<Self::Color>, Color = Self::Color, Output = ()>,
-        style: &MenuStyle<Self::Color>,
+        items: &impl StyledDrawable<MenuStyle<BinaryColor>, Color = BinaryColor, Output = ()>,
+        style: &MenuStyle<BinaryColor>,
     ) -> Result<(), D::Error>
     where
-        D: DrawTarget<Color = Self::Color>,
+        D: DrawTarget<Color = BinaryColor>,
     {
         let Insets {
             left: margin_left,
