@@ -1,13 +1,5 @@
 use crate::interaction::{InteractionController, InteractionType};
 
-use embedded_graphics::{
-    draw_target::DrawTarget,
-    pixelcolor::BinaryColor,
-    prelude::{Point, Size},
-    primitives::{Primitive, PrimitiveStyle, Rectangle},
-    Drawable,
-};
-
 pub struct SingleTouch {
     interaction_time: u32,
     ignore_time: u32,
@@ -77,23 +69,6 @@ impl InteractionController for SingleTouch {
                 None
             }
         }
-    }
-}
-
-impl Drawable for SingleTouch {
-    type Color = BinaryColor;
-    type Output = ();
-
-    fn draw<D: DrawTarget<Color = BinaryColor>>(&self, display: &mut D) -> Result<(), D::Error> {
-        Rectangle::new(
-            Point::zero(),
-            Size::new(
-                self.fill_area_width(display.bounding_box().size.width),
-                display.bounding_box().size.height,
-            ),
-        )
-        .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
-        .draw(display)
     }
 }
 

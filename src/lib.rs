@@ -131,11 +131,7 @@ where
     }
 }
 
-mod private {
-    pub struct NoItems;
-}
-
-use private::NoItems;
+pub struct NoItems;
 
 pub struct Menu<IT, VG, R, C, P, S>
 where
@@ -260,7 +256,7 @@ where
 impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     R: Copy,
-    IT: InteractionController + Drawable<Color = C>,
+    IT: InteractionController,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
@@ -383,7 +379,7 @@ where
 impl<IT, VG, R, P, S> Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
-    IT: InteractionController + Drawable<Color = BinaryColor>,
+    IT: InteractionController,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -459,7 +455,7 @@ where
 impl<IT, VG, R, P, S> Drawable for Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
-    IT: InteractionController + Drawable<Color = BinaryColor>,
+    IT: InteractionController,
     VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,

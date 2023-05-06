@@ -1,7 +1,5 @@
 use crate::interaction::{InteractionController, InteractionType};
 
-use embedded_graphics::{draw_target::DrawTarget, pixelcolor::BinaryColor, Drawable};
-
 pub struct Programmed;
 
 impl InteractionController for Programmed {
@@ -13,17 +11,5 @@ impl InteractionController for Programmed {
     }
     fn update(&mut self, action: Self::Input) -> Option<InteractionType> {
         Some(action)
-    }
-}
-
-impl Drawable for Programmed {
-    type Color = BinaryColor;
-    type Output = ();
-
-    fn draw<D>(&self, _display: &mut D) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = BinaryColor>,
-    {
-        Ok(())
     }
 }

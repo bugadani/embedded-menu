@@ -2,12 +2,11 @@ use crate::{
     interaction::{programmed::Programmed, InteractionController},
     items::MenuLine,
     plumbing::MenuExt,
-    private::NoItems,
     selection_indicator::{
         style::{line::Line, IndicatorStyle},
         AnimatedPosition, Indicator, SelectionIndicatorController, StaticPosition,
     },
-    Menu, MenuDisplayMode, MenuItem, MenuStyle,
+    Menu, MenuDisplayMode, MenuItem, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
 use embedded_graphics::{pixelcolor::PixelColor, primitives::Rectangle};
