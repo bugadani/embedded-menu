@@ -7,22 +7,28 @@ use embedded_layout::{
     prelude::{Chain, Link},
 };
 
-use crate::MenuStyle;
+use crate::{selection_indicator::style::IndicatorStyle, MenuStyle};
 
-pub trait StyledMenuItem<C: PixelColor>:
-    StyledDrawable<MenuStyle<C>, Color = C, Output = ()>
-{
-}
-impl<T, C: PixelColor> StyledMenuItem<C> for T where
-    T: StyledDrawable<MenuStyle<C>, Color = C, Output = ()>
-{
-}
-
-impl<C, V, VC> StyledDrawable<MenuStyle<C>> for Link<V, VC>
+pub trait StyledMenuItem<C, S>: StyledDrawable<MenuStyle<C, S>, Color = C, Output = ()>
 where
     C: PixelColor,
-    V: StyledMenuItem<C>,
-    VC: ChainElement + StyledMenuItem<C>,
+    S: IndicatorStyle,
+{
+}
+impl<T, C, S> StyledMenuItem<C, S> for T
+where
+    T: StyledDrawable<MenuStyle<C, S>, Color = C, Output = ()>,
+    C: PixelColor,
+    S: IndicatorStyle,
+{
+}
+
+impl<C, S, V, VC> StyledDrawable<MenuStyle<C, S>> for Link<V, VC>
+where
+    C: PixelColor,
+    V: StyledMenuItem<C, S>,
+    VC: ChainElement + StyledMenuItem<C, S>,
+    S: IndicatorStyle,
 {
     type Color = C;
     type Output = ();
@@ -30,7 +36,7 @@ where
     #[inline]
     fn draw_styled<D>(
         &self,
-        style: &MenuStyle<Self::Color>,
+        style: &MenuStyle<Self::Color, S>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
@@ -43,10 +49,11 @@ where
     }
 }
 
-impl<C, V> StyledDrawable<MenuStyle<C>> for Chain<V>
+impl<C, S, V> StyledDrawable<MenuStyle<C, S>> for Chain<V>
 where
     C: PixelColor,
-    V: StyledMenuItem<C>,
+    V: StyledMenuItem<C, S>,
+    S: IndicatorStyle,
 {
     type Color = C;
     type Output = ();
@@ -54,7 +61,7 @@ where
     #[inline]
     fn draw_styled<D>(
         &self,
-        style: &MenuStyle<Self::Color>,
+        style: &MenuStyle<Self::Color, S>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where

@@ -70,21 +70,22 @@ pub enum DisplayScrollbar {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct MenuStyle<C: PixelColor> {
+pub struct MenuStyle<C: PixelColor, S: IndicatorStyle> {
     pub(crate) color: C,
     pub(crate) scrollbar: DisplayScrollbar,
     pub(crate) font: &'static MonoFont<'static>,
     pub(crate) title_font: &'static MonoFont<'static>,
     pub(crate) details_delay: Option<u16>,
+    pub(crate) indicator_style: S,
 }
 
-impl Default for MenuStyle<BinaryColor> {
+impl Default for MenuStyle<BinaryColor, LineIndicator> {
     fn default() -> Self {
         Self::new(BinaryColor::On)
     }
 }
 
-impl<C> MenuStyle<C>
+impl<C> MenuStyle<C, LineIndicator>
 where
     C: PixelColor,
 {
@@ -95,9 +96,16 @@ where
             font: &FONT_6X10,
             title_font: &FONT_6X10,
             details_delay: None,
+            indicator_style: LineIndicator,
         }
     }
+}
 
+impl<C, S> MenuStyle<C, S>
+where
+    C: PixelColor,
+    S: IndicatorStyle,
+{
     pub const fn with_font(self, font: &'static MonoFont<'static>) -> Self {
         Self { font, ..self }
     }
@@ -114,6 +122,20 @@ where
         Self {
             details_delay: Some(frames),
             ..self
+        }
+    }
+
+    pub const fn with_selection_indicator<S2>(self, indicator_style: S2) -> MenuStyle<C, S2>
+    where
+        S2: IndicatorStyle,
+    {
+        MenuStyle {
+            indicator_style,
+            color: self.color,
+            scrollbar: self.scrollbar,
+            font: self.font,
+            title_font: self.title_font,
+            details_delay: self.details_delay,
         }
     }
 
@@ -145,31 +167,27 @@ where
     list_offset: i32,
     idle_timeout: u16,
     display_mode: MenuDisplayMode,
-    style: MenuStyle<C>,
+    style: MenuStyle<C, S>,
     indicator: Indicator<P, S>,
 }
 
-impl<R, C> Menu<Programmed, NoItems, R, C, StaticPosition, LineIndicator>
+impl<R, C, S> Menu<Programmed, NoItems, R, C, StaticPosition, S>
 where
     R: Copy,
     C: PixelColor,
+    S: IndicatorStyle,
 {
-    pub fn builder(
-        title: &'static str,
-    ) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, LineIndicator>
+    pub fn builder(title: &'static str) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S>
     where
-        MenuStyle<C>: Default,
+        MenuStyle<C, S>: Default,
     {
         Self::build_with_style(title, MenuStyle::default())
     }
 
     pub fn build_with_style(
         title: &'static str,
-        style: MenuStyle<C>,
-    ) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, LineIndicator>
-    where
-        MenuStyle<C>: Default,
-    {
+        style: MenuStyle<C, S>,
+    ) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S> {
         MenuBuilder::new(title, style)
     }
 }
@@ -228,7 +246,7 @@ impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S>,
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -351,7 +369,7 @@ impl<IT, VG, R, P, S> Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -427,7 +445,7 @@ impl<IT, VG, R, P, S> Drawable for Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {

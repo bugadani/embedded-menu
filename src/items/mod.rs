@@ -6,6 +6,7 @@ pub use select::Select;
 
 use crate::{
     margin::{Margin, MarginExt},
+    selection_indicator::style::IndicatorStyle,
     MenuItem, MenuStyle,
 };
 use embedded_graphics::{
@@ -29,9 +30,10 @@ impl<I> MenuLine<I>
 where
     I: MenuItem,
 {
-    pub fn new<C>(item: I, style: MenuStyle<C>) -> MenuLine<I>
+    pub fn new<C, S>(item: I, style: MenuStyle<C, S>) -> MenuLine<I>
     where
         C: PixelColor,
+        S: IndicatorStyle,
     {
         let style = style.text_style();
 
@@ -73,17 +75,18 @@ impl<I> View for MenuLine<I> {
     }
 }
 
-impl<C, I> StyledDrawable<MenuStyle<C>> for MenuLine<I>
+impl<C, S, I> StyledDrawable<MenuStyle<C, S>> for MenuLine<I>
 where
     C: PixelColor + From<Rgb888>,
     I: MenuItem,
+    S: IndicatorStyle,
 {
     type Color = C;
     type Output = ();
 
     fn draw_styled<D>(
         &self,
-        style: &MenuStyle<C>,
+        style: &MenuStyle<C, S>,
         display: &mut D,
     ) -> Result<Self::Output, D::Error>
     where

@@ -142,8 +142,8 @@ where
         screen_offset: i32,
         fill_width: u32,
         display: &mut D,
-        items: &impl StyledDrawable<MenuStyle<BinaryColor>, Color = BinaryColor, Output = ()>,
-        style: &MenuStyle<BinaryColor>,
+        items: &impl StyledDrawable<MenuStyle<BinaryColor, S>, Color = BinaryColor, Output = ()>,
+        style: &MenuStyle<BinaryColor, S>,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,

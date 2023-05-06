@@ -3,8 +3,8 @@ use crate::{
     items::MenuLine,
     plumbing::MenuExt,
     selection_indicator::{
-        style::{line::Line, IndicatorStyle},
-        AnimatedPosition, Indicator, SelectionIndicatorController, StaticPosition,
+        style::IndicatorStyle, AnimatedPosition, Indicator, SelectionIndicatorController,
+        StaticPosition,
     },
     Menu, MenuDisplayMode, MenuItem, MenuStyle, NoItems,
 };
@@ -17,22 +17,23 @@ where
     R: Copy,
     IT: InteractionController,
     C: PixelColor,
+    S: IndicatorStyle,
 {
     _return_type: PhantomData<R>,
     title: &'static str,
     items: LL,
     interaction: IT,
-    style: MenuStyle<C>,
+    style: MenuStyle<C, S>,
     indicator_controller: P,
-    indicator_style: S,
 }
 
-impl<R, C> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, Line>
+impl<R, C, S> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S>
 where
     R: Copy,
     C: PixelColor,
+    S: IndicatorStyle,
 {
-    pub fn new(title: &'static str, style: MenuStyle<C>) -> Self {
+    pub fn new(title: &'static str, style: MenuStyle<C, S>) -> Self {
         Self {
             _return_type: PhantomData,
             title,
@@ -40,7 +41,6 @@ where
             interaction: Programmed,
             style,
             indicator_controller: StaticPosition::new(),
-            indicator_style: Line,
         }
     }
 }
@@ -53,21 +53,6 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn with_selection_indicator_style<S2>(self, style: S2) -> MenuBuilder<IT, LL, R, C, P, S2>
-    where
-        S2: IndicatorStyle,
-    {
-        MenuBuilder {
-            _return_type: PhantomData,
-            title: self.title,
-            items: self.items,
-            interaction: self.interaction,
-            style: self.style,
-            indicator_controller: self.indicator_controller,
-            indicator_style: style,
-        }
-    }
-
     pub fn with_animated_selection_indicator(
         self,
         frames: i32,
@@ -78,7 +63,6 @@ where
             items: self.items,
             interaction: self.interaction,
             style: self.style,
-            indicator_style: self.indicator_style,
             indicator_controller: AnimatedPosition::new(frames),
         }
     }
@@ -94,7 +78,6 @@ where
             interaction,
             style: self.style,
             indicator_controller: self.indicator_controller,
-            indicator_style: self.indicator_style,
         }
     }
 }
@@ -117,7 +100,10 @@ where
             interaction: self.interaction,
             recompute_targets: true,
             list_offset: 0,
-            indicator: Indicator::new(self.indicator_controller, self.indicator_style),
+            indicator: Indicator::new(
+                self.indicator_controller,
+                self.style.indicator_style.clone(),
+            ),
             idle_timeout: self.style.details_delay.unwrap_or_default(),
             display_mode: MenuDisplayMode::List,
             style: self.style,
@@ -144,7 +130,6 @@ where
             interaction: self.interaction,
             style: self.style,
             indicator_controller: self.indicator_controller,
-            indicator_style: self.indicator_style,
         }
     }
 }
@@ -169,7 +154,6 @@ where
             interaction: self.interaction,
             style: self.style,
             indicator_controller: self.indicator_controller,
-            indicator_style: self.indicator_style,
         }
     }
 }
@@ -195,7 +179,6 @@ where
             interaction: self.interaction,
             style: self.style,
             indicator_controller: self.indicator_controller,
-            indicator_style: self.indicator_style,
         }
     }
 }

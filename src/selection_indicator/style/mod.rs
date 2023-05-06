@@ -11,7 +11,7 @@ pub mod border;
 pub mod line;
 pub mod triangle;
 
-pub trait IndicatorStyle {
+pub trait IndicatorStyle: Clone + Copy {
     type Shape: ContainsPoint + Clone;
     type State: Default;
 

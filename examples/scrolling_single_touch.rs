@@ -12,7 +12,7 @@ use embedded_menu::{
     interaction::single_touch::SingleTouch,
     items::{select::SelectValue, NavigationItem, Select},
     selection_indicator::style::animated_triangle::AnimatedTriangle,
-    Menu,
+    Menu, MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -41,9 +41,9 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::builder("Menu with even longer title")
+    let style = MenuStyle::default().with_selection_indicator(AnimatedTriangle::new(160));
+    let mut menu = Menu::build_with_style("Menu with even longer title", style)
         .with_interaction_controller(SingleTouch::new(10, 100))
-        .with_selection_indicator_style(AnimatedTriangle::new(160))
         .with_animated_selection_indicator(10)
         .add_item(
             NavigationItem::new("Foo", ())
