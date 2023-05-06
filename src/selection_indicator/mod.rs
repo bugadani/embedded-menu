@@ -1,6 +1,5 @@
 use crate::{
-    adapters::invert::BinaryColorDrawTargetExt,
-    selection_indicator::style::{line::Line, IndicatorStyle},
+    adapters::invert::BinaryColorDrawTargetExt, selection_indicator::style::IndicatorStyle,
     MenuStyle,
 };
 use embedded_graphics::{
@@ -95,18 +94,14 @@ impl SelectionIndicatorController for AnimatedPosition {
     }
 }
 
-pub(crate) struct Indicator<P, S> {
+pub(crate) struct Indicator<P, S>
+where
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
     position: P,
     style: S,
-}
-
-impl Indicator<StaticPosition, Line> {
-    pub fn new() -> Self {
-        Self {
-            position: StaticPosition::new(),
-            style: Line,
-        }
-    }
+    state: S::State,
 }
 
 impl<P, S> Indicator<P, S>
@@ -114,17 +109,11 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn with_indicator_style<S2: IndicatorStyle>(self, style: S2) -> Indicator<P, S2> {
-        Indicator {
-            position: self.position,
+    pub fn new(position: P, style: S) -> Self {
+        Self {
+            position,
             style,
-        }
-    }
-
-    pub fn with_animated_selection_indicator(self, frames: i32) -> Indicator<AnimatedPosition, S> {
-        Indicator {
-            position: AnimatedPosition::new(frames),
-            style: self.style,
+            state: Default::default(),
         }
     }
 
@@ -134,16 +123,16 @@ where
 
     pub fn change_selected_item(&mut self, pos: i32) {
         self.position.update_target(pos);
-        self.style.on_target_changed();
+        self.style.on_target_changed(&mut self.state);
     }
 
     pub fn update(&mut self, fill_width: u32) {
         self.position.update();
-        self.style.update(fill_width);
+        self.style.update(&mut self.state, fill_width);
     }
 
     pub fn item_height(&self, menuitem_height: u32) -> u32 {
-        let indicator_insets = self.style.margin(menuitem_height);
+        let indicator_insets = self.style.margin(&self.state, menuitem_height);
         (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
     }
 
@@ -164,9 +153,10 @@ where
             top: margin_top,
             right: margin_right,
             bottom: margin_bottom,
-        } = self.style.margin(selected_height);
+        } = self.style.margin(&self.state, selected_height);
 
         self.style.draw(
+            &self.state,
             fill_width,
             &mut display.cropped(&Rectangle::new(
                 Point::new(0, screen_offset),
@@ -181,6 +171,7 @@ where
         let display_size = display.bounding_box().size;
 
         let mut inverting = display.invert_area(&self.style.shape(
+            &self.state,
             Rectangle::new(
                 Point::new(0, screen_offset),
                 Size::new(fill_width, selected_height),

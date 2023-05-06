@@ -12,16 +12,22 @@ pub struct Border;
 
 impl IndicatorStyle for Border {
     type Shape = Rectangle;
+    type State = ();
 
-    fn margin(&self, _height: u32) -> Insets {
+    fn margin(&self, _state: &Self::State, _height: u32) -> Insets {
         Insets::new(2, 1, 1, 1)
     }
 
-    fn shape(&self, bounds: Rectangle, _fill_width: u32) -> Self::Shape {
+    fn shape(&self, _state: &Self::State, bounds: Rectangle, _fill_width: u32) -> Self::Shape {
         bounds
     }
 
-    fn draw<D>(&self, fill_width: u32, display: &mut D) -> Result<(), D::Error>
+    fn draw<D>(
+        &self,
+        _state: &Self::State,
+        fill_width: u32,
+        display: &mut D,
+    ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {

@@ -23,7 +23,8 @@ where
     items: LL,
     interaction: IT,
     style: MenuStyle<C>,
-    indicator: Indicator<P, S>,
+    indicator_controller: P,
+    indicator_style: S,
 }
 
 impl<R, C> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, Line>
@@ -38,7 +39,8 @@ where
             items: NoItems,
             interaction: Programmed,
             style,
-            indicator: Indicator::new(),
+            indicator_controller: StaticPosition::new(),
+            indicator_style: Line,
         }
     }
 }
@@ -61,7 +63,8 @@ where
             items: self.items,
             interaction: self.interaction,
             style: self.style,
-            indicator: self.indicator.with_indicator_style(style),
+            indicator_controller: self.indicator_controller,
+            indicator_style: style,
         }
     }
 
@@ -75,7 +78,8 @@ where
             items: self.items,
             interaction: self.interaction,
             style: self.style,
-            indicator: self.indicator.with_animated_selection_indicator(frames),
+            indicator_style: self.indicator_style,
+            indicator_controller: AnimatedPosition::new(frames),
         }
     }
 
@@ -89,7 +93,8 @@ where
             items: self.items,
             interaction,
             style: self.style,
-            indicator: self.indicator,
+            indicator_controller: self.indicator_controller,
+            indicator_style: self.indicator_style,
         }
     }
 }
@@ -112,7 +117,7 @@ where
             interaction: self.interaction,
             recompute_targets: true,
             list_offset: 0,
-            indicator: self.indicator,
+            indicator: Indicator::new(self.indicator_controller, self.indicator_style),
             idle_timeout: self.style.details_delay.unwrap_or_default(),
             display_mode: MenuDisplayMode::List,
             style: self.style,
@@ -138,7 +143,8 @@ where
             items: Chain::new(MenuLine::new(item, self.style)),
             interaction: self.interaction,
             style: self.style,
-            indicator: self.indicator,
+            indicator_controller: self.indicator_controller,
+            indicator_style: self.indicator_style,
         }
     }
 }
@@ -162,7 +168,8 @@ where
             items: self.items.append(MenuLine::new(item, self.style)),
             interaction: self.interaction,
             style: self.style,
-            indicator: self.indicator,
+            indicator_controller: self.indicator_controller,
+            indicator_style: self.indicator_style,
         }
     }
 }
@@ -187,7 +194,8 @@ where
             items: self.items.append(MenuLine::new(item, self.style)),
             interaction: self.interaction,
             style: self.style,
-            indicator: self.indicator,
+            indicator_controller: self.indicator_controller,
+            indicator_style: self.indicator_style,
         }
     }
 }

@@ -16,22 +16,23 @@ pub struct Triangle;
 
 impl IndicatorStyle for Triangle {
     type Shape = Arrow;
+    type State = ();
 
-    fn margin(&self, height: u32) -> Insets {
+    fn margin(&self, _state: &Self::State, height: u32) -> Insets {
         Insets::new(height as i32 / 2 + 1, 0, 0, 0)
     }
 
-    fn shape(&self, bounds: Rectangle, fill_width: u32) -> Self::Shape {
+    fn shape(&self, _state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape {
         Arrow::new(bounds, fill_width)
     }
 
-    fn draw<D>(&self, fill_width: u32, display: &mut D) -> Result<(), D::Error>
+    fn draw<D>(&self, state: &Self::State, fill_width: u32, display: &mut D) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
         let display_area = display.bounding_box();
 
-        self.shape(display_area, fill_width).draw(display)?;
+        self.shape(state, display_area, fill_width).draw(display)?;
 
         Ok(())
     }
