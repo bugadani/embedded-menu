@@ -69,9 +69,8 @@ impl InteractionController for SingleTouch {
             }
         } else {
             let time = core::mem::replace(&mut self.interaction_time, 0);
-            if time <= self.ignore_time {
-                None
-            } else if time < self.max_time {
+
+            if 0 < time && time < self.max_time {
                 Some(InteractionType::Next)
             } else {
                 // Already interacted

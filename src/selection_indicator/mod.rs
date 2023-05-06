@@ -88,8 +88,9 @@ pub trait SelectionIndicator: Sized {
     type Color: PixelColor;
     type Controller: SelectionIndicatorController;
 
-    fn position(&self) -> &Self::Controller;
-    fn position_mut(&mut self) -> &mut Self::Controller;
+    fn offset(&self) -> i32;
+
+    fn change_selected_item(&mut self, pos: i32);
 
     fn item_height(&self, menuitem_height: u32) -> u32;
 
@@ -146,12 +147,13 @@ where
     type Color = BinaryColor;
     type Controller = P;
 
-    fn position(&self) -> &Self::Controller {
-        &self.position
+    fn offset(&self) -> i32 {
+        self.position.offset()
     }
 
-    fn position_mut(&mut self) -> &mut Self::Controller {
-        &mut self.position
+    fn change_selected_item(&mut self, pos: i32) {
+        self.position.update_target(pos);
+        self.style.on_target_changed();
     }
 
     fn update(&mut self, fill_width: u32) {

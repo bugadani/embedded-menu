@@ -16,8 +16,7 @@ use crate::{
     margin::MarginExt,
     plumbing::MenuExt,
     selection_indicator::{
-        style::line::Line as LineIndicator, Indicator, SelectionIndicator,
-        SelectionIndicatorController, StaticPosition,
+        style::line::Line as LineIndicator, Indicator, SelectionIndicator, StaticPosition,
     },
     styled::StyledMenuItem,
 };
@@ -350,15 +349,14 @@ where
         if self.recompute_targets {
             self.recompute_targets = false;
             self.indicator
-                .position_mut()
-                .update_target(selected_item_bounds.top_left.y);
+                .change_selected_item(selected_item_bounds.top_left.y);
         }
 
         self.indicator
             .update(self.interaction.fill_area_width(display_size.width));
 
         // Ensure selection indicator is always visible
-        let top_distance = self.indicator.position().offset() - self.list_offset;
+        let top_distance = self.indicator.offset() - self.list_offset;
         self.list_offset += if top_distance > 0 {
             let indicator_height =
                 self.indicator
@@ -456,7 +454,7 @@ where
 
         self.indicator.draw(
             menuitem_height,
-            self.indicator.position().offset() - self.list_offset + menu_title.size().height as i32,
+            self.indicator.offset() - self.list_offset + menu_title.size().height as i32,
             self.interaction.fill_area_width(menu_list_width),
             &mut display.clipped(&menu_display_area),
             &self.items,

@@ -26,6 +26,10 @@ impl AnimatedTriangle {
 impl IndicatorStyle for AnimatedTriangle {
     type Shape = Arrow;
 
+    fn on_target_changed(&mut self) {
+        self.current = 0;
+    }
+
     fn update(&mut self, fill_width: u32) {
         self.current = if fill_width == 0 {
             (self.current + 1) % self.period

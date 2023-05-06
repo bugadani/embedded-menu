@@ -14,6 +14,7 @@ pub mod triangle;
 pub trait IndicatorStyle {
     type Shape: ContainsPoint + Clone;
 
+    fn on_target_changed(&mut self) {}
     fn update(&mut self, _fill_width: u32) {}
     fn margin(&self, height: u32) -> Insets;
     fn shape(&self, bounds: Rectangle, fill_width: u32) -> Self::Shape;
