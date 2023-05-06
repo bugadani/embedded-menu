@@ -3,7 +3,7 @@ use crate::{
     items::MenuLine,
     plumbing::MenuExt,
     private::NoItems,
-    selection_indicator::{Indicator, SelectionIndicator, StaticPosition},
+    selection_indicator::{style::line::Line, Indicator, SelectionIndicator, StaticPosition},
     Menu, MenuDisplayMode, MenuItem, MenuStyle,
 };
 use core::marker::PhantomData;
@@ -26,7 +26,9 @@ where
     indicator: SI,
 }
 
-impl<R: Copy, C: PixelColor> MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition>> {
+impl<R: Copy, C: PixelColor>
+    MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition, Line>>
+{
     pub fn new(title: &'static str, bounds: Rectangle, style: MenuStyle<C>) -> Self {
         Self {
             _return_type: PhantomData,
@@ -70,7 +72,7 @@ where
             interaction: self.interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,
-            indicator: indicator,
+            indicator,
         }
     }
 

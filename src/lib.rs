@@ -16,7 +16,8 @@ use crate::{
     margin::MarginExt,
     plumbing::MenuExt,
     selection_indicator::{
-        Indicator, SelectionIndicator, SelectionIndicatorController, StaticPosition,
+        style::line::Line as LineIndicator, Indicator, SelectionIndicator,
+        SelectionIndicatorController, StaticPosition,
     },
     styled::StyledMenuItem,
 };
@@ -184,7 +185,7 @@ where
     indicator: SI,
 }
 
-impl<R, C> Menu<Programmed, NoItems, R, C, Indicator<StaticPosition>>
+impl<R, C> Menu<Programmed, NoItems, R, C, Indicator<StaticPosition, LineIndicator>>
 where
     R: Copy,
     C: PixelColor,
@@ -192,7 +193,7 @@ where
     pub fn builder(
         title: &'static str,
         bounds: Rectangle,
-    ) -> MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition>>
+    ) -> MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition, LineIndicator>>
     where
         MenuStyle<C>: Default,
     {
@@ -203,7 +204,7 @@ where
         title: &'static str,
         bounds: Rectangle,
         style: MenuStyle<C>,
-    ) -> MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition>>
+    ) -> MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition, LineIndicator>>
     where
         MenuStyle<C>: Default,
     {
@@ -452,7 +453,7 @@ where
         .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
 
         self.indicator.draw(
-            menuitem_height as u32,
+            menuitem_height,
             self.indicator.position().offset() - self.list_offset + menu_title.size().height as i32,
             self.interaction.fill_area_width(menu_list_width),
             &mut display.clipped(&menu_display_area),

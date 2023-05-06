@@ -1,12 +1,15 @@
-use crate::{adapters::invert::BinaryColorDrawTargetExt, Animated, MenuStyle};
+use crate::{
+    adapters::invert::BinaryColorDrawTargetExt,
+    selection_indicator::style::{line::Line, IndicatorStyle},
+    Animated, MenuStyle,
+};
 use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::{DrawTarget, DrawTargetExt, PixelColor, Point, Size},
-    primitives::{Primitive, PrimitiveStyle, Rectangle, StyledDrawable, Triangle},
-    transform::Transform,
-    Drawable,
+    primitives::{Rectangle, StyledDrawable},
 };
-use embedded_layout::prelude::{horizontal::LeftToRight, vertical::Center, Align};
+
+pub mod style;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Insets {
@@ -23,68 +26,6 @@ impl Insets {
             top,
             right,
             bottom,
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub enum IndicatorStyle {
-    Line,
-    Border,
-    Triangle,
-}
-
-impl IndicatorStyle {
-    pub fn margin(&self, height: u32) -> Insets {
-        match self {
-            IndicatorStyle::Line => Insets::new(2, 0, 0, 0),
-            IndicatorStyle::Border => Insets::new(2, 1, 1, 1),
-            IndicatorStyle::Triangle => Insets::new(height as i32 / 2 + 1, 0, 0, 0),
-        }
-    }
-
-    fn draw<D>(&self, fill_width: u32, display: &mut D) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = BinaryColor>,
-    {
-        let display_area = display.bounding_box();
-        let fill = Rectangle::new(
-            display_area.top_left,
-            Size::new(fill_width, display_area.size.height),
-        );
-        match self {
-            IndicatorStyle::Line => {
-                Rectangle::new(fill.top_left, fill.size.component_max(Size::new(1, 0)))
-                    .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
-                    .draw(display)
-            }
-            IndicatorStyle::Border => {
-                display_area
-                    .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
-                    .draw(display)?;
-                fill.into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
-                    .draw(display)
-            }
-            IndicatorStyle::Triangle => {
-                // TODO: describe as a single shape, use this shape to invert area
-                fill.into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
-                    .draw(display)?;
-                const SHRINK: i32 = 1;
-                Triangle::new(
-                    Point::new(0, SHRINK),
-                    Point::new(0, display_area.size.height as i32 - 1 - SHRINK),
-                    Point::new(
-                        display_area.size.height as i32 / 2 - SHRINK,
-                        display_area.size.height as i32 / 2,
-                    ),
-                )
-                .align_to(&fill, LeftToRight, Center)
-                // e-layout doesn't align well to 0 area rectangles
-                // TODO: animate
-                .translate(Point::new(if fill.is_zero_sized() { -1 } else { 0 }, 0))
-                .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
-                .draw(display)
-            }
         }
     }
 }
@@ -165,34 +106,41 @@ pub trait SelectionIndicator: Sized {
         D: DrawTarget<Color = Self::Color>;
 }
 
-pub struct Indicator<P> {
+pub struct Indicator<P, S> {
     position: P,
-    style: IndicatorStyle,
+    style: S,
 }
 
-impl Indicator<StaticPosition> {
+impl Indicator<StaticPosition, Line> {
     pub fn new() -> Self {
         Self {
             position: StaticPosition::new(),
-            style: IndicatorStyle::Line,
+            style: Line,
         }
     }
 
-    pub fn animated(frames: i32) -> Indicator<AnimatedPosition> {
+    pub fn animated(frames: i32) -> Indicator<AnimatedPosition, Line> {
         Indicator {
             position: AnimatedPosition::new(frames),
-            style: IndicatorStyle::Line,
+            style: Line,
         }
     }
 }
 
-impl<P> Indicator<P> {
-    pub fn with_indicator_style(self, style: IndicatorStyle) -> Self {
-        Self { style, ..self }
+impl<P, S> Indicator<P, S> {
+    pub fn with_indicator_style<S2: IndicatorStyle>(self, style: S2) -> Indicator<P, S2> {
+        Indicator {
+            position: self.position,
+            style,
+        }
     }
 }
 
-impl<P: SelectionIndicatorController> SelectionIndicator for Indicator<P> {
+impl<P, S> SelectionIndicator for Indicator<P, S>
+where
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
     type Color = BinaryColor;
     type Controller = P;
 
@@ -242,10 +190,14 @@ impl<P: SelectionIndicatorController> SelectionIndicator for Indicator<P> {
         let display_top_left = display.bounding_box().top_left;
         let display_size = display.bounding_box().size;
 
-        let mut inverting = display.invert_area(&Rectangle::new(
-            Point::new(0, screen_offset),
-            Size::new(fill_width, selected_height),
+        let mut inverting = display.invert_area(&self.style.shape(
+            Rectangle::new(
+                Point::new(0, screen_offset),
+                Size::new(fill_width, selected_height),
+            ),
+            fill_width,
         ));
+
         items.draw_styled(
             style,
             &mut inverting.cropped(&Rectangle::new(
