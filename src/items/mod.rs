@@ -53,6 +53,14 @@ where
             .with_margin(0, 0, -1, 0),
         }
     }
+
+    pub fn as_item(&self) -> &I {
+        &self.item
+    }
+
+    pub fn as_item_mut(&mut self) -> &mut I {
+        &mut self.item
+    }
 }
 
 impl<I> View for MenuLine<I> {
@@ -62,33 +70,6 @@ impl<I> View for MenuLine<I> {
 
     fn bounds(&self) -> Rectangle {
         self.bounds.bounds()
-    }
-}
-
-impl<I> MenuItem for MenuLine<I>
-where
-    I: MenuItem,
-{
-    type Data = I::Data;
-
-    fn interact(&mut self) -> Self::Data {
-        self.item.interact()
-    }
-
-    fn title(&self) -> &str {
-        self.item.title()
-    }
-
-    fn details(&self) -> &str {
-        self.item.details()
-    }
-
-    fn value(&self) -> &str {
-        self.item.value()
-    }
-
-    fn longest_value_str(&self) -> &str {
-        self.item.longest_value_str()
     }
 }
 

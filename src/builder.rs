@@ -154,7 +154,7 @@ impl<IT, CE, R, C, P, S> MenuBuilder<IT, Chain<CE>, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    CE: MenuItem<Data = R>,
+    Chain<CE>: MenuExt<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -179,7 +179,7 @@ impl<IT, I, CE, R, C, P, S> MenuBuilder<IT, Link<I, CE>, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    I: MenuItem<Data = R>,
+    Link<I, CE>: MenuExt<R>,
     CE: MenuExt<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
