@@ -7,28 +7,34 @@ use embedded_layout::{
     prelude::{Chain, Link},
 };
 
-use crate::{selection_indicator::style::IndicatorStyle, MenuStyle};
+use crate::{
+    interaction::InteractionController, selection_indicator::style::IndicatorStyle, MenuStyle,
+};
 
-pub trait StyledMenuItem<C, S>: StyledDrawable<MenuStyle<C, S>, Color = C, Output = ()>
+pub trait StyledMenuItem<C, S, IT>:
+    StyledDrawable<MenuStyle<C, S, IT>, Color = C, Output = ()>
 where
     C: PixelColor,
     S: IndicatorStyle,
+    IT: InteractionController,
 {
 }
-impl<T, C, S> StyledMenuItem<C, S> for T
+impl<T, C, S, IT> StyledMenuItem<C, S, IT> for T
 where
-    T: StyledDrawable<MenuStyle<C, S>, Color = C, Output = ()>,
+    T: StyledDrawable<MenuStyle<C, S, IT>, Color = C, Output = ()>,
     C: PixelColor,
     S: IndicatorStyle,
+    IT: InteractionController,
 {
 }
 
-impl<C, S, V, VC> StyledDrawable<MenuStyle<C, S>> for Link<V, VC>
+impl<C, S, V, VC, IT> StyledDrawable<MenuStyle<C, S, IT>> for Link<V, VC>
 where
     C: PixelColor,
-    V: StyledMenuItem<C, S>,
-    VC: ChainElement + StyledMenuItem<C, S>,
+    V: StyledMenuItem<C, S, IT>,
+    VC: ChainElement + StyledMenuItem<C, S, IT>,
     S: IndicatorStyle,
+    IT: InteractionController,
 {
     type Color = C;
     type Output = ();
@@ -36,7 +42,7 @@ where
     #[inline]
     fn draw_styled<D>(
         &self,
-        style: &MenuStyle<Self::Color, S>,
+        style: &MenuStyle<Self::Color, S, IT>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
@@ -49,11 +55,12 @@ where
     }
 }
 
-impl<C, S, V> StyledDrawable<MenuStyle<C, S>> for Chain<V>
+impl<C, S, V, IT> StyledDrawable<MenuStyle<C, S, IT>> for Chain<V>
 where
     C: PixelColor,
-    V: StyledMenuItem<C, S>,
+    V: StyledMenuItem<C, S, IT>,
     S: IndicatorStyle,
+    IT: InteractionController,
 {
     type Color = C;
     type Output = ();
@@ -61,7 +68,7 @@ where
     #[inline]
     fn draw_styled<D>(
         &self,
-        style: &MenuStyle<Self::Color, S>,
+        style: &MenuStyle<Self::Color, S, IT>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where

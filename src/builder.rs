@@ -1,5 +1,5 @@
 use crate::{
-    interaction::{programmed::Programmed, InteractionController},
+    interaction::InteractionController,
     items::MenuLine,
     plumbing::MenuExt,
     selection_indicator::{
@@ -22,23 +22,22 @@ where
     _return_type: PhantomData<R>,
     title: &'static str,
     items: LL,
-    interaction: IT,
-    style: MenuStyle<C, S>,
+    style: MenuStyle<C, S, IT>,
     indicator_controller: P,
 }
 
-impl<R, C, S> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S>
+impl<R, C, S, IT> MenuBuilder<IT, NoItems, R, C, StaticPosition, S>
 where
     R: Copy,
     C: PixelColor,
     S: IndicatorStyle,
+    IT: InteractionController,
 {
-    pub fn new(title: &'static str, style: MenuStyle<C, S>) -> Self {
+    pub fn new(title: &'static str, style: MenuStyle<C, S, IT>) -> Self {
         Self {
             _return_type: PhantomData,
             title,
             items: NoItems,
-            interaction: Programmed,
             style,
             indicator_controller: StaticPosition::new(),
         }
@@ -61,23 +60,8 @@ where
             _return_type: PhantomData,
             title: self.title,
             items: self.items,
-            interaction: self.interaction,
             style: self.style,
             indicator_controller: AnimatedPosition::new(frames),
-        }
-    }
-
-    pub fn with_interaction_controller<ITC: InteractionController>(
-        self,
-        interaction: ITC,
-    ) -> MenuBuilder<ITC, LL, R, C, P, S> {
-        MenuBuilder {
-            _return_type: PhantomData,
-            title: self.title,
-            items: self.items,
-            interaction,
-            style: self.style,
-            indicator_controller: self.indicator_controller,
         }
     }
 }
@@ -97,7 +81,7 @@ where
             title: self.title,
             selected: (ViewGroup::len(&self.items) as u32).saturating_sub(1),
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
-            interaction: self.interaction,
+            interaction_state: Default::default(),
             recompute_targets: true,
             list_offset: 0,
             indicator: Indicator::new(
@@ -127,7 +111,6 @@ where
             _return_type: PhantomData,
             title: self.title,
             items: Chain::new(MenuLine::new(item, self.style)),
-            interaction: self.interaction,
             style: self.style,
             indicator_controller: self.indicator_controller,
         }
@@ -151,7 +134,6 @@ where
             _return_type: PhantomData,
             title: self.title,
             items: self.items.append(MenuLine::new(item, self.style)),
-            interaction: self.interaction,
             style: self.style,
             indicator_controller: self.indicator_controller,
         }
@@ -176,7 +158,6 @@ where
             _return_type: PhantomData,
             title: self.title,
             items: self.items.append(MenuLine::new(item, self.style)),
-            interaction: self.interaction,
             style: self.style,
             indicator_controller: self.indicator_controller,
         }

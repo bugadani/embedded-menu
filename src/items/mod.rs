@@ -5,6 +5,7 @@ pub use navigation_item::NavigationItem;
 pub use select::Select;
 
 use crate::{
+    interaction::InteractionController,
     margin::{Margin, MarginExt},
     selection_indicator::style::IndicatorStyle,
     MenuItem, MenuStyle,
@@ -30,10 +31,11 @@ impl<I> MenuLine<I>
 where
     I: MenuItem,
 {
-    pub fn new<C, S>(item: I, style: MenuStyle<C, S>) -> MenuLine<I>
+    pub fn new<C, S, IT>(item: I, style: MenuStyle<C, S, IT>) -> MenuLine<I>
     where
         C: PixelColor,
         S: IndicatorStyle,
+        IT: InteractionController,
     {
         let style = style.text_style();
 
@@ -75,18 +77,19 @@ impl<I> View for MenuLine<I> {
     }
 }
 
-impl<C, S, I> StyledDrawable<MenuStyle<C, S>> for MenuLine<I>
+impl<C, S, I, IT> StyledDrawable<MenuStyle<C, S, IT>> for MenuLine<I>
 where
     C: PixelColor + From<Rgb888>,
     I: MenuItem,
     S: IndicatorStyle,
+    IT: InteractionController,
 {
     type Color = C;
     type Output = ();
 
     fn draw_styled<D>(
         &self,
-        style: &MenuStyle<C, S>,
+        style: &MenuStyle<C, S, IT>,
         display: &mut D,
     ) -> Result<Self::Output, D::Error>
     where

@@ -1,7 +1,12 @@
 use crate::interaction::{InteractionController, InteractionType};
 
-pub struct SingleTouch {
+#[derive(Default)]
+pub struct State {
     interaction_time: u32,
+}
+
+#[derive(Clone, Copy)]
+pub struct SingleTouch {
     ignore_time: u32,
     max_time: u32,
 }
@@ -18,7 +23,6 @@ impl SingleTouch {
     /// `max`: Detect pulses with this many active samples as `Select`
     pub fn new(ignore: u32, max: u32) -> Self {
         Self {
-            interaction_time: 0,
             ignore_time: ignore,
             max_time: max,
         }
@@ -27,15 +31,16 @@ impl SingleTouch {
 
 impl InteractionController for SingleTouch {
     type Input = bool;
+    type State = State;
 
-    fn reset(&mut self) {
-        self.interaction_time = 0;
+    fn reset(&self, state: &mut Self::State) {
+        state.interaction_time = 0;
     }
 
-    fn fill_area_width(&self, max: u32) -> u32 {
-        if self.ignore_time <= self.interaction_time && self.interaction_time < self.max_time {
+    fn fill_area_width(&self, state: &Self::State, max: u32) -> u32 {
+        if self.ignore_time <= state.interaction_time && state.interaction_time < self.max_time {
             // Draw indicator bar
-            let time = (self.interaction_time - self.ignore_time) as f32
+            let time = (state.interaction_time - self.ignore_time) as f32
                 / ((self.max_time - self.ignore_time) as f32 * 0.9);
 
             ((time * (max - 1) as f32) as u32).max(0)
@@ -45,12 +50,12 @@ impl InteractionController for SingleTouch {
         }
     }
 
-    fn update(&mut self, action: Self::Input) -> Option<InteractionType> {
+    fn update(&self, state: &mut Self::State, action: Self::Input) -> Option<InteractionType> {
         if action {
-            if self.interaction_time < self.max_time {
-                self.interaction_time = self.interaction_time.saturating_add(1);
+            if state.interaction_time < self.max_time {
+                state.interaction_time = state.interaction_time.saturating_add(1);
 
-                if self.interaction_time == self.max_time {
+                if state.interaction_time == self.max_time {
                     Some(InteractionType::Select)
                 } else {
                     None
@@ -60,7 +65,7 @@ impl InteractionController for SingleTouch {
                 None
             }
         } else {
-            let time = core::mem::replace(&mut self.interaction_time, 0);
+            let time = core::mem::replace(&mut state.interaction_time, 0);
 
             if 0 < time && time < self.max_time {
                 Some(InteractionType::Next)
@@ -79,7 +84,9 @@ mod test {
     #[test]
     fn test_interaction() {
         // ignore 1 long pulses, accept 2-4 as short press, 5- as long press
-        let mut controller = SingleTouch::new(1, 5);
+        let controller = SingleTouch::new(1, 5);
+
+        let mut controller_state = <SingleTouch as InteractionController>::State::default();
 
         let expectations: [&[_]; 6] = [
             &[(5, false, None)],
@@ -107,12 +114,12 @@ mod test {
         ];
 
         for (row, &inputs) in expectations.iter().enumerate() {
-            controller.reset();
+            controller.reset(&mut controller_state);
 
             let mut sample = 0;
             for (repeat, input, expectation) in inputs.iter() {
                 for _ in 0..*repeat {
-                    let ret = controller.update(*input);
+                    let ret = controller.update(&mut controller_state, *input);
 
                     assert_eq!(
                         ret, *expectation,

@@ -70,22 +70,28 @@ pub enum DisplayScrollbar {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct MenuStyle<C: PixelColor, S: IndicatorStyle> {
+pub struct MenuStyle<C, S, IT>
+where
+    C: PixelColor,
+    S: IndicatorStyle,
+    IT: InteractionController,
+{
     pub(crate) color: C,
     pub(crate) scrollbar: DisplayScrollbar,
     pub(crate) font: &'static MonoFont<'static>,
     pub(crate) title_font: &'static MonoFont<'static>,
     pub(crate) details_delay: Option<u16>,
     pub(crate) indicator_style: S,
+    pub(crate) interaction: IT,
 }
 
-impl Default for MenuStyle<BinaryColor, LineIndicator> {
+impl Default for MenuStyle<BinaryColor, LineIndicator, Programmed> {
     fn default() -> Self {
         Self::new(BinaryColor::On)
     }
 }
 
-impl<C> MenuStyle<C, LineIndicator>
+impl<C> MenuStyle<C, LineIndicator, Programmed>
 where
     C: PixelColor,
 {
@@ -97,14 +103,16 @@ where
             title_font: &FONT_6X10,
             details_delay: None,
             indicator_style: LineIndicator,
+            interaction: Programmed,
         }
     }
 }
 
-impl<C, S> MenuStyle<C, S>
+impl<C, S, IT> MenuStyle<C, S, IT>
 where
     C: PixelColor,
     S: IndicatorStyle,
+    IT: InteractionController,
 {
     pub const fn with_font(self, font: &'static MonoFont<'static>) -> Self {
         Self { font, ..self }
@@ -125,7 +133,7 @@ where
         }
     }
 
-    pub const fn with_selection_indicator<S2>(self, indicator_style: S2) -> MenuStyle<C, S2>
+    pub const fn with_selection_indicator<S2>(self, indicator_style: S2) -> MenuStyle<C, S2, IT>
     where
         S2: IndicatorStyle,
     {
@@ -136,6 +144,22 @@ where
             font: self.font,
             title_font: self.title_font,
             details_delay: self.details_delay,
+            interaction: self.interaction,
+        }
+    }
+
+    pub const fn with_interaction_controller<IT2>(self, interaction: IT2) -> MenuStyle<C, S, IT2>
+    where
+        IT2: InteractionController,
+    {
+        MenuStyle {
+            interaction,
+            color: self.color,
+            scrollbar: self.scrollbar,
+            font: self.font,
+            title_font: self.title_font,
+            details_delay: self.details_delay,
+            indicator_style: self.indicator_style,
         }
     }
 
@@ -161,13 +185,13 @@ where
     _return_type: PhantomData<R>,
     title: &'static str,
     items: VG,
-    interaction: IT,
+    interaction_state: IT::State,
     selected: u32,
     recompute_targets: bool,
     list_offset: i32,
     idle_timeout: u16,
     display_mode: MenuDisplayMode,
-    style: MenuStyle<C, S>,
+    style: MenuStyle<C, S, IT>,
     indicator: Indicator<P, S>,
 }
 
@@ -179,15 +203,23 @@ where
 {
     pub fn builder(title: &'static str) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S>
     where
-        MenuStyle<C, S>: Default,
+        MenuStyle<C, S, Programmed>: Default,
     {
         Self::build_with_style(title, MenuStyle::default())
     }
+}
 
+impl<IT, R, C, S> Menu<IT, NoItems, R, C, StaticPosition, S>
+where
+    R: Copy,
+    C: PixelColor,
+    S: IndicatorStyle,
+    IT: InteractionController,
+{
     pub fn build_with_style(
         title: &'static str,
-        style: MenuStyle<C, S>,
-    ) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S> {
+        style: MenuStyle<C, S, IT>,
+    ) -> MenuBuilder<IT, NoItems, R, C, StaticPosition, S> {
         MenuBuilder::new(title, style)
     }
 }
@@ -209,7 +241,7 @@ where
     }
 
     pub fn reset_interaction(&mut self) {
-        self.interaction.reset();
+        self.style.interaction.reset(&mut self.interaction_state);
     }
 
     fn selected_has_details(&self) -> bool {
@@ -223,7 +255,11 @@ where
         }
 
         let count = ViewGroup::len(&self.items) as u32;
-        match self.interaction.update(input) {
+        match self
+            .style
+            .interaction
+            .update(&mut self.interaction_state, input)
+        {
             Some(InteractionType::Next) => {
                 let selected = self.selected.checked_sub(1).unwrap_or(count - 1);
 
@@ -246,7 +282,7 @@ impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT>,
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -315,8 +351,11 @@ where
                 .change_selected_item(selected_item_bounds.top_left.y);
         }
 
-        self.indicator
-            .update(self.interaction.fill_area_width(display_size.width));
+        self.indicator.update(
+            self.style
+                .interaction
+                .fill_area_width(&self.interaction_state, display_size.width),
+        );
 
         // Ensure selection indicator is always visible
         let top_distance = self.indicator.offset() - self.list_offset;
@@ -369,7 +408,7 @@ impl<IT, VG, R, P, S> Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -418,7 +457,9 @@ where
         self.indicator.draw(
             menuitem_height,
             self.indicator.offset() - self.list_offset + menu_title.size().height as i32,
-            self.interaction.fill_area_width(menu_list_width),
+            self.style
+                .interaction
+                .fill_area_width(&self.interaction_state, menu_list_width),
             &mut display.clipped(&menu_display_area),
             &self.items,
             &self.style,
@@ -445,7 +486,7 @@ impl<IT, VG, R, P, S> Drawable for Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {

@@ -1,6 +1,6 @@
 use crate::{
-    adapters::invert::BinaryColorDrawTargetExt, selection_indicator::style::IndicatorStyle,
-    MenuStyle,
+    adapters::invert::BinaryColorDrawTargetExt, interaction::InteractionController,
+    selection_indicator::style::IndicatorStyle, MenuStyle,
 };
 use embedded_graphics::{
     pixelcolor::BinaryColor,
@@ -136,17 +136,18 @@ where
         (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
     }
 
-    pub fn draw<D>(
+    pub fn draw<D, IT>(
         &self,
         selected_height: u32,
         screen_offset: i32,
         fill_width: u32,
         display: &mut D,
-        items: &impl StyledDrawable<MenuStyle<BinaryColor, S>, Color = BinaryColor, Output = ()>,
-        style: &MenuStyle<BinaryColor, S>,
+        items: &impl StyledDrawable<MenuStyle<BinaryColor, S, IT>, Color = BinaryColor, Output = ()>,
+        style: &MenuStyle<BinaryColor, S, IT>,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
+        IT: InteractionController,
     {
         let Insets {
             left: margin_left,
