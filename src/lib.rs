@@ -92,7 +92,7 @@ impl<C> MenuStyle<C>
 where
     C: PixelColor,
 {
-    pub fn new(color: C) -> Self {
+    pub const fn new(color: C) -> Self {
         Self {
             color,
             scrollbar: DisplayScrollbar::Auto,
@@ -101,12 +101,16 @@ where
         }
     }
 
-    pub fn with_font(self, font: &'static MonoFont<'static>) -> Self {
+    pub const fn with_font(self, font: &'static MonoFont<'static>) -> Self {
         Self { font, ..self }
     }
 
-    pub fn with_title_font(self, title_font: &'static MonoFont<'static>) -> Self {
+    pub const fn with_title_font(self, title_font: &'static MonoFont<'static>) -> Self {
         Self { title_font, ..self }
+    }
+
+    pub const fn with_scrollbar_style(self, scrollbar: DisplayScrollbar) -> Self {
+        Self { scrollbar, ..self }
     }
 
     pub fn text_style(&self) -> MonoTextStyle<'static, C> {
