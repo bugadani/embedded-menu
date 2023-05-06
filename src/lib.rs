@@ -62,45 +62,6 @@ impl MenuDisplayMode {
     }
 }
 
-pub struct Animated {
-    current: i32,
-    target: i32,
-    frames: i32,
-}
-
-impl Animated {
-    pub fn new(current: i32, frames: i32) -> Self {
-        Self {
-            current,
-            target: current,
-            frames,
-        }
-    }
-
-    pub fn update(&mut self) {
-        let rounding = if self.current < self.target {
-            self.frames - 1
-        } else {
-            1 - self.frames
-        };
-
-        let distance = self.target - self.current;
-        self.current += (distance + rounding) / self.frames;
-    }
-
-    pub fn update_target(&mut self, target: i32) {
-        self.target = target;
-    }
-
-    pub fn current(&self) -> i32 {
-        self.current
-    }
-
-    pub fn target(&self) -> i32 {
-        self.target
-    }
-}
-
 pub enum MenuEvent<R: Copy> {
     NavigationEvent(R),
     DataEvent(R),

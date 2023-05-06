@@ -1,7 +1,7 @@
 use crate::{
     adapters::invert::BinaryColorDrawTargetExt,
     selection_indicator::style::{line::Line, IndicatorStyle},
-    Animated, MenuStyle,
+    MenuStyle,
 };
 use embedded_graphics::{
     pixelcolor::BinaryColor,
@@ -59,28 +59,39 @@ impl SelectionIndicatorController for StaticPosition {
 }
 
 pub struct AnimatedPosition {
-    y_offset: Animated,
+    current: i32,
+    target: i32,
+    frames: i32,
 }
 
 impl AnimatedPosition {
     pub fn new(frames: i32) -> Self {
         Self {
-            y_offset: Animated::new(0, frames),
+            current: 0,
+            target: 0,
+            frames,
         }
     }
 }
 
 impl SelectionIndicatorController for AnimatedPosition {
     fn update_target(&mut self, y: i32) {
-        self.y_offset.update_target(y);
+        self.target = y;
     }
 
     fn offset(&self) -> i32 {
-        self.y_offset.current()
+        self.current
     }
 
     fn update(&mut self) {
-        self.y_offset.update()
+        let rounding = if self.current < self.target {
+            self.frames - 1
+        } else {
+            1 - self.frames
+        };
+
+        let distance = self.target - self.current;
+        self.current += (distance + rounding) / self.frames;
     }
 }
 
