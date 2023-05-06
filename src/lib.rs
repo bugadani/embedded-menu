@@ -16,7 +16,7 @@ use crate::{
     margin::MarginExt,
     plumbing::MenuExt,
     selection_indicator::{
-        simple::SimpleSelectionIndicator, SelectionIndicator, SelectionIndicatorController,
+        simple::Indicator, SelectionIndicator, SelectionIndicatorController, StaticPosition,
     },
     styled::StyledMenuItem,
 };
@@ -184,7 +184,7 @@ where
     indicator: SI,
 }
 
-impl<R, C> Menu<Programmed, NoItems, R, C, SimpleSelectionIndicator>
+impl<R, C> Menu<Programmed, NoItems, R, C, Indicator<StaticPosition>>
 where
     R: Copy,
     C: PixelColor,
@@ -192,7 +192,7 @@ where
     pub fn builder(
         title: &'static str,
         bounds: Rectangle,
-    ) -> MenuBuilder<Programmed, NoItems, R, C, SimpleSelectionIndicator>
+    ) -> MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition>>
     where
         MenuStyle<C>: Default,
     {
@@ -203,7 +203,7 @@ where
         title: &'static str,
         bounds: Rectangle,
         style: MenuStyle<C>,
-    ) -> MenuBuilder<Programmed, NoItems, R, C, SimpleSelectionIndicator>
+    ) -> MenuBuilder<Programmed, NoItems, R, C, Indicator<StaticPosition>>
     where
         MenuStyle<C>: Default,
     {
