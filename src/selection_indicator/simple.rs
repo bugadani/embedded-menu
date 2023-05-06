@@ -34,6 +34,12 @@ impl Indicator<StaticPosition> {
     }
 }
 
+impl<P> Indicator<P> {
+    pub fn with_indicator_style(self, style: IndicatorStyle) -> Self {
+        Self { style, ..self }
+    }
+}
+
 impl<P: SelectionIndicatorController> SelectionIndicator for Indicator<P> {
     type Color = BinaryColor;
     type Controller = P;

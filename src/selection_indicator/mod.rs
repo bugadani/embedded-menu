@@ -9,7 +9,6 @@ use embedded_layout::prelude::{horizontal::LeftToRight, vertical::Center, Align}
 
 use crate::{Animated, MenuStyle};
 
-pub mod animated;
 pub mod simple;
 
 pub struct Insets {
