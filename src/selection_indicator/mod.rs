@@ -84,7 +84,7 @@ impl SelectionIndicatorController for AnimatedPosition {
     }
 }
 
-pub struct Indicator<P, S> {
+pub(crate) struct Indicator<P, S> {
     position: P,
     style: S,
 }
@@ -93,13 +93,6 @@ impl Indicator<StaticPosition, Line> {
     pub fn new() -> Self {
         Self {
             position: StaticPosition::new(),
-            style: Line,
-        }
-    }
-
-    pub fn animated(frames: i32) -> Indicator<AnimatedPosition, Line> {
-        Indicator {
-            position: AnimatedPosition::new(frames),
             style: Line,
         }
     }
@@ -114,6 +107,13 @@ where
         Indicator {
             position: self.position,
             style,
+        }
+    }
+
+    pub fn with_animated_selection_indicator(self, frames: i32) -> Indicator<AnimatedPosition, S> {
+        Indicator {
+            position: AnimatedPosition::new(frames),
+            style: self.style,
         }
     }
 

@@ -5,7 +5,7 @@ use crate::{
     private::NoItems,
     selection_indicator::{
         style::{line::Line, IndicatorStyle},
-        Indicator, SelectionIndicatorController, StaticPosition,
+        AnimatedPosition, Indicator, SelectionIndicatorController, StaticPosition,
     },
     Menu, MenuDisplayMode, MenuItem, MenuStyle,
 };
@@ -29,7 +29,11 @@ where
     indicator: Indicator<P, S>,
 }
 
-impl<R: Copy, C: PixelColor> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, Line> {
+impl<R, C> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, Line>
+where
+    R: Copy,
+    C: PixelColor,
+{
     pub fn new(title: &'static str, bounds: Rectangle, style: MenuStyle<C>) -> Self {
         Self {
             _return_type: PhantomData,
@@ -49,6 +53,8 @@ where
     R: Copy,
     IT: InteractionController,
     C: PixelColor,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
 {
     pub fn show_details_after(self, timeout: u16) -> MenuBuilder<IT, LL, R, C, P, S> {
         MenuBuilder {
@@ -63,12 +69,8 @@ where
         }
     }
 
-    pub fn with_selection_indicator<P2, S2>(
-        self,
-        indicator: Indicator<P2, S2>,
-    ) -> MenuBuilder<IT, LL, R, C, P2, S2>
+    pub fn with_selection_indicator_style<S2>(self, style: S2) -> MenuBuilder<IT, LL, R, C, P, S2>
     where
-        P2: SelectionIndicatorController,
         S2: IndicatorStyle,
     {
         MenuBuilder {
@@ -79,7 +81,23 @@ where
             interaction: self.interaction,
             idle_timeout: self.idle_timeout,
             style: self.style,
-            indicator,
+            indicator: self.indicator.with_indicator_style(style),
+        }
+    }
+
+    pub fn with_animated_selection_indicator(
+        self,
+        frames: i32,
+    ) -> MenuBuilder<IT, LL, R, C, AnimatedPosition, S> {
+        MenuBuilder {
+            _return_type: PhantomData,
+            title: self.title,
+            bounds: self.bounds,
+            items: self.items,
+            interaction: self.interaction,
+            idle_timeout: self.idle_timeout,
+            style: self.style,
+            indicator: self.indicator.with_animated_selection_indicator(frames),
         }
     }
 
