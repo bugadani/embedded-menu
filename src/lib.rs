@@ -17,7 +17,7 @@ use crate::{
     plumbing::MenuExt,
     selection_indicator::{
         style::{line::Line as LineIndicator, IndicatorStyle},
-        Indicator, SelectionIndicatorController, StaticPosition,
+        AnimatedPosition, Indicator, SelectionIndicatorController, StaticPosition,
     },
     styled::StyledMenuItem,
 };
@@ -70,11 +70,12 @@ pub enum DisplayScrollbar {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct MenuStyle<C, S, IT>
+pub struct MenuStyle<C, S, IT, P>
 where
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
+    P: SelectionIndicatorController,
 {
     pub(crate) color: C,
     pub(crate) scrollbar: DisplayScrollbar,
@@ -83,15 +84,16 @@ where
     pub(crate) details_delay: Option<u16>,
     pub(crate) indicator_style: S,
     pub(crate) interaction: IT,
+    pub(crate) indicator_controller: P,
 }
 
-impl Default for MenuStyle<BinaryColor, LineIndicator, Programmed> {
+impl Default for MenuStyle<BinaryColor, LineIndicator, Programmed, StaticPosition> {
     fn default() -> Self {
         Self::new(BinaryColor::On)
     }
 }
 
-impl<C> MenuStyle<C, LineIndicator, Programmed>
+impl<C> MenuStyle<C, LineIndicator, Programmed, StaticPosition>
 where
     C: PixelColor,
 {
@@ -104,15 +106,17 @@ where
             details_delay: None,
             indicator_style: LineIndicator,
             interaction: Programmed,
+            indicator_controller: StaticPosition,
         }
     }
 }
 
-impl<C, S, IT> MenuStyle<C, S, IT>
+impl<C, S, IT, P> MenuStyle<C, S, IT, P>
 where
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
+    P: SelectionIndicatorController,
 {
     pub const fn with_font(self, font: &'static MonoFont<'static>) -> Self {
         Self { font, ..self }
@@ -133,7 +137,7 @@ where
         }
     }
 
-    pub const fn with_selection_indicator<S2>(self, indicator_style: S2) -> MenuStyle<C, S2, IT>
+    pub const fn with_selection_indicator<S2>(self, indicator_style: S2) -> MenuStyle<C, S2, IT, P>
     where
         S2: IndicatorStyle,
     {
@@ -145,10 +149,11 @@ where
             title_font: self.title_font,
             details_delay: self.details_delay,
             interaction: self.interaction,
+            indicator_controller: self.indicator_controller,
         }
     }
 
-    pub const fn with_interaction_controller<IT2>(self, interaction: IT2) -> MenuStyle<C, S, IT2>
+    pub const fn with_interaction_controller<IT2>(self, interaction: IT2) -> MenuStyle<C, S, IT2, P>
     where
         IT2: InteractionController,
     {
@@ -160,6 +165,23 @@ where
             title_font: self.title_font,
             details_delay: self.details_delay,
             indicator_style: self.indicator_style,
+            indicator_controller: self.indicator_controller,
+        }
+    }
+
+    pub const fn with_animated_selection_indicator(
+        &self,
+        frames: i32,
+    ) -> MenuStyle<C, S, IT, AnimatedPosition> {
+        MenuStyle {
+            interaction: self.interaction,
+            color: self.color,
+            scrollbar: self.scrollbar,
+            font: self.font,
+            title_font: self.title_font,
+            details_delay: self.details_delay,
+            indicator_style: self.indicator_style,
+            indicator_controller: AnimatedPosition::new(frames),
         }
     }
 
@@ -191,7 +213,7 @@ where
     list_offset: i32,
     idle_timeout: u16,
     display_mode: MenuDisplayMode,
-    style: MenuStyle<C, S, IT>,
+    style: MenuStyle<C, S, IT, P>,
     indicator: Indicator<P, S>,
 }
 
@@ -203,23 +225,24 @@ where
 {
     pub fn builder(title: &'static str) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S>
     where
-        MenuStyle<C, S, Programmed>: Default,
+        MenuStyle<C, S, Programmed, StaticPosition>: Default,
     {
         Self::build_with_style(title, MenuStyle::default())
     }
 }
 
-impl<IT, R, C, S> Menu<IT, NoItems, R, C, StaticPosition, S>
+impl<IT, R, C, P, S> Menu<IT, NoItems, R, C, P, S>
 where
     R: Copy,
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
+    P: SelectionIndicatorController,
 {
     pub fn build_with_style(
         title: &'static str,
-        style: MenuStyle<C, S, IT>,
-    ) -> MenuBuilder<IT, NoItems, R, C, StaticPosition, S> {
+        style: MenuStyle<C, S, IT, P>,
+    ) -> MenuBuilder<IT, NoItems, R, C, P, S> {
         MenuBuilder::new(title, style)
     }
 }
@@ -282,7 +305,7 @@ impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -408,7 +431,7 @@ impl<IT, VG, R, P, S> Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -486,7 +509,7 @@ impl<IT, VG, R, P, S> Drawable for Menu<IT, VG, R, BinaryColor, P, S>
 where
     R: Copy,
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT>,
+    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {

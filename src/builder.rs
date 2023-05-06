@@ -2,10 +2,7 @@ use crate::{
     interaction::InteractionController,
     items::MenuLine,
     plumbing::MenuExt,
-    selection_indicator::{
-        style::IndicatorStyle, AnimatedPosition, Indicator, SelectionIndicatorController,
-        StaticPosition,
-    },
+    selection_indicator::{style::IndicatorStyle, Indicator, SelectionIndicatorController},
     Menu, MenuDisplayMode, MenuItem, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
@@ -18,50 +15,28 @@ where
     IT: InteractionController,
     C: PixelColor,
     S: IndicatorStyle,
+    P: SelectionIndicatorController,
 {
     _return_type: PhantomData<R>,
     title: &'static str,
     items: LL,
-    style: MenuStyle<C, S, IT>,
-    indicator_controller: P,
+    style: MenuStyle<C, S, IT, P>,
 }
 
-impl<R, C, S, IT> MenuBuilder<IT, NoItems, R, C, StaticPosition, S>
+impl<R, C, S, IT, P> MenuBuilder<IT, NoItems, R, C, P, S>
 where
     R: Copy,
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
+    P: SelectionIndicatorController,
 {
-    pub fn new(title: &'static str, style: MenuStyle<C, S, IT>) -> Self {
+    pub fn new(title: &'static str, style: MenuStyle<C, S, IT, P>) -> Self {
         Self {
             _return_type: PhantomData,
             title,
             items: NoItems,
             style,
-            indicator_controller: StaticPosition::new(),
-        }
-    }
-}
-
-impl<IT, LL, R, C, P, S> MenuBuilder<IT, LL, R, C, P, S>
-where
-    R: Copy,
-    IT: InteractionController,
-    C: PixelColor,
-    P: SelectionIndicatorController,
-    S: IndicatorStyle,
-{
-    pub fn with_animated_selection_indicator(
-        self,
-        frames: i32,
-    ) -> MenuBuilder<IT, LL, R, C, AnimatedPosition, S> {
-        MenuBuilder {
-            _return_type: PhantomData,
-            title: self.title,
-            items: self.items,
-            style: self.style,
-            indicator_controller: AnimatedPosition::new(frames),
         }
     }
 }
@@ -85,7 +60,7 @@ where
             recompute_targets: true,
             list_offset: 0,
             indicator: Indicator::new(
-                self.indicator_controller,
+                self.style.indicator_controller,
                 self.style.indicator_style.clone(),
             ),
             idle_timeout: self.style.details_delay.unwrap_or_default(),
@@ -112,7 +87,6 @@ where
             title: self.title,
             items: Chain::new(MenuLine::new(item, self.style)),
             style: self.style,
-            indicator_controller: self.indicator_controller,
         }
     }
 }
@@ -135,7 +109,6 @@ where
             title: self.title,
             items: self.items.append(MenuLine::new(item, self.style)),
             style: self.style,
-            indicator_controller: self.indicator_controller,
         }
     }
 }
@@ -159,7 +132,6 @@ where
             title: self.title,
             items: self.items.append(MenuLine::new(item, self.style)),
             style: self.style,
-            indicator_controller: self.indicator_controller,
         }
     }
 }

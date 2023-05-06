@@ -8,33 +8,38 @@ use embedded_layout::{
 };
 
 use crate::{
-    interaction::InteractionController, selection_indicator::style::IndicatorStyle, MenuStyle,
+    interaction::InteractionController,
+    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    MenuStyle,
 };
 
-pub trait StyledMenuItem<C, S, IT>:
-    StyledDrawable<MenuStyle<C, S, IT>, Color = C, Output = ()>
+pub trait StyledMenuItem<C, S, IT, P>:
+    StyledDrawable<MenuStyle<C, S, IT, P>, Color = C, Output = ()>
 where
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
+    P: SelectionIndicatorController,
 {
 }
-impl<T, C, S, IT> StyledMenuItem<C, S, IT> for T
+impl<T, C, S, IT, P> StyledMenuItem<C, S, IT, P> for T
 where
-    T: StyledDrawable<MenuStyle<C, S, IT>, Color = C, Output = ()>,
+    T: StyledDrawable<MenuStyle<C, S, IT, P>, Color = C, Output = ()>,
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
+    P: SelectionIndicatorController,
 {
 }
 
-impl<C, S, V, VC, IT> StyledDrawable<MenuStyle<C, S, IT>> for Link<V, VC>
+impl<C, S, V, VC, IT, P> StyledDrawable<MenuStyle<C, S, IT, P>> for Link<V, VC>
 where
     C: PixelColor,
-    V: StyledMenuItem<C, S, IT>,
-    VC: ChainElement + StyledMenuItem<C, S, IT>,
+    V: StyledMenuItem<C, S, IT, P>,
+    VC: ChainElement + StyledMenuItem<C, S, IT, P>,
     S: IndicatorStyle,
     IT: InteractionController,
+    P: SelectionIndicatorController,
 {
     type Color = C;
     type Output = ();
@@ -42,7 +47,7 @@ where
     #[inline]
     fn draw_styled<D>(
         &self,
-        style: &MenuStyle<Self::Color, S, IT>,
+        style: &MenuStyle<Self::Color, S, IT, P>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
@@ -55,12 +60,13 @@ where
     }
 }
 
-impl<C, S, V, IT> StyledDrawable<MenuStyle<C, S, IT>> for Chain<V>
+impl<C, S, V, IT, P> StyledDrawable<MenuStyle<C, S, IT, P>> for Chain<V>
 where
     C: PixelColor,
-    V: StyledMenuItem<C, S, IT>,
+    V: StyledMenuItem<C, S, IT, P>,
     S: IndicatorStyle,
     IT: InteractionController,
+    P: SelectionIndicatorController,
 {
     type Color = C;
     type Output = ();
@@ -68,7 +74,7 @@ where
     #[inline]
     fn draw_styled<D>(
         &self,
-        style: &MenuStyle<Self::Color, S, IT>,
+        style: &MenuStyle<Self::Color, S, IT, P>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where

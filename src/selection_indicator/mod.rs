@@ -29,68 +29,73 @@ impl Insets {
     }
 }
 
-pub trait SelectionIndicatorController {
-    fn update_target(&mut self, y: i32);
-    fn offset(&self) -> i32;
-    fn update(&mut self);
+pub trait SelectionIndicatorController: Copy {
+    type State: Default;
+
+    fn update_target(&self, state: &mut Self::State, y: i32);
+    fn offset(&self, state: &Self::State) -> i32;
+    fn update(&self, state: &mut Self::State);
 }
 
-pub struct StaticPosition {
+#[derive(Clone, Copy, Default)]
+pub struct StaticState {
     y_offset: i32,
 }
 
-impl StaticPosition {
-    pub fn new() -> Self {
-        Self { y_offset: 0 }
-    }
-}
+#[derive(Clone, Copy)]
+pub struct StaticPosition;
 
 impl SelectionIndicatorController for StaticPosition {
-    fn update_target(&mut self, y: i32) {
-        self.y_offset = y;
+    type State = StaticState;
+
+    fn update_target(&self, state: &mut Self::State, y: i32) {
+        state.y_offset = y;
     }
 
-    fn offset(&self) -> i32 {
-        self.y_offset
+    fn offset(&self, state: &Self::State) -> i32 {
+        state.y_offset
     }
 
-    fn update(&mut self) {}
+    fn update(&self, _state: &mut Self::State) {}
 }
 
+#[derive(Clone, Copy)]
 pub struct AnimatedPosition {
-    current: i32,
-    target: i32,
     frames: i32,
 }
 
+#[derive(Clone, Copy, Default)]
+pub struct AnimatedState {
+    current: i32,
+    target: i32,
+}
+
 impl AnimatedPosition {
-    pub fn new(frames: i32) -> Self {
-        Self {
-            current: 0,
-            target: 0,
-            frames,
-        }
+    pub const fn new(frames: i32) -> Self {
+        Self { frames }
     }
 }
 
 impl SelectionIndicatorController for AnimatedPosition {
-    fn update_target(&mut self, y: i32) {
-        self.target = y;
+    type State = AnimatedState;
+
+    fn update_target(&self, state: &mut Self::State, y: i32) {
+        state.target = y;
     }
 
-    fn offset(&self) -> i32 {
-        self.current
+    fn offset(&self, state: &Self::State) -> i32 {
+        state.current
     }
 
-    fn update(&mut self) {
-        let rounding = if self.current < self.target {
+    fn update(&self, state: &mut Self::State) {
+        let rounding = if state.current < state.target {
             self.frames - 1
         } else {
             1 - self.frames
         };
 
-        let distance = self.target - self.current;
-        self.current += (distance + rounding) / self.frames;
+        let distance = state.target - state.current;
+        state.current += (distance + rounding) / self.frames;
     }
 }
 
@@ -99,7 +104,8 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    position: P,
+    controller: P,
+    position: P::State,
     style: S,
     state: S::State,
 }
@@ -109,25 +115,26 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn new(position: P, style: S) -> Self {
+    pub fn new(controller: P, style: S) -> Self {
         Self {
-            position,
+            controller,
             style,
+            position: Default::default(),
             state: Default::default(),
         }
     }
 
     pub fn offset(&self) -> i32 {
-        self.position.offset()
+        self.controller.offset(&self.position)
     }
 
     pub fn change_selected_item(&mut self, pos: i32) {
-        self.position.update_target(pos);
+        self.controller.update_target(&mut self.position, pos);
         self.style.on_target_changed(&mut self.state);
     }
 
     pub fn update(&mut self, fill_width: u32) {
-        self.position.update();
+        self.controller.update(&mut self.position);
         self.style.update(&mut self.state, fill_width);
     }
 
@@ -142,8 +149,8 @@ where
         screen_offset: i32,
         fill_width: u32,
         display: &mut D,
-        items: &impl StyledDrawable<MenuStyle<BinaryColor, S, IT>, Color = BinaryColor, Output = ()>,
-        style: &MenuStyle<BinaryColor, S, IT>,
+        items: &impl StyledDrawable<MenuStyle<BinaryColor, S, IT, P>, Color = BinaryColor, Output = ()>,
+        style: &MenuStyle<BinaryColor, S, IT, P>,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,

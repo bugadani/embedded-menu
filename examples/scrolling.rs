@@ -8,7 +8,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, NavigationItem, Select},
-    Menu,
+    Menu, MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -37,8 +37,9 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::builder("Menu")
-        .with_animated_selection_indicator(10)
+    let style = MenuStyle::new(BinaryColor::On).with_animated_selection_indicator(10);
+
+    let mut menu = Menu::build_with_style("Menu", style)
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")

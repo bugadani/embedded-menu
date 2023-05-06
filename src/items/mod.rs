@@ -7,7 +7,7 @@ pub use select::Select;
 use crate::{
     interaction::InteractionController,
     margin::{Margin, MarginExt},
-    selection_indicator::style::IndicatorStyle,
+    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     MenuItem, MenuStyle,
 };
 use embedded_graphics::{
@@ -31,11 +31,12 @@ impl<I> MenuLine<I>
 where
     I: MenuItem,
 {
-    pub fn new<C, S, IT>(item: I, style: MenuStyle<C, S, IT>) -> MenuLine<I>
+    pub fn new<C, S, IT, P>(item: I, style: MenuStyle<C, S, IT, P>) -> MenuLine<I>
     where
         C: PixelColor,
         S: IndicatorStyle,
         IT: InteractionController,
+        P: SelectionIndicatorController,
     {
         let style = style.text_style();
 
@@ -77,19 +78,20 @@ impl<I> View for MenuLine<I> {
     }
 }
 
-impl<C, S, I, IT> StyledDrawable<MenuStyle<C, S, IT>> for MenuLine<I>
+impl<C, S, I, IT, P> StyledDrawable<MenuStyle<C, S, IT, P>> for MenuLine<I>
 where
     C: PixelColor + From<Rgb888>,
     I: MenuItem,
     S: IndicatorStyle,
     IT: InteractionController,
+    P: SelectionIndicatorController,
 {
     type Color = C;
     type Output = ();
 
     fn draw_styled<D>(
         &self,
-        style: &MenuStyle<C, S, IT>,
+        style: &MenuStyle<C, S, IT, P>,
         display: &mut D,
     ) -> Result<Self::Output, D::Error>
     where
