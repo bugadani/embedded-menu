@@ -14,8 +14,8 @@ impl SelectValue for bool {
         match *self {
             // true => "O",
             // false => "O\r+\r#", // this only works for certain small fonts, unfortunately
-            true => "[ ]",
-            false => "[X]",
+            false => "[ ]",
+            true => "[X]",
         }
     }
 }
