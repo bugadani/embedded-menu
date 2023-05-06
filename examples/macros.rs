@@ -8,13 +8,12 @@ use embedded_graphics_simulator::{
     Window,
 };
 use embedded_menu::{
-    interaction::InteractionType,
-    items::{select::SelectValue, Select},
-    Menu,
+    interaction::InteractionType, items::select::SelectValue,
+    selection_indicator::style::animated_triangle::AnimatedTriangle, MenuStyle,
 };
-use embedded_menu_macros::SelectValue;
+use embedded_menu_macros::{Menu, SelectValue};
 
-#[derive(Copy, Clone, PartialEq, SelectValue)]
+#[derive(Copy, Clone, Debug, PartialEq, SelectValue)]
 pub enum TestEnum {
     A,
     #[display_as("AB")]
@@ -23,10 +22,37 @@ pub enum TestEnum {
     C,
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum NavEvents {
+    Quit,
+}
+
+#[derive(Clone, Copy, Debug, Menu)]
+#[menu(
+    title = "Menu title",
+    event = NavEvents,
+    items = [
+        data(label = "Multiple select", field = test_field, details = "Some description"),
+        data(label = "Checkbox", field = checkbox),
+        navigation(label = "Quit", details = "Exits the demo", event = NavEvents::Quit)
+    ]
+)]
+pub struct DemoMenu {
+    test_field: TestEnum,
+    checkbox: bool,
+}
+
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::new("Menu")
-        .add_item(Select::new("Check this2", TestEnum::A))
-        .build();
+    let mut menu = DemoMenu {
+        test_field: TestEnum::B,
+        checkbox: false,
+    }
+    .create_menu_with_style(
+        MenuStyle::new(BinaryColor::On)
+            .with_details_delay(100)
+            .with_animated_selection_indicator(10)
+            .with_selection_indicator(AnimatedTriangle::new(120)),
+    );
 
     let output_settings = OutputSettingsBuilder::new()
         .theme(BinaryColorTheme::OledBlue)
@@ -40,22 +66,30 @@ fn main() -> Result<(), core::convert::Infallible> {
         window.update(&display);
 
         for event in window.events() {
-            match event {
-                SimulatorEvent::KeyDown {
-                    keycode,
-                    repeat: false,
-                    ..
-                } => match keycode {
-                    Keycode::Return => menu.interact(InteractionType::Select),
-                    Keycode::Up => menu.interact(InteractionType::Previous),
-                    Keycode::Down => menu.interact(InteractionType::Next),
+            let interaction = match event {
+                SimulatorEvent::KeyDown { keycode, .. } => match keycode {
+                    Keycode::Return => Some(InteractionType::Select),
+                    Keycode::Up => Some(InteractionType::Previous),
+                    Keycode::Down => Some(InteractionType::Next),
                     _ => None,
                 },
                 SimulatorEvent::Quit => break 'running,
                 _ => None,
             };
+
+            let Some(interaction) = interaction else { continue; };
+            let output = menu.interact(interaction);
+            let Some(output) = output else { continue; };
+
+            match output {
+                NavEvents::Quit => break 'running,
+            }
         }
     }
+
+    let final_data = menu.data();
+
+    println!("{final_data:?}");
 
     Ok(())
 }
