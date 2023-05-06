@@ -357,7 +357,7 @@ where
         let top_distance = self.indicator.offset() - self.list_offset;
         self.list_offset += if top_distance > 0 {
             let indicator_style = self.indicator.style();
-            let indicator_insets = indicator_style.margin();
+            let indicator_insets = indicator_style.margin(selected_item_bounds.size().height);
             let indicator_height = selected_item_bounds.size().height as i32
                 + indicator_insets.top
                 + indicator_insets.bottom;

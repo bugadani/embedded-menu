@@ -51,7 +51,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .show_details_after(100)
         .with_interaction_controller(SingleTouch::new(5, 100))
         .with_selection_indicator(
-            AnimatedSelectionIndicator::new(10).with_indicator_style(IndicatorStyle::Border),
+            AnimatedSelectionIndicator::new(10).with_indicator_style(IndicatorStyle::Triangle),
         )
         .add_item(
             NavigationItem::new("Foo", ())

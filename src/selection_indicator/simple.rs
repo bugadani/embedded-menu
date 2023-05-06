@@ -62,7 +62,7 @@ impl SelectionIndicator for SimpleSelectionIndicator {
             top: margin_top,
             right: margin_right,
             bottom: margin_bottom,
-        } = self.style.margin();
+        } = self.style.margin(selected_height);
 
         self.style.draw(
             fill_width,
