@@ -339,7 +339,10 @@ where
 
     pub fn update(&mut self, display: &impl Dimensions) {
         self.idle_timeout = self.idle_timeout.saturating_sub(1);
-        if self.style.details_delay.is_some() && self.idle_timeout == 0 {
+        if self.style.details_delay.is_some()
+            && self.idle_timeout == 0
+            && self.selected_has_details()
+        {
             self.display_mode = MenuDisplayMode::Details;
         }
 
