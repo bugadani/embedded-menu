@@ -30,7 +30,7 @@ pub enum NavEvents {
 #[derive(Clone, Copy, Debug, Menu)]
 #[menu(
     title = "Menu title",
-    event = NavEvents,
+    navigation(events = NavEvents, marker = ">"),
     items = [
         data(label = "Multiple select", field = test_field, details = "Some description"),
         data(label = "Checkbox", field = checkbox),
@@ -49,9 +49,9 @@ fn main() -> Result<(), core::convert::Infallible> {
     }
     .create_menu_with_style(
         MenuStyle::new(BinaryColor::On)
-            .with_details_delay(100)
+            .with_details_delay(250)
             .with_animated_selection_indicator(10)
-            .with_selection_indicator(AnimatedTriangle::new(120)),
+            .with_selection_indicator(AnimatedTriangle::new(200)),
     );
 
     let output_settings = OutputSettingsBuilder::new()

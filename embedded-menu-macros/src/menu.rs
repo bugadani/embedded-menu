@@ -212,7 +212,8 @@ impl MenuItem {
 struct MenuOptions {
     title: String,
     items: Vec<MenuItemOption>,
-    external_nav_event_ty: Option<Path>,
+    navigation_marker: Option<String>,
+    navigation_event_ty: Option<Path>,
 }
 
 impl MenuOptions {
@@ -234,7 +235,8 @@ impl Default for MenuOptions {
         Self {
             title: String::from("Menu"),
             items: Vec::new(),
-            external_nav_event_ty: None,
+            navigation_marker: None,
+            navigation_event_ty: None,
         }
     }
 }
@@ -244,7 +246,8 @@ impl Parse for MenuOptions {
         let mut options = Self {
             title: String::new(),
             items: Vec::new(),
-            external_nav_event_ty: None,
+            navigation_marker: None,
+            navigation_event_ty: None,
         };
 
         while !input.is_empty() {
@@ -257,16 +260,41 @@ impl Parse for MenuOptions {
 
                 let _ = input.parse::<Token![=]>()?;
                 options.title = input.parse::<LitStr>()?.value();
-            } else if option == "event" {
-                if !options.external_nav_event_ty.is_none() {
-                    return Err(syn::Error::new_spanned(
-                        option,
-                        "Event type is already set.",
-                    ));
-                }
+            } else if option == "navigation" {
+                let args;
+                parenthesized!(args in input);
 
-                let _ = input.parse::<Token![=]>()?;
-                options.external_nav_event_ty = Some(input.parse::<Path>()?);
+                while !args.is_empty() {
+                    let option = args.parse::<Ident>()?;
+                    args.parse::<Token![=]>()?;
+
+                    if option == "events" {
+                        if options.navigation_marker.is_some() {
+                            return Err(syn::Error::new_spanned(
+                                option,
+                                "Event type is already set.",
+                            ));
+                        }
+                        options.navigation_event_ty = Some(args.parse::<Path>()?);
+                    } else if option == "marker" {
+                        if options.navigation_marker.is_some() {
+                            return Err(syn::Error::new_spanned(
+                                option,
+                                "Navigation marker is already set.",
+                            ));
+                        }
+                        options.navigation_marker = Some(args.parse::<LitStr>()?.value());
+                    } else {
+                        return Err(syn::Error::new_spanned(
+                            &option,
+                            format!("Unknown option \"{option}\""),
+                        ));
+                    }
+
+                    if !args.is_empty() {
+                        args.parse::<Token![,]>()?;
+                    }
+                }
             } else if option == "items" {
                 if !options.items.is_empty() {
                     return Err(syn::Error::new_spanned(option, "Items are already set."));
@@ -305,7 +333,8 @@ impl Parse for MenuOptions {
 struct MenuData {
     ty_name: Ident,
     title: String,
-    external_nav_event_ty: Option<Path>,
+    navigation_event_ty: Option<Path>,
+    navigation_marker: Option<String>,
     items: Vec<MenuItem>,
 }
 
@@ -387,8 +416,9 @@ impl TryFrom<MenuInput> for MenuData {
         Ok(Self {
             title: menu_options.title,
             ty_name,
-            external_nav_event_ty: menu_options.external_nav_event_ty,
+            navigation_event_ty: menu_options.navigation_event_ty,
             items,
+            navigation_marker: menu_options.navigation_marker,
         })
     }
 }
@@ -431,11 +461,19 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
         .items
         .iter()
         .filter_map(|item| item.as_data_field());
-    let menu_items = menu_data.items.iter().map(|item| item.menu_item(&events));
+    let menu_items = menu_data.items.iter().map(|item| {
+        let tokens = item.menu_item(&events);
+        if matches!(item, MenuItem::Nav(..)) {
+            let navigation_marker = menu_data.navigation_marker.iter();
+            quote! { #tokens #(.with_marker(#navigation_marker))* }
+        } else {
+            tokens
+        }
+    });
 
     let title = menu_data.title;
     let ty_name = menu_data.ty_name;
-    let external_nav_event_ty = if let Some(ty) = menu_data.external_nav_event_ty {
+    let navigation_event_ty = if let Some(ty) = menu_data.navigation_event_ty {
         quote! {#ty}
     } else {
         quote! {()}
@@ -462,7 +500,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
             #[derive(Clone, Copy)]
             #[allow(non_camel_case_types)]
             enum #events {
-                __NavigationEvent(#external_nav_event_ty),
+                __NavigationEvent(#navigation_event_ty),
                 #(#event_variants),*
             }
 
@@ -495,7 +533,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                     self.data.clone()
                 }
 
-                pub fn interact(&mut self, event: IT::Input) -> Option<#external_nav_event_ty> {
+                pub fn interact(&mut self, event: IT::Input) -> Option<#navigation_event_ty> {
                     match self.menu.interact(event)? {
                         #(#events::#event_set_data_fields(value) => self.data.#event_set_data_fields = value,)*
                         #events::__NavigationEvent(event) => return Some(event),
