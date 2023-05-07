@@ -9,9 +9,8 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::InteractionType, items::select::SelectValue,
-    selection_indicator::style::animated_triangle::AnimatedTriangle, MenuStyle,
+    selection_indicator::style::animated_triangle::AnimatedTriangle, Menu, MenuStyle, SelectValue,
 };
-use embedded_menu_macros::{Menu, SelectValue};
 
 #[derive(Copy, Clone, Debug, PartialEq, SelectValue)]
 pub enum TestEnum {

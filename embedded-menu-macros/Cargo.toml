@@ -1,6 +1,6 @@
 [package]
 name = "embedded-menu-macros"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Dániel Buga <bugadani@gmail.com>"]
 edition = "2021"
 

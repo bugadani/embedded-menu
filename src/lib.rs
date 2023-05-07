@@ -37,6 +37,8 @@ use embedded_text::{
     TextBox,
 };
 
+pub use embedded_menu_macros::{Menu, SelectValue};
+
 pub trait MenuItem {
     type Data;
 
