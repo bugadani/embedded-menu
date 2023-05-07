@@ -21,7 +21,7 @@ pub struct SingleTouch {
 impl SingleTouch {
     /// `ignore`: Ignore pulses with at most this many active samples
     /// `max`: Detect pulses with this many active samples as `Select`
-    pub fn new(ignore: u32, max: u32) -> Self {
+    pub const fn new(ignore: u32, max: u32) -> Self {
         Self {
             ignore_time: ignore,
             max_time: max,

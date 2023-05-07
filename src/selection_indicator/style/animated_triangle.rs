@@ -17,7 +17,7 @@ pub struct AnimatedTriangle {
 }
 
 impl AnimatedTriangle {
-    pub fn new(period: i32) -> Self {
+    pub const fn new(period: i32) -> Self {
         Self { period }
     }
 }
