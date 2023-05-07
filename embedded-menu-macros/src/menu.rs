@@ -520,7 +520,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                     P,
                     S,
                 >,
-                data: DemoMenu,
+                data: #ty_name,
             }
 
             impl<IT, P, S> #wrapper<IT, P, S>
@@ -529,8 +529,8 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                 P: SelectionIndicatorController,
                 S: IndicatorStyle,
             {
-                pub fn data(&self) -> DemoMenu {
-                    self.data.clone()
+                pub fn data(&self) -> &#ty_name {
+                    &self.data
                 }
 
                 pub fn interact(&mut self, event: IT::Input) -> Option<#navigation_event_ty> {
