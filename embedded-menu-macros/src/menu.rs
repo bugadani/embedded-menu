@@ -533,6 +533,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                     &self.data
                 }
 
+                #[allow(unreachable_code)]
                 pub fn interact(&mut self, event: IT::Input) -> Option<#navigation_event_ty> {
                     match self.menu.interact(event)? {
                         #(#events::#event_set_data_fields(value) => self.data.#event_set_data_fields = value,)*
