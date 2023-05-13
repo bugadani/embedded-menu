@@ -8,8 +8,8 @@ use embedded_graphics_simulator::{
     Window,
 };
 use embedded_menu::{
-    interaction::InteractionType, items::select::SelectValue,
-    selection_indicator::style::animated_triangle::AnimatedTriangle, Menu, MenuStyle, SelectValue,
+    interaction::InteractionType, selection_indicator::style::animated_triangle::AnimatedTriangle,
+    Menu, MenuStyle, SelectValue,
 };
 
 #[derive(Copy, Clone, Debug, PartialEq, SelectValue)]
