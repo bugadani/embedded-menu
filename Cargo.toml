@@ -3,6 +3,10 @@ name = "embedded-menu"
 version = "0.1.0"
 authors = ["Dániel Buga <bugadani@gmail.com>"]
 edition = "2021"
+description = "Simple interactive menu for embedded devices"
+license = "MIT"
+repository = "https://github.com/bugadani/embedded-menu"
+categories = ["embedded", "no-std"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

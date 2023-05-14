@@ -3,6 +3,9 @@ name = "embedded-menu-macros"
 version = "0.1.0"
 authors = ["Dániel Buga <bugadani@gmail.com>"]
 edition = "2021"
+description = "Derive macro implementations for embedded-menu"
+license = "MIT"
+repository = "https://github.com/bugadani/embedded-menu"
 
 [lib]
 proc-macro = true
