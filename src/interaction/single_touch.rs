@@ -3,6 +3,7 @@ use crate::interaction::{InteractionController, InteractionType};
 #[derive(Default)]
 pub struct State {
     interaction_time: u32,
+    was_released: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -51,18 +52,20 @@ impl InteractionController for SingleTouch {
     }
 
     fn update(&self, state: &mut Self::State, action: Self::Input) -> Option<InteractionType> {
+        if !state.was_released {
+            if action {
+                return None;
+            }
+            state.was_released = true;
+        }
+
         if action {
             if state.interaction_time < self.max_time {
                 state.interaction_time = state.interaction_time.saturating_add(1);
-
-                if state.interaction_time == self.max_time {
-                    Some(InteractionType::Select)
-                } else {
-                    None
-                }
-            } else {
-                // holding input after event has fired
                 None
+            } else {
+                state.interaction_time = 0;
+                Some(InteractionType::Select)
             }
         } else {
             let time = core::mem::replace(&mut state.interaction_time, 0);
