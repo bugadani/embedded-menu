@@ -10,6 +10,7 @@ pub struct State {
 pub struct SingleTouch {
     ignore_time: u32,
     max_time: u32,
+    interacted_before_release: bool,
 }
 
 /// Single touch navigation in hierarchical lists
@@ -26,6 +27,7 @@ impl SingleTouch {
         Self {
             ignore_time: ignore,
             max_time: max,
+            interacted_before_release: false,
         }
     }
 }
@@ -51,7 +53,7 @@ impl InteractionController for SingleTouch {
         }
     }
 
-    fn update(&self, state: &mut Self::State, action: Self::Input) -> Option<InteractionType> {
+    fn update(&mut self, state: &mut Self::State, action: Self::Input) -> Option<InteractionType> {
         if !state.was_released {
             if action {
                 return None;
@@ -65,15 +67,17 @@ impl InteractionController for SingleTouch {
                 None
             } else {
                 state.interaction_time = 0;
+                self.interacted_before_release = true;
                 Some(InteractionType::Select)
             }
         } else {
             let time = core::mem::replace(&mut state.interaction_time, 0);
 
-            if 0 < time && time < self.max_time {
+            if 0 < time && time < self.max_time && !self.interacted_before_release {
                 Some(InteractionType::Next)
             } else {
                 // Already interacted
+                self.interacted_before_release = false;
                 None
             }
         }

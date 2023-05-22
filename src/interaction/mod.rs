@@ -14,5 +14,5 @@ pub trait InteractionController: Copy {
 
     fn reset(&self, _state: &mut Self::State) {}
     fn fill_area_width(&self, state: &Self::State, max: u32) -> u32;
-    fn update(&self, state: &mut Self::State, action: Self::Input) -> Option<InteractionType>;
+    fn update(&mut self, state: &mut Self::State, action: Self::Input) -> Option<InteractionType>;
 }
