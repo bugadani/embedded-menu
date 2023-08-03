@@ -67,8 +67,8 @@ pub fn expand_select_value(input: DeriveInput) -> syn::Result<TokenStream> {
 
     let enum_name = input.ident;
 
-    let next_body = expand_next_fn(&data)?;
-    let name_body = expand_name_fn(&data)?;
+    let next_body = expand_next_fn(data)?;
+    let name_body = expand_name_fn(data)?;
 
     Ok(quote! {
         impl embedded_menu::items::select::SelectValue for #enum_name {

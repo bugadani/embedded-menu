@@ -119,10 +119,7 @@ where
             interaction_state: Default::default(),
             recompute_targets: true,
             list_offset: 0,
-            indicator: Indicator::new(
-                self.style.indicator_controller,
-                self.style.indicator_style.clone(),
-            ),
+            indicator: Indicator::new(self.style.indicator_controller, self.style.indicator_style),
             idle_timeout: self.style.details_delay.unwrap_or_default(),
             display_mode: MenuDisplayMode::List,
             style: self.style,
