@@ -9,6 +9,7 @@ pub trait MenuExt<R>: ChainElement {
     fn title_of(&self, nth: u32) -> &str;
     fn details_of(&self, nth: u32) -> &str;
     fn interact_with(&mut self, nth: u32) -> R;
+    fn count(&self) -> usize;
 }
 
 impl<I, R> MenuExt<R> for Chain<I>
@@ -33,6 +34,10 @@ where
     fn details_of(&self, nth: u32) -> &str {
         debug_assert!(nth == 0);
         self.object.details()
+    }
+
+    fn count(&self) -> usize {
+        1
     }
 }
 
@@ -71,5 +76,9 @@ where
         } else {
             self.parent.details_of(nth - 1)
         }
+    }
+
+    fn count(&self) -> usize {
+        1 + self.parent.count()
     }
 }

@@ -255,7 +255,7 @@ where
 impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R>,
+    VG: MenuExt<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -281,7 +281,7 @@ where
             self.display_mode = MenuDisplayMode::List;
         }
 
-        let count = ViewGroup::len(&self.items) as u32;
+        let count = self.items.count() as u32;
         match self
             .style
             .interaction
