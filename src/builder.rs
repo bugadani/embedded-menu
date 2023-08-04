@@ -6,7 +6,9 @@ use crate::{
 };
 use core::marker::PhantomData;
 use embedded_graphics::pixelcolor::PixelColor;
-use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
+use embedded_layout::{
+    layout::linear::LinearLayout, object_chain::ChainElement, prelude::*, view_group::ViewGroup,
+};
 
 pub struct MenuBuilder<IT, LL, R, C, P, S>
 where
@@ -86,8 +88,8 @@ where
 impl<IT, I, CE, R, C, P, S> MenuBuilder<IT, Link<I, CE>, R, C, P, S>
 where
     IT: InteractionController,
-    Link<I, CE>: MenuItemCollection<R>,
-    CE: MenuItemCollection<R>,
+    Link<I, CE>: MenuItemCollection<R> + ChainElement,
+    CE: MenuItemCollection<R> + ChainElement,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,

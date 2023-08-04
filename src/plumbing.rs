@@ -4,7 +4,7 @@ use embedded_layout::{object_chain::ChainElement, prelude::*};
 use crate::MenuItem;
 
 /// Menu-related extensions for object chain elements
-pub trait MenuItemCollection<R>: ChainElement {
+pub trait MenuItemCollection<R> {
     fn bounds_of(&self, nth: u32) -> Rectangle;
     fn title_of(&self, nth: u32) -> &str;
     fn details_of(&self, nth: u32) -> &str;
@@ -12,28 +12,29 @@ pub trait MenuItemCollection<R>: ChainElement {
     fn count(&self) -> usize;
 }
 
-impl<I, R> MenuItemCollection<R> for Chain<I>
+// Treat any MenuItem impl as a 1-element collection
+impl<I, R> MenuItemCollection<R> for I
 where
     I: MenuItem<Data = R> + View,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
         debug_assert!(nth == 0);
-        self.object.bounds()
+        self.bounds()
     }
 
     fn interact_with(&mut self, nth: u32) -> R {
         debug_assert!(nth == 0);
-        self.object.interact()
+        self.interact()
     }
 
     fn title_of(&self, nth: u32) -> &str {
         debug_assert!(nth == 0);
-        self.object.title()
+        self.title()
     }
 
     fn details_of(&self, nth: u32) -> &str {
         debug_assert!(nth == 0);
-        self.object.details()
+        self.details()
     }
 
     fn count(&self) -> usize {
@@ -41,44 +42,73 @@ where
     }
 }
 
+impl<I, R> MenuItemCollection<R> for Chain<I>
+where
+    I: MenuItemCollection<R>,
+{
+    fn bounds_of(&self, nth: u32) -> Rectangle {
+        self.object.bounds_of(nth)
+    }
+
+    fn interact_with(&mut self, nth: u32) -> R {
+        self.object.interact_with(nth)
+    }
+
+    fn title_of(&self, nth: u32) -> &str {
+        self.object.title_of(nth)
+    }
+
+    fn details_of(&self, nth: u32) -> &str {
+        self.object.details_of(nth)
+    }
+
+    fn count(&self) -> usize {
+        self.object.count()
+    }
+}
+
 impl<I, LE, R> MenuItemCollection<R> for Link<I, LE>
 where
     I: MenuItem<Data = R> + View,
-    LE: MenuItemCollection<R>,
+    LE: MenuItemCollection<R> + ChainElement,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
-        if nth == 0 {
-            self.object.bounds()
+        let count = self.object.count() as u32;
+        if nth < count {
+            self.object.bounds_of(nth)
         } else {
-            self.parent.bounds_of(nth - 1)
+            self.parent.bounds_of(nth - count)
         }
     }
 
     fn interact_with(&mut self, nth: u32) -> R {
-        if nth == 0 {
-            self.object.interact()
+        let count = self.object.count() as u32;
+        if nth < count {
+            self.object.interact_with(nth)
         } else {
-            self.parent.interact_with(nth - 1)
+            self.parent.interact_with(nth - count)
         }
     }
 
     fn title_of(&self, nth: u32) -> &str {
-        if nth == 0 {
-            self.object.title()
+        let count = self.object.count() as u32;
+        if nth < count {
+            self.object.title_of(nth)
         } else {
-            self.parent.title_of(nth - 1)
+            self.parent.title_of(nth - count)
         }
     }
 
     fn details_of(&self, nth: u32) -> &str {
-        if nth == 0 {
-            self.object.details()
+        let count = self.object.count() as u32;
+        if nth < count {
+            self.object.details_of(nth)
         } else {
-            self.parent.details_of(nth - 1)
+            self.parent.details_of(nth - count)
         }
     }
 
     fn count(&self) -> usize {
-        1 + self.parent.count()
+        self.object.count() + self.parent.count()
     }
 }
