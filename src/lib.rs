@@ -50,6 +50,40 @@ pub trait MenuItem<D, S>: View + Marker {
     fn value(&self) -> &str;
 }
 
+impl<D, S> View for &mut dyn MenuItem<D, S> {
+    fn translate_impl(&mut self, by: Point) {
+        (**self).translate_impl(by);
+    }
+
+    fn bounds(&self) -> Rectangle {
+        (**self).bounds()
+    }
+}
+
+impl<D, S> Marker for &mut dyn MenuItem<D, S> {}
+
+impl<D, S> MenuItem<D, S> for &mut dyn MenuItem<D, S> {
+    fn interact(&mut self) -> D {
+        (**self).interact()
+    }
+
+    fn set_style(&mut self, style: &S) {
+        (**self).set_style(style)
+    }
+
+    fn title(&self) -> &str {
+        (**self).title()
+    }
+
+    fn details(&self) -> &str {
+        (**self).details()
+    }
+
+    fn value(&self) -> &str {
+        (**self).value()
+    }
+}
+
 enum MenuDisplayMode {
     List,
     Details,
