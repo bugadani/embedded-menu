@@ -1,6 +1,6 @@
 [package]
 name = "embedded-menu-macros"
-version = "0.2.0-dev"
+version = "0.2.0"
 authors = ["Dániel Buga <bugadani@gmail.com>"]
 edition = "2021"
 description = "Derive macro implementations for embedded-menu"

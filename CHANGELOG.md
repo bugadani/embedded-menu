@@ -1,5 +1,5 @@
-Unreleased (??)
-===============
+0.3.0 (2023-08-04)
+==================
 
  - Add `MenuBuilder::add_items` that takes a slice of menu items.
  - **breaking**: Renamed `MenuExt` to `MenuItemCollection`
