@@ -42,7 +42,7 @@ pub use plumbing::MenuItemCollection;
 /// Marker trait necessary to avoid a "conflicting implementations" error.
 pub trait Marker {}
 
-pub trait MenuItem<D, S>: Marker {
+pub trait MenuItem<D, S>: View + Marker {
     fn interact(&mut self) -> D;
     fn set_style(&mut self, style: &S);
     fn title(&self) -> &str;

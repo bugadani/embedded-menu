@@ -8,7 +8,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::InteractionType,
     items::{select::SelectValue, NavigationItem, Select},
-    Menu, MenuItemCollection, MenuStyle,
+    Menu, MenuItem, MenuItemCollection, MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -51,26 +51,12 @@ fn main() -> Result<(), core::convert::Infallible> {
         .with_detail_text("Some longer description text");
 
     let mut item2 = Select::new("Check this", false).with_detail_text("Description");
+    let mut item3 = Select::new("Check this too", TestEnum::A).with_detail_text("Description");
 
-    let mut items: [&mut dyn MenuItemCollection<(), Style>; 2] = [&mut item1, &mut item2];
+    let mut items: [&mut dyn MenuItem<(), Style>; 3] = [&mut item1, &mut item2, &mut item3];
 
     let mut menu = Menu::with_style("Menu", style)
-        .add_item(&mut items[..])
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
-        .add_item(Select::new("Check this", true).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", true).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", true).with_detail_text("Description"))
-        .add_item(
-            NavigationItem::new("Foo", ())
-                .with_marker(">")
-                .with_detail_text("Some longer description text"),
-        )
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
+        .add_items(&mut items)
         .build();
 
     let output_settings = OutputSettingsBuilder::new()
