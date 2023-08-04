@@ -11,7 +11,7 @@ impl InteractionController for Programmed {
         0
     }
 
-    fn update(&mut self, _state: &mut Self::State, action: Self::Input) -> Option<InteractionType> {
+    fn update(&self, _state: &mut Self::State, action: Self::Input) -> Option<InteractionType> {
         Some(action)
     }
 }
