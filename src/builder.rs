@@ -1,6 +1,6 @@
 use crate::{
     interaction::InteractionController,
-    plumbing::MenuExt,
+    plumbing::MenuItemCollection,
     selection_indicator::{style::IndicatorStyle, Indicator, SelectionIndicatorController},
     Menu, MenuDisplayMode, MenuItem, MenuStyle, NoItems,
 };
@@ -63,7 +63,7 @@ where
 impl<IT, CE, R, C, P, S> MenuBuilder<IT, Chain<CE>, R, C, P, S>
 where
     IT: InteractionController,
-    Chain<CE>: MenuExt<R>,
+    Chain<CE>: MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -86,8 +86,8 @@ where
 impl<IT, I, CE, R, C, P, S> MenuBuilder<IT, Link<I, CE>, R, C, P, S>
 where
     IT: InteractionController,
-    Link<I, CE>: MenuExt<R>,
-    CE: MenuExt<R>,
+    Link<I, CE>: MenuItemCollection<R>,
+    CE: MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -110,7 +110,7 @@ where
 impl<IT, VG, R, C, P, S> MenuBuilder<IT, VG, R, C, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R>,
+    VG: ViewGroup + MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,

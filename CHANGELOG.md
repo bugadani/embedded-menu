@@ -1,6 +1,7 @@
 Unreleased (??)
 ===============
 
+ - **breaking**: Renamed `MenuExt` to `MenuItemCollection`
  - Removed `SingleTouch::new`.
  - Fields of `SingleTouch` are now public.
  - **breaking**: Removed `MenuLine` from the menu type signature.

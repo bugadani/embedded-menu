@@ -4,7 +4,7 @@ use embedded_layout::{object_chain::ChainElement, prelude::*};
 use crate::MenuItem;
 
 /// Menu-related extensions for object chain elements
-pub trait MenuExt<R>: ChainElement {
+pub trait MenuItemCollection<R>: ChainElement {
     fn bounds_of(&self, nth: u32) -> Rectangle;
     fn title_of(&self, nth: u32) -> &str;
     fn details_of(&self, nth: u32) -> &str;
@@ -12,7 +12,7 @@ pub trait MenuExt<R>: ChainElement {
     fn count(&self) -> usize;
 }
 
-impl<I, R> MenuExt<R> for Chain<I>
+impl<I, R> MenuItemCollection<R> for Chain<I>
 where
     I: MenuItem<Data = R> + View,
 {
@@ -41,10 +41,10 @@ where
     }
 }
 
-impl<I, LE, R> MenuExt<R> for Link<I, LE>
+impl<I, LE, R> MenuItemCollection<R> for Link<I, LE>
 where
     I: MenuItem<Data = R> + View,
-    LE: MenuExt<R>,
+    LE: MenuItemCollection<R>,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
         if nth == 0 {

@@ -14,7 +14,7 @@ use crate::{
     builder::MenuBuilder,
     interaction::{programmed::Programmed, InteractionController, InteractionType},
     margin::MarginExt,
-    plumbing::MenuExt,
+    plumbing::MenuItemCollection,
     selection_indicator::{
         style::{line::Line as LineIndicator, IndicatorStyle},
         AnimatedPosition, Indicator, SelectionIndicatorController, StaticPosition,
@@ -255,7 +255,7 @@ where
 impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     IT: InteractionController,
-    VG: MenuExt<R>,
+    VG: MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -308,7 +308,7 @@ where
 impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT, P>,
+    VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -436,7 +436,7 @@ where
 impl<IT, VG, R, P, S> Menu<IT, VG, R, BinaryColor, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT, P>,
+    VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -513,7 +513,7 @@ where
 impl<IT, VG, R, P, S> Drawable for Menu<IT, VG, R, BinaryColor, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup + MenuExt<R> + StyledMenuItem<BinaryColor, S, IT, P>,
+    VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
