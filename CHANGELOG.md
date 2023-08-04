@@ -1,6 +1,7 @@
 Unreleased (??)
 ===============
 
+ - Add `MenuBuilder::add_items` that takes a slice of menu items.
  - **breaking**: Renamed `MenuExt` to `MenuItemCollection`
  - Removed `SingleTouch::new`.
  - Fields of `SingleTouch` are now public.

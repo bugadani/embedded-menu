@@ -6,15 +6,15 @@ pub mod interaction;
 pub mod items;
 pub mod selection_indicator;
 
+mod collection;
 mod margin;
-mod plumbing;
 mod styled;
 
 use crate::{
     builder::MenuBuilder,
+    collection::MenuItemCollection,
     interaction::{programmed::Programmed, InteractionController, InteractionType},
     margin::MarginExt,
-    plumbing::MenuItemCollection,
     selection_indicator::{
         style::{line::Line as LineIndicator, IndicatorStyle},
         AnimatedPosition, Indicator, SelectionIndicatorController, StaticPosition,
