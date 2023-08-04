@@ -47,7 +47,10 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<IT, Chain<I>, R, C, P, S> {
+    pub fn add_item<I: MenuItem<R, MenuStyle<C, S, IT, P>>>(
+        self,
+        mut item: I,
+    ) -> MenuBuilder<IT, Chain<I>, R, C, P, S> {
         item.set_style(&self.style);
 
         MenuBuilder {
@@ -62,12 +65,12 @@ where
 impl<IT, CE, R, C, P, S> MenuBuilder<IT, Chain<CE>, R, C, P, S>
 where
     IT: InteractionController,
-    Chain<CE>: MenuItemCollection<R>,
+    Chain<CE>: MenuItemCollection<R, MenuStyle<C, S, IT, P>>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn add_item<I: MenuItem<R>>(
+    pub fn add_item<I: MenuItem<R, MenuStyle<C, S, IT, P>>>(
         self,
         mut item: I,
     ) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C, P, S> {
@@ -85,13 +88,13 @@ where
 impl<IT, I, CE, R, C, P, S> MenuBuilder<IT, Link<I, CE>, R, C, P, S>
 where
     IT: InteractionController,
-    Link<I, CE>: MenuItemCollection<R> + ChainElement,
-    CE: MenuItemCollection<R> + ChainElement,
+    Link<I, CE>: MenuItemCollection<R, MenuStyle<C, S, IT, P>> + ChainElement,
+    CE: MenuItemCollection<R, MenuStyle<C, S, IT, P>> + ChainElement,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn add_item<I2: MenuItem<R>>(
+    pub fn add_item<I2: MenuItem<R, MenuStyle<C, S, IT, P>>>(
         self,
         mut item: I2,
     ) -> MenuBuilder<IT, Link<I2, Link<I, CE>>, R, C, P, S> {
@@ -109,7 +112,7 @@ where
 impl<IT, VG, R, C, P, S> MenuBuilder<IT, VG, R, C, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup + MenuItemCollection<R>,
+    VG: ViewGroup + MenuItemCollection<R, MenuStyle<C, S, IT, P>>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,

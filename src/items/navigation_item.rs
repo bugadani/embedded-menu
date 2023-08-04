@@ -22,7 +22,14 @@ pub struct NavigationItem<'a, R: Copy> {
 
 impl<R: Copy> Marker for NavigationItem<'_, R> {}
 
-impl<'a, R: Copy> MenuItem<R> for NavigationItem<'a, R> {
+impl<R, C, S, IT, P> MenuItem<R, MenuStyle<C, S, IT, P>> for NavigationItem<'_, R>
+where
+    R: Copy,
+    C: PixelColor,
+    S: IndicatorStyle,
+    IT: InteractionController,
+    P: SelectionIndicatorController,
+{
     fn interact(&mut self) -> R {
         self.return_value
     }
@@ -39,14 +46,8 @@ impl<'a, R: Copy> MenuItem<R> for NavigationItem<'a, R> {
         self.marker
     }
 
-    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P>)
-    where
-        C: PixelColor,
-        S: IndicatorStyle,
-        IT: InteractionController,
-        P: SelectionIndicatorController,
-    {
-        self.line = MenuLine::new(self.value(), style);
+    fn set_style(&mut self, style: &MenuStyle<C, S, IT, P>) {
+        self.line = MenuLine::new(self.marker, style);
     }
 }
 
@@ -100,6 +101,6 @@ where
         D: DrawTarget<Color = Self::Color>,
     {
         self.line
-            .draw_styled(self.title(), self.value(), style, display)
+            .draw_styled(self.title_text, self.marker, style, display)
     }
 }

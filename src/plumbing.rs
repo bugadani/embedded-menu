@@ -4,7 +4,7 @@ use embedded_layout::{object_chain::ChainElement, prelude::*};
 use crate::MenuItem;
 
 /// Menu-related extensions for object chain elements
-pub trait MenuItemCollection<R> {
+pub trait MenuItemCollection<R, S> {
     fn bounds_of(&self, nth: u32) -> Rectangle;
     fn title_of(&self, nth: u32) -> &str;
     fn details_of(&self, nth: u32) -> &str;
@@ -13,9 +13,9 @@ pub trait MenuItemCollection<R> {
 }
 
 // Treat any MenuItem impl as a 1-element collection
-impl<I, R> MenuItemCollection<R> for I
+impl<I, R, S> MenuItemCollection<R, S> for I
 where
-    I: MenuItem<R> + View + crate::Marker,
+    I: MenuItem<R, S> + View + crate::Marker,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
         debug_assert!(nth == 0);
@@ -42,9 +42,9 @@ where
     }
 }
 
-impl<I, R> MenuItemCollection<R> for Chain<I>
+impl<I, R, S> MenuItemCollection<R, S> for Chain<I>
 where
-    I: MenuItemCollection<R>,
+    I: MenuItemCollection<R, S>,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
         self.object.bounds_of(nth)
@@ -67,10 +67,10 @@ where
     }
 }
 
-impl<I, LE, R> MenuItemCollection<R> for Link<I, LE>
+impl<I, LE, R, S> MenuItemCollection<R, S> for Link<I, LE>
 where
-    I: MenuItemCollection<R>,
-    LE: MenuItemCollection<R> + ChainElement,
+    I: MenuItemCollection<R, S>,
+    LE: MenuItemCollection<R, S> + ChainElement,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
         let count = self.object.count() as u32;
