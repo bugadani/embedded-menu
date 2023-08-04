@@ -262,7 +262,7 @@ where
     }
 
     pub fn reset_interaction(&mut self) {
-        self.style.interaction.reset(&mut self.interaction_state);
+        self.interaction_state = Default::default();
     }
 
     fn selected_has_details(&self) -> bool {

@@ -43,7 +43,11 @@ impl SelectValue for TestEnum {
 fn main() -> Result<(), core::convert::Infallible> {
     let style = MenuStyle::default()
         .with_selection_indicator(AnimatedTriangle::new(160))
-        .with_interaction_controller(SingleTouch::new(10, 100))
+        .with_interaction_controller(SingleTouch {
+            ignore_time: 10,
+            debounce_time: 1,
+            max_time: 100,
+        })
         .with_animated_selection_indicator(10);
 
     let mut menu = Menu::with_style("Menu with even longer title", style)

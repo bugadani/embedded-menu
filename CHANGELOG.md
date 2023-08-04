@@ -1,7 +1,13 @@
+Unreleased (??)
+===============
+
+ - Removed `SingleTouch::new`.
+ - Fields of `SingleTouch` are now public.
+
 0.2.0 (2023-06-23)
 ==================
 
- - Removed unused `display-interface` dependency
+ - Removed unused `display-interface` dependency.
  - Single touch menu items now fire contiuously while held.
  - Single touch interaction now ignores initial held input.
  - Single touch interaction no longer selects next item after selecting a menu item.
