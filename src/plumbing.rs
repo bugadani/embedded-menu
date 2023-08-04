@@ -69,7 +69,7 @@ where
 
 impl<I, LE, R> MenuItemCollection<R> for Link<I, LE>
 where
-    I: MenuItem<Data = R> + View,
+    I: MenuItemCollection<R>,
     LE: MenuItemCollection<R> + ChainElement,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
