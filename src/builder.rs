@@ -121,7 +121,7 @@ where
         Menu {
             _return_type: PhantomData,
             title: self.title,
-            selected: (ViewGroup::len(&self.items) as u32).saturating_sub(1),
+            selected: self.items.count().saturating_sub(1),
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
             interaction_state: Default::default(),
             recompute_targets: true,

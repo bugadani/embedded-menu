@@ -210,7 +210,7 @@ where
     title: &'static str,
     items: VG,
     interaction_state: IT::State,
-    selected: u32,
+    selected: usize,
     recompute_targets: bool,
     list_offset: i32,
     idle_timeout: u16,
@@ -255,7 +255,7 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    fn change_selected_item(&mut self, new_selected: u32) {
+    fn change_selected_item(&mut self, new_selected: usize) {
         if new_selected != self.selected {
             self.selected = new_selected;
             self.recompute_targets = true;
@@ -276,7 +276,7 @@ where
             self.display_mode = MenuDisplayMode::List;
         }
 
-        let count = self.items.count() as u32;
+        let count = self.items.count();
         match self
             .style
             .interaction
