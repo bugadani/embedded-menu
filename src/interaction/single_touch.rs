@@ -91,7 +91,7 @@ mod test {
     #[test]
     fn test_interaction() {
         // ignore 1 long pulses, accept 2-4 as short press, 5- as long press
-        let controller = SingleTouch::new(1, 5);
+        let mut controller = SingleTouch::new(1, 5);
 
         let mut controller_state = <SingleTouch as InteractionController>::State::default();
 
