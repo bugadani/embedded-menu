@@ -42,9 +42,14 @@ pub use embedded_menu_macros::{Menu, SelectValue};
 /// Marker trait necessary to avoid a "conflicting implementations" error.
 pub trait Marker {}
 
-pub trait MenuItem<D, S>: Marker {
+pub trait MenuItem<D>: Marker {
     fn interact(&mut self) -> D;
-    fn set_style(&mut self, style: &S);
+    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P>)
+    where
+        C: PixelColor,
+        S: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController;
     fn title(&self) -> &str;
     fn details(&self) -> &str;
     fn value(&self) -> &str;
@@ -250,7 +255,7 @@ where
 impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     IT: InteractionController,
-    VG: MenuItemCollection<R, MenuStyle<C, S, IT, P>>,
+    VG: MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -303,9 +308,7 @@ where
 impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup
-        + MenuItemCollection<R, MenuStyle<C, S, IT, P>>
-        + StyledMenuItem<BinaryColor, S, IT, P>,
+    VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -433,9 +436,7 @@ where
 impl<IT, VG, R, P, S> Menu<IT, VG, R, BinaryColor, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup
-        + MenuItemCollection<R, MenuStyle<BinaryColor, S, IT, P>>
-        + StyledMenuItem<BinaryColor, S, IT, P>,
+    VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -512,9 +513,7 @@ where
 impl<IT, VG, R, P, S> Drawable for Menu<IT, VG, R, BinaryColor, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup
-        + MenuItemCollection<R, MenuStyle<BinaryColor, S, IT, P>>
-        + StyledMenuItem<BinaryColor, S, IT, P>,
+    VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {

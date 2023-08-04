@@ -3,6 +3,7 @@ Unreleased (??)
 
  - Add `MenuBuilder::add_items` that takes a slice of menu items.
  - **breaking**: Renamed `MenuExt` to `MenuItemCollection`
+ - **breaking**: Changed associate type on `MenuItem` into a generic parameter.
  - Removed `SingleTouch::new`.
  - Fields of `SingleTouch` are now public.
  - **breaking**: Removed `MenuLine` from the menu type signature.

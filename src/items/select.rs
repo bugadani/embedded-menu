@@ -70,13 +70,9 @@ impl<'a, R, S: SelectValue> Select<'a, R, S> {
 
 impl<R, S: SelectValue> Marker for Select<'_, R, S> {}
 
-impl<R, S, C, ST, IT, P> MenuItem<R, MenuStyle<C, ST, IT, P>> for Select<'_, R, S>
+impl<R, S> MenuItem<R> for Select<'_, R, S>
 where
     S: SelectValue,
-    C: PixelColor,
-    ST: IndicatorStyle,
-    IT: InteractionController,
-    P: SelectionIndicatorController,
 {
     fn interact(&mut self) -> R {
         self.value = self.value.next();
@@ -95,7 +91,13 @@ where
         self.value.name()
     }
 
-    fn set_style(&mut self, style: &MenuStyle<C, ST, IT, P>) {
+    fn set_style<C, ST, IT, P>(&mut self, style: &MenuStyle<C, ST, IT, P>)
+    where
+        C: PixelColor,
+        ST: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+    {
         let initial = self.value;
         let mut longest_str = initial.name();
 

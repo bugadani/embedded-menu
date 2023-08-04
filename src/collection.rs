@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// Menu-related extensions for object chain elements
-pub trait MenuItemCollection<R, S> {
+pub trait MenuItemCollection<R> {
     fn bounds_of(&self, nth: usize) -> Rectangle;
     fn title_of(&self, nth: usize) -> &str;
     fn details_of(&self, nth: usize) -> &str;
@@ -23,9 +23,9 @@ pub trait MenuItemCollection<R, S> {
 }
 
 // Treat any MenuItem impl as a 1-element collection
-impl<I, R, S> MenuItemCollection<R, S> for I
+impl<I, R> MenuItemCollection<R> for I
 where
-    I: MenuItem<R, S> + View + Marker,
+    I: MenuItem<R> + View + Marker,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         debug_assert!(nth == 0);
@@ -52,17 +52,17 @@ where
     }
 }
 
-pub struct MenuItems<'a, I, R, S>
+pub struct MenuItems<'a, I, R>
 where
-    I: MenuItem<R, S> + Marker,
+    I: MenuItem<R> + Marker,
 {
     items: &'a mut [I],
-    _marker: PhantomData<(R, S)>,
+    _marker: PhantomData<R>,
 }
 
-impl<'a, I, R, S> MenuItems<'a, I, R, S>
+impl<'a, I, R> MenuItems<'a, I, R>
 where
-    I: MenuItem<R, S> + Marker,
+    I: MenuItem<R> + Marker,
 {
     pub fn new(items: &'a mut [I]) -> Self {
         Self {
@@ -72,9 +72,9 @@ where
     }
 }
 
-impl<I, R, S> MenuItemCollection<R, S> for MenuItems<'_, I, R, S>
+impl<I, R> MenuItemCollection<R> for MenuItems<'_, I, R>
 where
-    I: MenuItem<R, S> + View + Marker,
+    I: MenuItem<R> + View + Marker,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.items[nth].bounds()
@@ -97,9 +97,9 @@ where
     }
 }
 
-impl<I, R, S> View for MenuItems<'_, I, R, S>
+impl<I, R> View for MenuItems<'_, I, R>
 where
-    I: MenuItem<R, S> + View + Marker,
+    I: MenuItem<R> + View + Marker,
 {
     fn translate_impl(&mut self, by: Point) {
         for view in self.items.iter_mut() {
@@ -122,9 +122,9 @@ where
     }
 }
 
-impl<I, R, S> ViewGroup for MenuItems<'_, I, R, S>
+impl<I, R> ViewGroup for MenuItems<'_, I, R>
 where
-    I: MenuItem<R, S> + View + Marker,
+    I: MenuItem<R> + View + Marker,
 {
     fn len(&self) -> usize {
         self.count()
@@ -139,13 +139,9 @@ where
     }
 }
 
-impl<I, C, S, IT, P, R> StyledDrawable<MenuStyle<C, S, IT, P>>
-    for MenuItems<'_, I, R, MenuStyle<C, S, IT, P>>
+impl<I, C, S, IT, P, R> StyledDrawable<MenuStyle<C, S, IT, P>> for MenuItems<'_, I, R>
 where
-    I: MenuItem<R, MenuStyle<C, S, IT, P>>
-        + View
-        + Marker
-        + StyledDrawable<MenuStyle<C, S, IT, P>, Color = C, Output = ()>,
+    I: MenuItem<R> + View + Marker + StyledDrawable<MenuStyle<C, S, IT, P>, Color = C, Output = ()>,
     C: PixelColor + From<Rgb888>,
     S: IndicatorStyle,
     IT: InteractionController,
@@ -171,9 +167,9 @@ where
     }
 }
 
-impl<I, R, S> MenuItemCollection<R, S> for Chain<I>
+impl<I, R> MenuItemCollection<R> for Chain<I>
 where
-    I: MenuItemCollection<R, S>,
+    I: MenuItemCollection<R>,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.object.bounds_of(nth)
@@ -196,10 +192,10 @@ where
     }
 }
 
-impl<I, LE, R, S> MenuItemCollection<R, S> for Link<I, LE>
+impl<I, LE, R> MenuItemCollection<R> for Link<I, LE>
 where
-    I: MenuItemCollection<R, S>,
-    LE: MenuItemCollection<R, S> + ChainElement,
+    I: MenuItemCollection<R>,
+    LE: MenuItemCollection<R> + ChainElement,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         let count = self.object.count();
