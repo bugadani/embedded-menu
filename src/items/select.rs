@@ -9,7 +9,7 @@ use crate::{
     interaction::InteractionController,
     items::MenuLine,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
-    MenuItem, MenuStyle,
+    Marker, MenuItem, MenuStyle,
 };
 
 pub trait SelectValue: Sized + Copy + PartialEq {
@@ -68,9 +68,9 @@ impl<'a, R, S: SelectValue> Select<'a, R, S> {
     }
 }
 
-impl<'a, R, S: SelectValue> MenuItem for Select<'a, R, S> {
-    type Data = R;
+impl<R, S: SelectValue> Marker for Select<'_, R, S> {}
 
+impl<'a, R, S: SelectValue> MenuItem<R> for Select<'a, R, S> {
     fn interact(&mut self) -> R {
         self.value = self.value.next();
         (self.convert)(self.value)

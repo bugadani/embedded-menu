@@ -15,7 +15,7 @@ pub trait MenuItemCollection<R> {
 // Treat any MenuItem impl as a 1-element collection
 impl<I, R> MenuItemCollection<R> for I
 where
-    I: MenuItem<Data = R> + View,
+    I: MenuItem<R> + View + crate::Marker,
 {
     fn bounds_of(&self, nth: u32) -> Rectangle {
         debug_assert!(nth == 0);

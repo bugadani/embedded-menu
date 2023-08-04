@@ -47,10 +47,7 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn add_item<I: MenuItem<Data = R>>(
-        self,
-        mut item: I,
-    ) -> MenuBuilder<IT, Chain<I>, R, C, P, S> {
+    pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<IT, Chain<I>, R, C, P, S> {
         item.set_style(&self.style);
 
         MenuBuilder {
@@ -70,7 +67,7 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn add_item<I: MenuItem<Data = R>>(
+    pub fn add_item<I: MenuItem<R>>(
         self,
         mut item: I,
     ) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C, P, S> {
@@ -94,7 +91,7 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn add_item<I2: MenuItem<Data = R>>(
+    pub fn add_item<I2: MenuItem<R>>(
         self,
         mut item: I2,
     ) -> MenuBuilder<IT, Link<I2, Link<I, CE>>, R, C, P, S> {

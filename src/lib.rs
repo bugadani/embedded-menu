@@ -39,10 +39,11 @@ use embedded_text::{
 
 pub use embedded_menu_macros::{Menu, SelectValue};
 
-pub trait MenuItem {
-    type Data;
+/// Marker trait necessary to avoid a "conflicting implementations" error.
+pub trait Marker {}
 
-    fn interact(&mut self) -> Self::Data;
+pub trait MenuItem<D>: Marker {
+    fn interact(&mut self) -> D;
     fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P>)
     where
         C: PixelColor,

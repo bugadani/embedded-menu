@@ -9,7 +9,7 @@ use crate::{
     interaction::InteractionController,
     items::MenuLine,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
-    MenuItem, MenuStyle,
+    Marker, MenuItem, MenuStyle,
 };
 
 pub struct NavigationItem<'a, R: Copy> {
@@ -20,9 +20,9 @@ pub struct NavigationItem<'a, R: Copy> {
     line: MenuLine,
 }
 
-impl<'a, R: Copy> MenuItem for NavigationItem<'a, R> {
-    type Data = R;
+impl<R: Copy> Marker for NavigationItem<'_, R> {}
 
+impl<'a, R: Copy> MenuItem<R> for NavigationItem<'a, R> {
     fn interact(&mut self) -> R {
         self.return_value
     }
