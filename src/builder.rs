@@ -1,6 +1,5 @@
 use crate::{
     interaction::InteractionController,
-    items::MenuLine,
     plumbing::MenuExt,
     selection_indicator::{style::IndicatorStyle, Indicator, SelectionIndicatorController},
     Menu, MenuDisplayMode, MenuItem, MenuStyle, NoItems,
@@ -48,12 +47,14 @@ where
 {
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
-        item: I,
-    ) -> MenuBuilder<IT, Chain<MenuLine<I>>, R, C, P, S> {
+        mut item: I,
+    ) -> MenuBuilder<IT, Chain<I>, R, C, P, S> {
+        item.set_style(&self.style);
+
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            items: Chain::new(MenuLine::new(item, self.style)),
+            items: Chain::new(item),
             style: self.style,
         }
     }
@@ -69,12 +70,14 @@ where
 {
     pub fn add_item<I: MenuItem<Data = R>>(
         self,
-        item: I,
-    ) -> MenuBuilder<IT, Link<MenuLine<I>, Chain<CE>>, R, C, P, S> {
+        mut item: I,
+    ) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C, P, S> {
+        item.set_style(&self.style);
+
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            items: self.items.append(MenuLine::new(item, self.style)),
+            items: self.items.append(item),
             style: self.style,
         }
     }
@@ -91,12 +94,14 @@ where
 {
     pub fn add_item<I2: MenuItem<Data = R>>(
         self,
-        item: I2,
-    ) -> MenuBuilder<IT, Link<MenuLine<I2>, Link<I, CE>>, R, C, P, S> {
+        mut item: I2,
+    ) -> MenuBuilder<IT, Link<I2, Link<I, CE>>, R, C, P, S> {
+        item.set_style(&self.style);
+
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            items: self.items.append(MenuLine::new(item, self.style)),
+            items: self.items.append(item),
             style: self.style,
         }
     }

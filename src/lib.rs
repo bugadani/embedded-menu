@@ -43,10 +43,16 @@ pub trait MenuItem {
     type Data;
 
     fn interact(&mut self) -> Self::Data;
+    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P>)
+    where
+        C: PixelColor,
+        S: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController;
+
     fn title(&self) -> &str;
     fn details(&self) -> &str;
     fn value(&self) -> &str;
-    fn longest_value_str(&self) -> &str;
 }
 
 enum MenuDisplayMode {

@@ -120,7 +120,10 @@ impl TryFrom<&Field> for MenuItemOption {
 
     fn try_from(field: &Field) -> Result<Self, Self::Error> {
         let Some(ident) = field.ident.clone() else {
-            return Err(syn::Error::new(Span::call_site(), "Menu can only be placed on named structs"));
+            return Err(syn::Error::new(
+                Span::call_site(),
+                "Menu can only be placed on named structs",
+            ));
         };
 
         Ok(Self::Data(DataItem {
@@ -144,7 +147,11 @@ impl MenuItem {
     }
 
     fn as_data_field(&self) -> Option<&Ident> {
-        let Self::Data { data: DataItem { field, .. }, .. } = self else {
+        let Self::Data {
+            data: DataItem { field, .. },
+            ..
+        } = self
+        else {
             return None;
         };
 
@@ -489,7 +496,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
             use embedded_menu::{
                 builder::MenuBuilder,
                 interaction::{programmed::Programmed, InteractionController},
-                items::{MenuLine, NavigationItem, Select},
+                items::{NavigationItem, Select},
                 selection_indicator::{
                     style::{line::Line, IndicatorStyle},
                     SelectionIndicatorController, StaticPosition,
@@ -513,7 +520,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                 menu: Menu<
                     IT,
                     embedded_layout::chain! {
-                        #(MenuLine<#menu_items_in_ty>),*
+                        #(#menu_items_in_ty),*
                     },
                     #events,
                     BinaryColor,

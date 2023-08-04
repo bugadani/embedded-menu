@@ -1,4 +1,16 @@
-use crate::MenuItem;
+use embedded_graphics::{
+    pixelcolor::Rgb888,
+    prelude::{DrawTarget, PixelColor, Point},
+    primitives::{Rectangle, StyledDrawable},
+};
+use embedded_layout::View;
+
+use crate::{
+    interaction::InteractionController,
+    items::MenuLine,
+    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    MenuItem, MenuStyle,
+};
 
 pub trait SelectValue: Sized + Copy + PartialEq {
     fn next(&self) -> Self;
@@ -25,6 +37,7 @@ pub struct Select<'a, R, S: SelectValue> {
     details: &'a str,
     convert: fn(S) -> R,
     value: S,
+    line: MenuLine,
 }
 
 impl<'a, S: SelectValue> Select<'a, (), S> {
@@ -34,6 +47,7 @@ impl<'a, S: SelectValue> Select<'a, (), S> {
             value,
             convert: |_| (),
             details: "",
+            line: MenuLine::empty(),
         }
     }
 }
@@ -45,6 +59,7 @@ impl<'a, R, S: SelectValue> Select<'a, R, S> {
             title_text: self.title_text,
             value: self.value,
             details: self.details,
+            line: self.line,
         }
     }
 
@@ -73,7 +88,13 @@ impl<'a, R, S: SelectValue> MenuItem for Select<'a, R, S> {
         self.value.name()
     }
 
-    fn longest_value_str(&self) -> &str {
+    fn set_style<C, ST, IT, P>(&mut self, style: &MenuStyle<C, ST, IT, P>)
+    where
+        C: PixelColor,
+        ST: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+    {
         let initial = self.value;
         let mut longest_str = initial.name();
 
@@ -85,6 +106,40 @@ impl<'a, R, S: SelectValue> MenuItem for Select<'a, R, S> {
             current = current.next();
         }
 
-        longest_str
+        self.line = MenuLine::new(longest_str, style);
+    }
+}
+
+impl<R, S: SelectValue> View for Select<'_, R, S> {
+    fn translate_impl(&mut self, by: Point) {
+        self.line.translate_mut(by);
+    }
+
+    fn bounds(&self) -> Rectangle {
+        self.line.bounds()
+    }
+}
+
+impl<C, ST, IT, P, R, S> StyledDrawable<MenuStyle<C, ST, IT, P>> for Select<'_, R, S>
+where
+    C: PixelColor + From<Rgb888>,
+    ST: IndicatorStyle,
+    IT: InteractionController,
+    P: SelectionIndicatorController,
+    S: SelectValue,
+{
+    type Color = C;
+    type Output = ();
+
+    fn draw_styled<D>(
+        &self,
+        style: &MenuStyle<C, ST, IT, P>,
+        display: &mut D,
+    ) -> Result<Self::Output, D::Error>
+    where
+        D: DrawTarget<Color = Self::Color>,
+    {
+        self.line
+            .draw_styled(self.title(), self.value(), style, display)
     }
 }
