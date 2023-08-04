@@ -17,7 +17,6 @@ pub struct SingleTouch {
 ///
 /// Short press: select next item
 /// Long press: activate current item
-///             Holding the input does not cause the current item to fire repeatedly
 ///
 /// Requires a `back` element.
 impl SingleTouch {
@@ -58,10 +57,11 @@ impl InteractionController for SingleTouch {
 
         if action {
             state.interaction_time = state.interaction_time.saturating_add(1);
-            if state.interaction_time < self.max_time || state.interacted_before_release {
+            if state.interaction_time < self.max_time {
                 None
             } else {
                 state.interacted_before_release = true;
+                state.interaction_time = 0;
                 Some(InteractionType::Select)
             }
         } else {
@@ -120,7 +120,9 @@ mod test {
                 (1, false, None),
                 (4, true, None),
                 (1, true, Some(InteractionType::Select)),
-                (10, true, None),
+                (4, true, None),
+                (1, true, Some(InteractionType::Select)),
+                (4, true, None),
                 (1, false, None),
             ],
         ];
