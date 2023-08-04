@@ -7,27 +7,20 @@ pub struct State {
     interacted_before_release: bool,
 }
 
-#[derive(Clone, Copy)]
-pub struct SingleTouch {
-    ignore_time: u32,
-    max_time: u32,
-}
-
 /// Single touch navigation in hierarchical lists
 ///
 /// Short press: select next item
 /// Long press: activate current item
-///
-/// Requires a `back` element.
-impl SingleTouch {
-    /// `ignore`: Ignore pulses with at most this many active samples when calculating fill width.
-    /// `max`: Detect pulses with this many active samples as `Select`
-    pub const fn new(ignore: u32, max: u32) -> Self {
-        Self {
-            ignore_time: ignore,
-            max_time: max,
-        }
-    }
+#[derive(Clone, Copy)]
+pub struct SingleTouch {
+    /// Does not display short presses on the selection indicator.
+    pub ignore_time: u32,
+
+    /// Ignores touches shorter than this many update periods.
+    pub debounce_time: u32,
+
+    /// Detects long presses after this many update periods.
+    pub max_time: u32,
 }
 
 impl InteractionController for SingleTouch {
@@ -67,7 +60,8 @@ impl InteractionController for SingleTouch {
         } else {
             let time = core::mem::replace(&mut state.interaction_time, 0);
 
-            if self.ignore_time < time && time < self.max_time && !state.interacted_before_release {
+            if self.debounce_time < time && time < self.max_time && !state.interacted_before_release
+            {
                 Some(InteractionType::Next)
             } else {
                 // Already interacted before releasing, ignore and reset.
@@ -85,7 +79,11 @@ mod test {
     #[test]
     fn test_interaction() {
         // ignore 1 long pulses, accept 2-4 as short press, 5- as long press
-        let controller = SingleTouch::new(1, 5);
+        let controller = SingleTouch {
+            ignore_time: 1,
+            debounce_time: 1,
+            max_time: 5,
+        };
 
         let expectations: [&[_]; 6] = [
             &[(5, false, None)],
