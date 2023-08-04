@@ -7,11 +7,7 @@ use embedded_graphics::{
 };
 use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
 
-use crate::{
-    interaction::InteractionController,
-    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
-    Marker, MenuItem, MenuStyle,
-};
+use crate::{Marker, MenuItem};
 
 /// Menu-related extensions for object chain elements
 pub trait MenuItemCollection<R> {
@@ -54,7 +50,7 @@ where
 
 pub struct MenuItems<'a, I, R>
 where
-    I: MenuItem<R> + Marker,
+    I: MenuItem<R>,
 {
     items: &'a mut [I],
     _marker: PhantomData<R>,
@@ -62,7 +58,7 @@ where
 
 impl<'a, I, R> MenuItems<'a, I, R>
 where
-    I: MenuItem<R> + Marker,
+    I: MenuItem<R>,
 {
     pub fn new(items: &'a mut [I]) -> Self {
         Self {
@@ -74,7 +70,7 @@ where
 
 impl<I, R> MenuItemCollection<R> for MenuItems<'_, I, R>
 where
-    I: MenuItem<R> + View + Marker,
+    I: MenuItem<R> + View,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.items[nth].bounds()
@@ -99,7 +95,7 @@ where
 
 impl<I, R> View for MenuItems<'_, I, R>
 where
-    I: MenuItem<R> + View + Marker,
+    I: MenuItem<R> + View,
 {
     fn translate_impl(&mut self, by: Point) {
         for view in self.items.iter_mut() {
@@ -124,7 +120,7 @@ where
 
 impl<I, R> ViewGroup for MenuItems<'_, I, R>
 where
-    I: MenuItem<R> + View + Marker,
+    I: MenuItem<R> + View,
 {
     fn len(&self) -> usize {
         self.count()
@@ -139,23 +135,16 @@ where
     }
 }
 
-impl<I, C, S, IT, P, R> StyledDrawable<MenuStyle<C, S, IT, P>> for MenuItems<'_, I, R>
+impl<I, C, S, R> StyledDrawable<S> for MenuItems<'_, I, R>
 where
-    I: MenuItem<R> + View + Marker + StyledDrawable<MenuStyle<C, S, IT, P>, Color = C, Output = ()>,
+    I: MenuItem<R> + StyledDrawable<S, Color = C, Output = ()>,
     C: PixelColor + From<Rgb888>,
-    S: IndicatorStyle,
-    IT: InteractionController,
-    P: SelectionIndicatorController,
     R: Copy,
 {
     type Color = C;
     type Output = ();
 
-    fn draw_styled<D>(
-        &self,
-        style: &MenuStyle<C, S, IT, P>,
-        display: &mut D,
-    ) -> Result<Self::Output, D::Error>
+    fn draw_styled<D>(&self, style: &S, display: &mut D) -> Result<Self::Output, D::Error>
     where
         D: DrawTarget<Color = Self::Color>,
     {
