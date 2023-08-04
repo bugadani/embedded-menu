@@ -5,6 +5,7 @@ use crate::MenuItem;
 
 /// Menu-related extensions for object chain elements
 pub trait MenuItemCollection<R, S> {
+    fn set_style(&mut self, style: &S);
     fn bounds_of(&self, nth: u32) -> Rectangle;
     fn title_of(&self, nth: u32) -> &str;
     fn details_of(&self, nth: u32) -> &str;
@@ -17,6 +18,10 @@ impl<I, R, S> MenuItemCollection<R, S> for I
 where
     I: MenuItem<R, S> + View + crate::Marker,
 {
+    fn set_style(&mut self, style: &S) {
+        MenuItem::set_style(self, style);
+    }
+
     fn bounds_of(&self, nth: u32) -> Rectangle {
         debug_assert!(nth == 0);
         self.bounds()
@@ -46,6 +51,10 @@ impl<I, R, S> MenuItemCollection<R, S> for Chain<I>
 where
     I: MenuItemCollection<R, S>,
 {
+    fn set_style(&mut self, style: &S) {
+        self.object.set_style(style);
+    }
+
     fn bounds_of(&self, nth: u32) -> Rectangle {
         self.object.bounds_of(nth)
     }
@@ -72,6 +81,11 @@ where
     I: MenuItemCollection<R, S>,
     LE: MenuItemCollection<R, S> + ChainElement,
 {
+    fn set_style(&mut self, style: &S) {
+        self.object.set_style(style);
+        self.parent.set_style(style);
+    }
+
     fn bounds_of(&self, nth: u32) -> Rectangle {
         let count = self.object.count() as u32;
         if nth < count {

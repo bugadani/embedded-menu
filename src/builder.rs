@@ -47,7 +47,7 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn add_item<I: MenuItem<R, MenuStyle<C, S, IT, P>>>(
+    pub fn add_item<I: MenuItemCollection<R, MenuStyle<C, S, IT, P>>>(
         self,
         mut item: I,
     ) -> MenuBuilder<IT, Chain<I>, R, C, P, S> {
