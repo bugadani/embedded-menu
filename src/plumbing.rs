@@ -1,10 +1,10 @@
-use embedded_graphics::primitives::Rectangle;
-use embedded_layout::{object_chain::ChainElement, prelude::*};
+use embedded_graphics::{prelude::Point, primitives::Rectangle};
+use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
 
 use crate::MenuItem;
 
 /// Menu-related extensions for object chain elements
-pub trait MenuItemCollection<R, S> {
+pub trait MenuItemCollection<R, S>: ViewGroup {
     fn set_style(&mut self, style: &S);
     fn bounds_of(&self, nth: u32) -> Rectangle;
     fn title_of(&self, nth: u32) -> &str;
@@ -16,7 +16,7 @@ pub trait MenuItemCollection<R, S> {
 // Treat any MenuItem impl as a 1-element collection
 impl<I, R, S> MenuItemCollection<R, S> for I
 where
-    I: MenuItem<R, S> + View + crate::Marker,
+    I: MenuItem<R, S> + ViewGroup + crate::Marker,
 {
     fn set_style(&mut self, style: &S) {
         MenuItem::set_style(self, style);
@@ -44,6 +44,87 @@ where
 
     fn count(&self) -> usize {
         1
+    }
+}
+
+impl<R, S> View for &mut dyn MenuItemCollection<R, S> {
+    fn translate_impl(&mut self, by: Point) {
+        (**self).translate_impl(by)
+    }
+
+    fn bounds(&self) -> Rectangle {
+        (**self).bounds()
+    }
+}
+
+impl<R, S> ViewGroup for &mut dyn MenuItemCollection<R, S> {
+    fn len(&self) -> usize {
+        (**self).len()
+    }
+
+    fn at(&self, idx: usize) -> &dyn View {
+        (**self).at(idx)
+    }
+
+    fn at_mut(&mut self, idx: usize) -> &mut dyn View {
+        (**self).at_mut(idx)
+    }
+}
+
+impl<R, S> MenuItemCollection<R, S> for &mut dyn MenuItemCollection<R, S> {
+    fn set_style(&mut self, style: &S) {
+        (**self).set_style(style)
+    }
+
+    fn bounds_of(&self, nth: u32) -> Rectangle {
+        (**self).bounds_of(nth)
+    }
+
+    fn title_of(&self, nth: u32) -> &str {
+        (**self).title_of(nth)
+    }
+
+    fn details_of(&self, nth: u32) -> &str {
+        (**self).details_of(nth)
+    }
+
+    fn interact_with(&mut self, nth: u32) -> R {
+        (**self).interact_with(nth)
+    }
+
+    fn count(&self) -> usize {
+        (**self).count()
+    }
+}
+
+impl<I, R, S> MenuItemCollection<R, S> for &mut [I]
+where
+    I: MenuItemCollection<R, S>,
+{
+    fn set_style(&mut self, style: &S) {
+        for item in self.iter_mut() {
+            item.set_style(style);
+        }
+    }
+
+    fn bounds_of(&self, nth: u32) -> Rectangle {
+        self[nth as usize].bounds_of(0)
+    }
+
+    fn interact_with(&mut self, nth: u32) -> R {
+        self[nth as usize].interact_with(0)
+    }
+
+    fn title_of(&self, nth: u32) -> &str {
+        self[nth as usize].title_of(0)
+    }
+
+    fn details_of(&self, nth: u32) -> &str {
+        self[nth as usize].details_of(0)
+    }
+
+    fn count(&self) -> usize {
+        self.iter().map(|i| i.count()).sum()
     }
 }
 

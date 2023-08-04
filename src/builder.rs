@@ -6,9 +6,7 @@ use crate::{
 };
 use core::marker::PhantomData;
 use embedded_graphics::pixelcolor::PixelColor;
-use embedded_layout::{
-    layout::linear::LinearLayout, object_chain::ChainElement, prelude::*, view_group::ViewGroup,
-};
+use embedded_layout::{layout::linear::LinearLayout, object_chain::ChainElement, prelude::*};
 
 pub struct MenuBuilder<IT, LL, R, C, P, S>
 where
@@ -70,7 +68,7 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn add_item<I: MenuItem<R, MenuStyle<C, S, IT, P>>>(
+    pub fn add_item<I: MenuItemCollection<R, MenuStyle<C, S, IT, P>>>(
         self,
         mut item: I,
     ) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C, P, S> {
@@ -112,7 +110,7 @@ where
 impl<IT, VG, R, C, P, S> MenuBuilder<IT, VG, R, C, P, S>
 where
     IT: InteractionController,
-    VG: ViewGroup + MenuItemCollection<R, MenuStyle<C, S, IT, P>>,
+    VG: MenuItemCollection<R, MenuStyle<C, S, IT, P>>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -121,7 +119,7 @@ where
         Menu {
             _return_type: PhantomData,
             title: self.title,
-            selected: (ViewGroup::len(&self.items) as u32).saturating_sub(1),
+            selected: self.items.count().saturating_sub(1) as u32,
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
             interaction_state: Default::default(),
             recompute_targets: true,

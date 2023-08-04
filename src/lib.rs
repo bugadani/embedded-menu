@@ -14,7 +14,6 @@ use crate::{
     builder::MenuBuilder,
     interaction::{programmed::Programmed, InteractionController, InteractionType},
     margin::MarginExt,
-    plumbing::MenuItemCollection,
     selection_indicator::{
         style::{line::Line as LineIndicator, IndicatorStyle},
         AnimatedPosition, Indicator, SelectionIndicatorController, StaticPosition,
@@ -38,6 +37,7 @@ use embedded_text::{
 };
 
 pub use embedded_menu_macros::{Menu, SelectValue};
+pub use plumbing::MenuItemCollection;
 
 /// Marker trait necessary to avoid a "conflicting implementations" error.
 pub trait Marker {}
