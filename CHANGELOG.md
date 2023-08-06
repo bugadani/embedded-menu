@@ -1,5 +1,5 @@
-Unreleased (??)
-===============
+0.3.1 (2023-08-06)
+==================
 
  - The ˙collection` and `styled` modules are now public.
 
