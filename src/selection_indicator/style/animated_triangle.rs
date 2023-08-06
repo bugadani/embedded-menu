@@ -22,7 +22,7 @@ impl AnimatedTriangle {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct State {
     current: i32,
 }

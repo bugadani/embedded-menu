@@ -13,7 +13,7 @@ pub mod triangle;
 
 pub trait IndicatorStyle: Clone + Copy {
     type Shape: ContainsPoint + Clone;
-    type State: Default;
+    type State: Default + Copy;
 
     fn on_target_changed(&self, _state: &mut Self::State) {}
     fn update(&self, _state: &mut Self::State, _fill_width: u32) {}

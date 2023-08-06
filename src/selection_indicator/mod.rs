@@ -30,7 +30,7 @@ impl Insets {
 }
 
 pub trait SelectionIndicatorController: Copy {
-    type State: Default;
+    type State: Default + Copy;
 
     fn update_target(&self, state: &mut Self::State, y: i32);
     fn offset(&self, state: &Self::State) -> i32;
@@ -99,15 +99,53 @@ impl SelectionIndicatorController for AnimatedPosition {
     }
 }
 
+pub struct State<P, S>
+where
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+    position: P::State,
+    state: S::State,
+}
+
+impl<P, S> Default for State<P, S>
+where
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+    fn default() -> Self {
+        Self {
+            position: Default::default(),
+            state: Default::default(),
+        }
+    }
+}
+
+impl<P, S> Clone for State<P, S>
+where
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<P, S> Copy for State<P, S>
+where
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+}
+
 pub(crate) struct Indicator<P, S>
 where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
     controller: P,
-    position: P::State,
     style: S,
-    state: S::State,
+    state: State<P, S>,
 }
 
 impl<P, S> Indicator<P, S>
@@ -119,27 +157,26 @@ where
         Self {
             controller,
             style,
-            position: Default::default(),
             state: Default::default(),
         }
     }
 
     pub fn offset(&self) -> i32 {
-        self.controller.offset(&self.position)
+        self.controller.offset(&self.state.position)
     }
 
     pub fn change_selected_item(&mut self, pos: i32) {
-        self.controller.update_target(&mut self.position, pos);
-        self.style.on_target_changed(&mut self.state);
+        self.controller.update_target(&mut self.state.position, pos);
+        self.style.on_target_changed(&mut self.state.state);
     }
 
     pub fn update(&mut self, fill_width: u32) {
-        self.controller.update(&mut self.position);
-        self.style.update(&mut self.state, fill_width);
+        self.controller.update(&mut self.state.position);
+        self.style.update(&mut self.state.state, fill_width);
     }
 
     pub fn item_height(&self, menuitem_height: u32) -> u32 {
-        let indicator_insets = self.style.margin(&self.state, menuitem_height);
+        let indicator_insets = self.style.margin(&self.state.state, menuitem_height);
         (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
     }
 
@@ -161,10 +198,10 @@ where
             top: margin_top,
             right: margin_right,
             bottom: margin_bottom,
-        } = self.style.margin(&self.state, selected_height);
+        } = self.style.margin(&self.state.state, selected_height);
 
         self.style.draw(
-            &self.state,
+            &self.state.state,
             fill_width,
             &mut display.cropped(&Rectangle::new(
                 Point::new(0, screen_offset),
@@ -179,7 +216,7 @@ where
         let display_size = display.bounding_box().size;
 
         let mut inverting = display.invert_area(&self.style.shape(
-            &self.state,
+            &self.state.state,
             Rectangle::new(
                 Point::new(0, screen_offset),
                 Size::new(fill_width, selected_height),
