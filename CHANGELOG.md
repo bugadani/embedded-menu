@@ -1,7 +1,7 @@
 Unreleased (??)
 ===============
 
- - The ˙collection` module is now public.
+ - The ˙collection` and `styled` modules are now public.
 
 0.3.0 (2023-08-04)
 ==================
