@@ -6,10 +6,10 @@ use embedded_graphics_simulator::{
     Window,
 };
 
-use embedded_menu::{interaction::InteractionType, items::NavigationItem, Menu};
+use embedded_menu::{interaction::InteractionType, items::NavigationItem, Menu, MenuStyle};
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::new("Menu")
+    let mut menu = Menu::with_style("Menu", MenuStyle::default().with_details_delay(100))
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")

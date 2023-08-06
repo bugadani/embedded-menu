@@ -56,13 +56,13 @@ pub trait MenuItem<D>: Marker {
 }
 
 enum MenuDisplayMode {
-    List,
+    List(u16),
     Details,
 }
 
 impl MenuDisplayMode {
     fn is_list(&self) -> bool {
-        matches!(self, Self::List)
+        matches!(self, Self::List(_))
     }
 
     fn is_details(&self) -> bool {
@@ -218,7 +218,6 @@ where
     selected: usize,
     recompute_targets: bool,
     list_offset: i32,
-    idle_timeout: u16,
     display_mode: MenuDisplayMode,
     style: MenuStyle<C, S, IT, P>,
     indicator: Indicator<P, S>,
@@ -277,8 +276,7 @@ where
 
     pub fn interact(&mut self, input: IT::Input) -> Option<R> {
         if let Some(threshold) = self.style.details_delay {
-            self.idle_timeout = threshold;
-            self.display_mode = MenuDisplayMode::List;
+            self.display_mode = MenuDisplayMode::List(threshold);
         }
 
         let count = self.items.count();
@@ -346,12 +344,13 @@ where
     }
 
     pub fn update(&mut self, display: &impl Dimensions) {
-        self.idle_timeout = self.idle_timeout.saturating_sub(1);
-        if self.style.details_delay.is_some()
-            && self.idle_timeout == 0
-            && self.selected_has_details()
-        {
-            self.display_mode = MenuDisplayMode::Details;
+        if self.style.details_delay.is_some() && self.selected_has_details() {
+            if let MenuDisplayMode::List(ref mut timeout) = self.display_mode {
+                *timeout = timeout.saturating_sub(1);
+                if *timeout == 0 {
+                    self.display_mode = MenuDisplayMode::Details;
+                }
+            }
         }
 
         if !self.display_mode.is_list() {
