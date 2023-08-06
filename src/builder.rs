@@ -162,12 +162,13 @@ where
             title: self.title,
             selected: self.items.count().saturating_sub(1),
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
-            interaction_state: Default::default(),
             recompute_targets: true,
             list_offset: 0,
             indicator: Indicator::new(self.style.indicator_controller, self.style.indicator_style),
             display_mode: MenuDisplayMode::List(self.style.details_delay.unwrap_or_default()),
             style: self.style,
+            interaction_state: Default::default(),
+            indicator_state: Default::default(),
         }
     }
 }

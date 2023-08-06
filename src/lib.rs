@@ -17,7 +17,8 @@ use crate::{
     margin::MarginExt,
     selection_indicator::{
         style::{line::Line as LineIndicator, IndicatorStyle},
-        AnimatedPosition, Indicator, SelectionIndicatorController, StaticPosition,
+        AnimatedPosition, Indicator, SelectionIndicatorController, State as IndicatorState,
+        StaticPosition,
     },
     styled::StyledMenuItem,
 };
@@ -214,13 +215,14 @@ where
     _return_type: PhantomData<R>,
     title: &'static str,
     items: VG,
-    interaction_state: IT::State,
     selected: usize,
     recompute_targets: bool,
     list_offset: i32,
     display_mode: MenuDisplayMode,
     style: MenuStyle<C, S, IT, P>,
     indicator: Indicator<P, S>,
+    interaction_state: IT::State,
+    indicator_state: IndicatorState<P, S>,
 }
 
 impl<R, C, S> Menu<Programmed, NoItems, R, C, StaticPosition, S>
@@ -376,21 +378,23 @@ where
         if self.recompute_targets {
             self.recompute_targets = false;
             self.indicator
-                .change_selected_item(selected_item_bounds.top_left.y);
+                .change_selected_item(selected_item_bounds.top_left.y, &mut self.indicator_state);
         }
 
         self.indicator.update(
             self.style
                 .interaction
                 .fill_area_width(&self.interaction_state, display_size.width),
+            &mut self.indicator_state,
         );
 
         // Ensure selection indicator is always visible
-        let top_distance = self.indicator.offset() - self.list_offset;
+        let top_distance = self.indicator.offset(&self.indicator_state) - self.list_offset;
         self.list_offset += if top_distance > 0 {
-            let indicator_height =
-                self.indicator
-                    .item_height(selected_item_bounds.size().height) as i32;
+            let indicator_height = self
+                .indicator
+                .item_height(selected_item_bounds.size().height, &self.indicator_state)
+                as i32;
 
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
@@ -483,13 +487,15 @@ where
 
         self.indicator.draw(
             menuitem_height,
-            self.indicator.offset() - self.list_offset + menu_title.size().height as i32,
+            self.indicator.offset(&self.indicator_state) - self.list_offset
+                + menu_title.size().height as i32,
             self.style
                 .interaction
                 .fill_area_width(&self.interaction_state, menu_list_width),
             &mut display.clipped(&menu_display_area),
             &self.items,
             &self.style,
+            &self.indicator_state,
         )?;
 
         if draw_scrollbar {

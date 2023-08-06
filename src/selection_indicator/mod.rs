@@ -145,7 +145,6 @@ where
 {
     controller: P,
     style: S,
-    state: State<P, S>,
 }
 
 impl<P, S> Indicator<P, S>
@@ -154,29 +153,25 @@ where
     S: IndicatorStyle,
 {
     pub fn new(controller: P, style: S) -> Self {
-        Self {
-            controller,
-            style,
-            state: Default::default(),
-        }
+        Self { controller, style }
     }
 
-    pub fn offset(&self) -> i32 {
-        self.controller.offset(&self.state.position)
+    pub fn offset(&self, state: &State<P, S>) -> i32 {
+        self.controller.offset(&state.position)
     }
 
-    pub fn change_selected_item(&mut self, pos: i32) {
-        self.controller.update_target(&mut self.state.position, pos);
-        self.style.on_target_changed(&mut self.state.state);
+    pub fn change_selected_item(&mut self, pos: i32, state: &mut State<P, S>) {
+        self.controller.update_target(&mut state.position, pos);
+        self.style.on_target_changed(&mut state.state);
     }
 
-    pub fn update(&mut self, fill_width: u32) {
-        self.controller.update(&mut self.state.position);
-        self.style.update(&mut self.state.state, fill_width);
+    pub fn update(&mut self, fill_width: u32, state: &mut State<P, S>) {
+        self.controller.update(&mut state.position);
+        self.style.update(&mut state.state, fill_width);
     }
 
-    pub fn item_height(&self, menuitem_height: u32) -> u32 {
-        let indicator_insets = self.style.margin(&self.state.state, menuitem_height);
+    pub fn item_height(&self, menuitem_height: u32, state: &State<P, S>) -> u32 {
+        let indicator_insets = self.style.margin(&state.state, menuitem_height);
         (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
     }
 
@@ -188,6 +183,7 @@ where
         display: &mut D,
         items: &impl StyledDrawable<MenuStyle<BinaryColor, S, IT, P>, Color = BinaryColor, Output = ()>,
         style: &MenuStyle<BinaryColor, S, IT, P>,
+        state: &State<P, S>,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
@@ -198,10 +194,10 @@ where
             top: margin_top,
             right: margin_right,
             bottom: margin_bottom,
-        } = self.style.margin(&self.state.state, selected_height);
+        } = self.style.margin(&state.state, selected_height);
 
         self.style.draw(
-            &self.state.state,
+            &state.state,
             fill_width,
             &mut display.cropped(&Rectangle::new(
                 Point::new(0, screen_offset),
@@ -216,7 +212,7 @@ where
         let display_size = display.bounding_box().size;
 
         let mut inverting = display.invert_area(&self.style.shape(
-            &self.state.state,
+            &state.state,
             Rectangle::new(
                 Point::new(0, screen_offset),
                 Size::new(fill_width, selected_height),
