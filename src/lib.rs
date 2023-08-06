@@ -2,11 +2,11 @@
 
 pub mod adapters;
 pub mod builder;
+pub mod collection;
 pub mod interaction;
 pub mod items;
 pub mod selection_indicator;
 
-mod collection;
 mod margin;
 mod styled;
 
