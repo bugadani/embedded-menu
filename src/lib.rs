@@ -216,7 +216,6 @@ where
 
 pub struct NoItems;
 
-#[derive(Default)]
 pub struct MenuState<IT, P, S>
 where
     IT: InteractionController,
@@ -229,6 +228,24 @@ where
     display_mode: MenuDisplayMode,
     interaction_state: IT::State,
     indicator_state: IndicatorState<P, S>,
+}
+
+impl<IT, P, S> Default for MenuState<IT, P, S>
+where
+    IT: InteractionController,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+    fn default() -> Self {
+        Self {
+            selected: Default::default(),
+            recompute_targets: Default::default(),
+            list_offset: Default::default(),
+            display_mode: Default::default(),
+            interaction_state: Default::default(),
+            indicator_state: Default::default(),
+        }
+    }
 }
 
 impl<IT, P, S> Clone for MenuState<IT, P, S>
