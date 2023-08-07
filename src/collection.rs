@@ -21,7 +21,7 @@ pub trait MenuItemCollection<R> {
 // Treat any MenuItem impl as a 1-element collection
 impl<I, R> MenuItemCollection<R> for I
 where
-    I: MenuItem<R> + View + Marker,
+    I: MenuItem<R> + Marker,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         debug_assert!(nth == 0);
@@ -70,7 +70,7 @@ where
 
 impl<I, R> MenuItemCollection<R> for MenuItems<'_, I, R>
 where
-    I: MenuItem<R> + View,
+    I: MenuItem<R>,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.items[nth].bounds()
@@ -95,7 +95,7 @@ where
 
 impl<I, R> View for MenuItems<'_, I, R>
 where
-    I: MenuItem<R> + View,
+    I: MenuItem<R>,
 {
     fn translate_impl(&mut self, by: Point) {
         for view in self.items.iter_mut() {
@@ -120,7 +120,7 @@ where
 
 impl<I, R> ViewGroup for MenuItems<'_, I, R>
 where
-    I: MenuItem<R> + View,
+    I: MenuItem<R>,
 {
     fn len(&self) -> usize {
         self.count()

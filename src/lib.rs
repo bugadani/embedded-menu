@@ -43,7 +43,7 @@ pub use embedded_menu_macros::{Menu, SelectValue};
 /// Marker trait necessary to avoid a "conflicting implementations" error.
 pub trait Marker {}
 
-pub trait MenuItem<D>: Marker {
+pub trait MenuItem<D>: Marker + View {
     fn interact(&mut self) -> D;
     fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P>)
     where

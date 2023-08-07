@@ -1,3 +1,8 @@
+Unreleased (??)
+===============
+
+ - `View` is now a supertrait of `MenuItem`
+
 0.3.1 (2023-08-06)
 ==================
 
