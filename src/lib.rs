@@ -349,6 +349,10 @@ where
             _ => None,
         }
     }
+
+    pub fn state(&self) -> MenuState<IT, P, S> {
+        self.state
+    }
 }
 
 impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>

@@ -157,15 +157,21 @@ where
     S: IndicatorStyle,
 {
     pub fn build(self) -> Menu<IT, VG, R, C, P, S> {
+        let default_timeout = self.style.details_delay.unwrap_or_default();
+
+        self.build_with_state(MenuState {
+            selected: 0,
+            recompute_targets: true,
+            list_offset: 0,
+            display_mode: MenuDisplayMode::List(default_timeout),
+            interaction_state: Default::default(),
+            indicator_state: Default::default(),
+        })
+    }
+
+    pub fn build_with_state(self, state: MenuState<IT, P, S>) -> Menu<IT, VG, R, C, P, S> {
         Menu {
-            state: MenuState {
-                selected: 0,
-                recompute_targets: true,
-                list_offset: 0,
-                display_mode: MenuDisplayMode::List(self.style.details_delay.unwrap_or_default()),
-                interaction_state: Default::default(),
-                indicator_state: Default::default(),
-            },
+            state,
             _return_type: PhantomData,
             title: self.title,
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
