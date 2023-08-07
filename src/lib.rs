@@ -56,9 +56,16 @@ pub trait MenuItem<D>: Marker + View {
     fn value(&self) -> &str;
 }
 
+#[derive(Clone, Copy)]
 enum MenuDisplayMode {
     List(u16),
     Details,
+}
+
+impl Default for MenuDisplayMode {
+    fn default() -> Self {
+        Self::List(0)
+    }
 }
 
 impl MenuDisplayMode {
@@ -91,9 +98,8 @@ where
     pub(crate) font: &'static MonoFont<'static>,
     pub(crate) title_font: &'static MonoFont<'static>,
     pub(crate) details_delay: Option<u16>,
-    pub(crate) indicator_style: S,
     pub(crate) interaction: IT,
-    pub(crate) indicator_controller: P,
+    pub(crate) indicator: Indicator<P, S>,
 }
 
 impl Default for MenuStyle<BinaryColor, LineIndicator, Programmed, StaticPosition> {
@@ -113,9 +119,11 @@ where
             font: &FONT_6X10,
             title_font: &FONT_6X10,
             details_delay: None,
-            indicator_style: LineIndicator,
             interaction: Programmed,
-            indicator_controller: StaticPosition,
+            indicator: Indicator {
+                style: LineIndicator,
+                controller: StaticPosition,
+            },
         }
     }
 }
@@ -151,14 +159,16 @@ where
         S2: IndicatorStyle,
     {
         MenuStyle {
-            indicator_style,
             color: self.color,
             scrollbar: self.scrollbar,
             font: self.font,
             title_font: self.title_font,
             details_delay: self.details_delay,
             interaction: self.interaction,
-            indicator_controller: self.indicator_controller,
+            indicator: Indicator {
+                style: indicator_style,
+                controller: self.indicator.controller,
+            },
         }
     }
 
@@ -173,8 +183,7 @@ where
             font: self.font,
             title_font: self.title_font,
             details_delay: self.details_delay,
-            indicator_style: self.indicator_style,
-            indicator_controller: self.indicator_controller,
+            indicator: self.indicator,
         }
     }
 
@@ -189,8 +198,10 @@ where
             font: self.font,
             title_font: self.title_font,
             details_delay: self.details_delay,
-            indicator_style: self.indicator_style,
-            indicator_controller: AnimatedPosition::new(frames),
+            indicator: Indicator {
+                style: self.indicator.style,
+                controller: AnimatedPosition::new(frames),
+            },
         }
     }
 
@@ -205,6 +216,75 @@ where
 
 pub struct NoItems;
 
+pub struct MenuState<IT, P, S>
+where
+    IT: InteractionController,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+    selected: usize,
+    recompute_targets: bool,
+    list_offset: i32,
+    display_mode: MenuDisplayMode,
+    interaction_state: IT::State,
+    indicator_state: IndicatorState<P, S>,
+}
+
+impl<IT, P, S> Default for MenuState<IT, P, S>
+where
+    IT: InteractionController,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+    fn default() -> Self {
+        Self {
+            selected: 0,
+            recompute_targets: Default::default(),
+            list_offset: Default::default(),
+            display_mode: Default::default(),
+            interaction_state: Default::default(),
+            indicator_state: Default::default(),
+        }
+    }
+}
+
+impl<IT, P, S> Clone for MenuState<IT, P, S>
+where
+    IT: InteractionController,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<IT, P, S> Copy for MenuState<IT, P, S>
+where
+    IT: InteractionController,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+}
+
+impl<IT, P, S> MenuState<IT, P, S>
+where
+    IT: InteractionController,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+    fn change_selected_item(&mut self, new_selected: usize) {
+        if new_selected != self.selected {
+            self.selected = new_selected;
+            self.recompute_targets = true;
+        }
+    }
+
+    pub fn reset_interaction(&mut self) {
+        self.interaction_state = Default::default();
+    }
+}
+
 pub struct Menu<IT, VG, R, C, P, S>
 where
     IT: InteractionController,
@@ -215,14 +295,8 @@ where
     _return_type: PhantomData<R>,
     title: &'static str,
     items: VG,
-    selected: usize,
-    recompute_targets: bool,
-    list_offset: i32,
-    display_mode: MenuDisplayMode,
     style: MenuStyle<C, S, IT, P>,
-    indicator: Indicator<P, S>,
-    interaction_state: IT::State,
-    indicator_state: IndicatorState<P, S>,
+    state: MenuState<IT, P, S>,
 }
 
 impl<R, C, S> Menu<Programmed, NoItems, R, C, StaticPosition, S>
@@ -261,47 +335,40 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    fn change_selected_item(&mut self, new_selected: usize) {
-        if new_selected != self.selected {
-            self.selected = new_selected;
-            self.recompute_targets = true;
-        }
-    }
-
-    pub fn reset_interaction(&mut self) {
-        self.interaction_state = Default::default();
-    }
-
     fn selected_has_details(&self) -> bool {
-        !self.items.details_of(self.selected).is_empty()
+        !self.items.details_of(self.state.selected).is_empty()
     }
 
     pub fn interact(&mut self, input: IT::Input) -> Option<R> {
         if let Some(threshold) = self.style.details_delay {
-            self.display_mode = MenuDisplayMode::List(threshold);
+            self.state.display_mode = MenuDisplayMode::List(threshold);
         }
 
         let count = self.items.count();
         match self
             .style
             .interaction
-            .update(&mut self.interaction_state, input)
+            .update(&mut self.state.interaction_state, input)
         {
             Some(InteractionType::Next) => {
-                let selected = (self.selected + 1) % count;
+                let selected = (self.state.selected + 1) % count;
 
-                self.change_selected_item(selected);
+                self.state.change_selected_item(selected);
                 None
             }
             Some(InteractionType::Previous) => {
-                let selected = self.selected.checked_sub(1).unwrap_or(count - 1);
+                let selected = self.state.selected.checked_sub(1).unwrap_or(count - 1);
 
-                self.change_selected_item(selected);
+                self.state.change_selected_item(selected);
                 None
             }
-            Some(InteractionType::Select) => Some(self.items.interact_with(self.selected)),
+            Some(InteractionType::Select) => Some(self.items.interact_with(self.state.selected)),
             _ => None,
         }
+    }
+
+    pub fn state(&self) -> MenuState<IT, P, S> {
+        self.state
     }
 }
 
@@ -347,15 +414,15 @@ where
 
     pub fn update(&mut self, display: &impl Dimensions) {
         if self.style.details_delay.is_some() && self.selected_has_details() {
-            if let MenuDisplayMode::List(ref mut timeout) = self.display_mode {
+            if let MenuDisplayMode::List(ref mut timeout) = self.state.display_mode {
                 *timeout = timeout.saturating_sub(1);
                 if *timeout == 0 {
-                    self.display_mode = MenuDisplayMode::Details;
+                    self.state.display_mode = MenuDisplayMode::Details;
                 }
             }
         }
 
-        if !self.display_mode.is_list() {
+        if !self.state.display_mode.is_list() {
             return;
         }
 
@@ -372,29 +439,32 @@ where
             .align_to_mut(&display_area, horizontal::Left, vertical::Top);
 
         // Height of the selection indicator
-        let selected_item_bounds = self.items.bounds_of(self.selected);
+        let selected_item_bounds = self.items.bounds_of(self.state.selected);
 
         // animations
-        if self.recompute_targets {
-            self.recompute_targets = false;
-            self.indicator
-                .change_selected_item(selected_item_bounds.top_left.y, &mut self.indicator_state);
+        if self.state.recompute_targets {
+            self.state.recompute_targets = false;
+            self.style.indicator.change_selected_item(
+                selected_item_bounds.top_left.y,
+                &mut self.state.indicator_state,
+            );
         }
 
-        self.indicator.update(
+        self.style.indicator.update(
             self.style
                 .interaction
-                .fill_area_width(&self.interaction_state, display_size.width),
-            &mut self.indicator_state,
+                .fill_area_width(&self.state.interaction_state, display_size.width),
+            &mut self.state.indicator_state,
         );
 
         // Ensure selection indicator is always visible
-        let top_distance = self.indicator.offset(&self.indicator_state) - self.list_offset;
-        self.list_offset += if top_distance > 0 {
-            let indicator_height = self
-                .indicator
-                .item_height(selected_item_bounds.size().height, &self.indicator_state)
-                as i32;
+        let top_distance =
+            self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset;
+        self.state.list_offset += if top_distance > 0 {
+            let indicator_height = self.style.indicator.item_height(
+                selected_item_bounds.size().height,
+                &self.state.indicator_state,
+            ) as i32;
 
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
@@ -404,7 +474,8 @@ where
             top_distance
         };
 
-        self.items.translate_mut(Point::new(0, -self.list_offset));
+        self.items
+            .translate_mut(Point::new(0, -self.state.list_offset));
     }
 
     fn display_details<D>(&self, display: &mut D) -> Result<(), D::Error>
@@ -414,14 +485,14 @@ where
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let header = self.header(self.items.title_of(self.selected), display);
+        let header = self.header(self.items.title_of(self.state.selected), display);
 
         // TODO: embedded-layout should allow appending views to linear layout at this point
         let size = header.size();
         LinearLayout::vertical(
             header.append(
                 TextBox::new(
-                    self.items.details_of(self.selected),
+                    self.items.details_of(self.state.selected),
                     Rectangle::new(
                         Point::zero(),
                         Size::new(size.width, display_size.height - size.height),
@@ -458,7 +529,7 @@ where
         let menu_height = display_size.height - menu_title.size().height;
 
         // Height of the selected menu item
-        let menuitem_height = self.items.bounds_of(self.selected).size().height;
+        let menuitem_height = self.items.bounds_of(self.state.selected).size().height;
 
         let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height)).align_to(
             &menu_title,
@@ -485,17 +556,17 @@ where
         )
         .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
 
-        self.indicator.draw(
+        self.style.indicator.draw(
             menuitem_height,
-            self.indicator.offset(&self.indicator_state) - self.list_offset
+            self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset
                 + menu_title.size().height as i32,
             self.style
                 .interaction
-                .fill_area_width(&self.interaction_state, menu_list_width),
+                .fill_area_width(&self.state.interaction_state, menu_list_width),
             &mut display.clipped(&menu_display_area),
             &self.items,
             &self.style,
-            &self.indicator_state,
+            &self.state.indicator_state,
         )?;
 
         if draw_scrollbar {
@@ -507,7 +578,7 @@ where
             // Start scrollbar from y=1, so we have a margin on top instead of bottom
             Line::new(Point::new(0, 1), Point::new(0, scrollbar_height))
                 .into_styled(thin_stroke)
-                .translate(Point::new(1, scale(self.list_offset as u32)))
+                .translate(Point::new(1, scale(self.state.list_offset as u32)))
                 .draw(&mut scrollbar_display)?;
         }
 
@@ -529,7 +600,7 @@ where
     where
         D: DrawTarget<Color = BinaryColor>,
     {
-        if self.display_mode.is_details() && self.selected_has_details() {
+        if self.state.display_mode.is_details() && self.selected_has_details() {
             self.display_details(display)
         } else {
             self.display_list(display)

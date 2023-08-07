@@ -10,7 +10,7 @@ pub enum InteractionType {
 
 pub trait InteractionController: Copy {
     type Input;
-    type State: Default;
+    type State: Default + Copy;
 
     fn fill_area_width(&self, state: &Self::State, max: u32) -> u32;
     fn update(&self, state: &mut Self::State, action: Self::Input) -> Option<InteractionType>;

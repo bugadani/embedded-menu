@@ -33,6 +33,7 @@ pub trait SelectionIndicatorController: Copy {
     type State: Default + Copy;
 
     fn update_target(&self, state: &mut Self::State, y: i32);
+    fn jump_to_target(&self, state: &mut Self::State);
     fn offset(&self, state: &Self::State) -> i32;
     fn update(&self, state: &mut Self::State);
 }
@@ -51,6 +52,8 @@ impl SelectionIndicatorController for StaticPosition {
     fn update_target(&self, state: &mut Self::State, y: i32) {
         state.y_offset = y;
     }
+
+    fn jump_to_target(&self, _state: &mut Self::State) {}
 
     fn offset(&self, state: &Self::State) -> i32 {
         state.y_offset
@@ -81,6 +84,10 @@ impl SelectionIndicatorController for AnimatedPosition {
 
     fn update_target(&self, state: &mut Self::State, y: i32) {
         state.target = y;
+    }
+
+    fn jump_to_target(&self, state: &mut Self::State) {
+        state.current = state.target;
     }
 
     fn offset(&self, state: &Self::State) -> i32 {
@@ -138,13 +145,10 @@ where
 {
 }
 
-pub(crate) struct Indicator<P, S>
-where
-    P: SelectionIndicatorController,
-    S: IndicatorStyle,
-{
-    controller: P,
-    style: S,
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Indicator<P, S> {
+    pub controller: P,
+    pub style: S,
 }
 
 impl<P, S> Indicator<P, S>
@@ -152,20 +156,20 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn new(controller: P, style: S) -> Self {
-        Self { controller, style }
-    }
-
     pub fn offset(&self, state: &State<P, S>) -> i32 {
         self.controller.offset(&state.position)
     }
 
-    pub fn change_selected_item(&mut self, pos: i32, state: &mut State<P, S>) {
+    pub fn change_selected_item(&self, pos: i32, state: &mut State<P, S>) {
         self.controller.update_target(&mut state.position, pos);
         self.style.on_target_changed(&mut state.state);
     }
 
-    pub fn update(&mut self, fill_width: u32, state: &mut State<P, S>) {
+    pub fn jump_to_target(&self, state: &mut State<P, S>) {
+        self.controller.jump_to_target(&mut state.position);
+    }
+
+    pub fn update(&self, fill_width: u32, state: &mut State<P, S>) {
         self.controller.update(&mut state.position);
         self.style.update(&mut state.state, fill_width);
     }

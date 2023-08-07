@@ -1,6 +1,6 @@
 use crate::interaction::{InteractionController, InteractionType};
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct State {
     interaction_time: u32,
     was_released: bool,

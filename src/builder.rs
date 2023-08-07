@@ -1,8 +1,8 @@
 use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::InteractionController,
-    selection_indicator::{style::IndicatorStyle, Indicator, SelectionIndicatorController},
-    Menu, MenuDisplayMode, MenuItem, MenuStyle, NoItems,
+    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    Menu, MenuDisplayMode, MenuItem, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
 use embedded_graphics::pixelcolor::PixelColor;
@@ -157,18 +157,44 @@ where
     S: IndicatorStyle,
 {
     pub fn build(self) -> Menu<IT, VG, R, C, P, S> {
-        Menu {
-            _return_type: PhantomData,
-            title: self.title,
+        let default_timeout = self.style.details_delay.unwrap_or_default();
+
+        self.build_with_state(MenuState {
             selected: 0,
-            items: LinearLayout::vertical(self.items).arrange().into_inner(),
             recompute_targets: true,
             list_offset: 0,
-            indicator: Indicator::new(self.style.indicator_controller, self.style.indicator_style),
-            display_mode: MenuDisplayMode::List(self.style.details_delay.unwrap_or_default()),
-            style: self.style,
+            display_mode: MenuDisplayMode::List(default_timeout),
             interaction_state: Default::default(),
             indicator_state: Default::default(),
+        })
+    }
+
+    pub fn build_with_state(self, mut state: MenuState<IT, P, S>) -> Menu<IT, VG, R, C, P, S> {
+        // We have less menu items than before. Avoid crashing.
+        let max_idx = self.items.count().saturating_sub(1);
+
+        let items = LinearLayout::vertical(self.items).arrange().into_inner();
+
+        if max_idx < state.selected {
+            state.selected = max_idx;
+
+            let max_indicator_pos = items.bounds_of(max_idx).top_left.y;
+
+            state.recompute_targets = false;
+            self.style
+                .indicator
+                .change_selected_item(max_indicator_pos, &mut state.indicator_state);
+            self.style
+                .indicator
+                .jump_to_target(&mut state.indicator_state);
+        }
+
+        Menu {
+            state,
+            _return_type: PhantomData,
+            title: self.title,
+            items,
+            style: self.style,
         }
     }
 }
