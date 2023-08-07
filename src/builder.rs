@@ -160,7 +160,7 @@ where
         Menu {
             _return_type: PhantomData,
             title: self.title,
-            selected: self.items.count().saturating_sub(1),
+            selected: 0,
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
             recompute_targets: true,
             list_offset: 0,

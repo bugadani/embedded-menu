@@ -288,13 +288,13 @@ where
             .update(&mut self.interaction_state, input)
         {
             Some(InteractionType::Next) => {
-                let selected = self.selected.checked_sub(1).unwrap_or(count - 1);
+                let selected = (self.selected + 1) % count;
 
                 self.change_selected_item(selected);
                 None
             }
             Some(InteractionType::Previous) => {
-                let selected = (self.selected + 1) % count;
+                let selected = self.selected.checked_sub(1).unwrap_or(count - 1);
 
                 self.change_selected_item(selected);
                 None

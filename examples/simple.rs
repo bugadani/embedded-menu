@@ -47,9 +47,9 @@ fn main() -> Result<(), core::convert::Infallible> {
                     "Lorem ipsum dolor sit amet, in per offendit assueverit adversarium, no sed clita adipisci nominati.",
                 ),
         )
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this", TestEnum::A).with_detail_text("Description"))
+        .add_item(Select::new("Check this 1", false).with_detail_text("Description"))
+        .add_item(Select::new("Check this 2", false).with_detail_text("Description"))
+        .add_item(Select::new("Check this 3", TestEnum::A).with_detail_text("Description"))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

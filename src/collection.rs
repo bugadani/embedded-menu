@@ -80,19 +80,19 @@ where
     I: MenuItem<R>,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
-        self.items[self.count() - 1 - nth].bounds()
+        self.items[nth].bounds()
     }
 
     fn interact_with(&mut self, nth: usize) -> R {
-        self.items[self.count() - 1 - nth].interact()
+        self.items[nth].interact()
     }
 
     fn title_of(&self, nth: usize) -> &str {
-        self.items[self.count() - 1 - nth].title()
+        self.items[nth].title()
     }
 
     fn details_of(&self, nth: usize) -> &str {
-        self.items[self.count() - 1 - nth].details()
+        self.items[nth].details()
     }
 
     fn count(&self) -> usize {
@@ -194,38 +194,38 @@ where
     LE: MenuItemCollection<R> + ChainElement,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
-        let count = self.object.count();
+        let count = self.parent.count();
         if nth < count {
-            self.object.bounds_of(nth)
+            self.parent.bounds_of(nth)
         } else {
-            self.parent.bounds_of(nth - count)
+            self.object.bounds_of(nth - count)
         }
     }
 
     fn interact_with(&mut self, nth: usize) -> R {
-        let count = self.object.count();
+        let count = self.parent.count();
         if nth < count {
-            self.object.interact_with(nth)
+            self.parent.interact_with(nth)
         } else {
-            self.parent.interact_with(nth - count)
+            self.object.interact_with(nth - count)
         }
     }
 
     fn title_of(&self, nth: usize) -> &str {
-        let count = self.object.count();
+        let count = self.parent.count();
         if nth < count {
-            self.object.title_of(nth)
+            self.parent.title_of(nth)
         } else {
-            self.parent.title_of(nth - count)
+            self.object.title_of(nth - count)
         }
     }
 
     fn details_of(&self, nth: usize) -> &str {
-        let count = self.object.count();
+        let count = self.parent.count();
         if nth < count {
-            self.object.details_of(nth)
+            self.parent.details_of(nth)
         } else {
-            self.parent.details_of(nth - count)
+            self.object.details_of(nth - count)
         }
     }
 
