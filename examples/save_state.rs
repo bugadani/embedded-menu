@@ -1,7 +1,5 @@
 //! Run using `cargo run --example scrolling --target x86_64-pc-windows-msvc`
 
-use std::iter::repeat_with;
-
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
@@ -48,11 +46,12 @@ fn do_loop(
 
     let title = format!("{item_count} items");
 
-    let mut items = repeat_with(|| Select::new("Changing", false).with_detail_text("Description"))
-        .take(item_count)
-        .collect::<Vec<_>>();
-
     for _ in 0..60 {
+        let mut items = (0..item_count)
+            .map(|_| Select::new("Changing", false).with_detail_text("Description"))
+            .take(item_count)
+            .collect::<Vec<_>>();
+
         let mut menu = Menu::with_style(unsafe { std::mem::transmute(title.as_str()) }, style)
             .add_item(
                 NavigationItem::new("Foo", ())
