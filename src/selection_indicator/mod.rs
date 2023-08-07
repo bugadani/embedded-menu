@@ -33,6 +33,7 @@ pub trait SelectionIndicatorController: Copy {
     type State: Default + Copy;
 
     fn update_target(&self, state: &mut Self::State, y: i32);
+    fn jump_to_target(&self, state: &mut Self::State);
     fn offset(&self, state: &Self::State) -> i32;
     fn update(&self, state: &mut Self::State);
 }
@@ -51,6 +52,8 @@ impl SelectionIndicatorController for StaticPosition {
     fn update_target(&self, state: &mut Self::State, y: i32) {
         state.y_offset = y;
     }
+
+    fn jump_to_target(&self, _state: &mut Self::State) {}
 
     fn offset(&self, state: &Self::State) -> i32 {
         state.y_offset
@@ -81,6 +84,10 @@ impl SelectionIndicatorController for AnimatedPosition {
 
     fn update_target(&self, state: &mut Self::State, y: i32) {
         state.target = y;
+    }
+
+    fn jump_to_target(&self, state: &mut Self::State) {
+        state.current = state.target;
     }
 
     fn offset(&self, state: &Self::State) -> i32 {
@@ -156,6 +163,10 @@ where
     pub fn change_selected_item(&self, pos: i32, state: &mut State<P, S>) {
         self.controller.update_target(&mut state.position, pos);
         self.style.on_target_changed(&mut state.state);
+    }
+
+    pub fn jump_to_target(&self, state: &mut State<P, S>) {
+        self.controller.jump_to_target(&mut state.position);
     }
 
     pub fn update(&self, fill_width: u32, state: &mut State<P, S>) {

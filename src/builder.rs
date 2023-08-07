@@ -169,12 +169,31 @@ where
         })
     }
 
-    pub fn build_with_state(self, state: MenuState<IT, P, S>) -> Menu<IT, VG, R, C, P, S> {
+    pub fn build_with_state(self, mut state: MenuState<IT, P, S>) -> Menu<IT, VG, R, C, P, S> {
+        // We have less menu items than before. Avoid crashing.
+        let max_idx = self.items.count().saturating_sub(1);
+
+        let items = LinearLayout::vertical(self.items).arrange().into_inner();
+
+        if max_idx < state.selected {
+            state.selected = max_idx;
+
+            let max_indicator_pos = items.bounds_of(max_idx).top_left.y;
+
+            state.recompute_targets = false;
+            self.style
+                .indicator
+                .change_selected_item(max_indicator_pos, &mut state.indicator_state);
+            self.style
+                .indicator
+                .jump_to_target(&mut state.indicator_state);
+        }
+
         Menu {
             state,
             _return_type: PhantomData,
             title: self.title,
-            items: LinearLayout::vertical(self.items).arrange().into_inner(),
+            items,
             style: self.style,
         }
     }

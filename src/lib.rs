@@ -238,7 +238,7 @@ where
 {
     fn default() -> Self {
         Self {
-            selected: Default::default(),
+            selected: 0,
             recompute_targets: Default::default(),
             list_offset: Default::default(),
             display_mode: Default::default(),
