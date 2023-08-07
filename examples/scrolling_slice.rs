@@ -40,12 +40,12 @@ fn main() -> Result<(), core::convert::Infallible> {
     let style = MenuStyle::new(BinaryColor::On).with_animated_selection_indicator(10);
 
     let mut selects1 = [
-        Select::new("Check this", false).with_detail_text("Description"),
-        Select::new("Check this", false).with_detail_text("Description"),
+        Select::new("Check this 1", false).with_detail_text("Description"),
+        Select::new("Check this 2", false).with_detail_text("Description"),
     ];
     let mut selects2 = [
-        Select::new("Check this", true).with_detail_text("Description"),
-        Select::new("Check this", true).with_detail_text("Description"),
+        Select::new("Check this 3", true).with_detail_text("Description"),
+        Select::new("Check this 4", true).with_detail_text("Description"),
     ];
 
     let mut menu = Menu::with_style("Menu", style)
