@@ -2,7 +2,7 @@ use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::InteractionController,
     selection_indicator::{style::IndicatorStyle, Indicator, SelectionIndicatorController},
-    Menu, MenuDisplayMode, MenuItem, MenuStyle, NoItems,
+    Menu, MenuDisplayMode, MenuItem, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
 use embedded_graphics::pixelcolor::PixelColor;
@@ -158,17 +158,19 @@ where
 {
     pub fn build(self) -> Menu<IT, VG, R, C, P, S> {
         Menu {
+            state: MenuState {
+                selected: 0,
+                recompute_targets: true,
+                list_offset: 0,
+                display_mode: MenuDisplayMode::List(self.style.details_delay.unwrap_or_default()),
+                interaction_state: Default::default(),
+                indicator_state: Default::default(),
+            },
             _return_type: PhantomData,
             title: self.title,
-            selected: 0,
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
-            recompute_targets: true,
-            list_offset: 0,
             indicator: Indicator::new(self.style.indicator_controller, self.style.indicator_style),
-            display_mode: MenuDisplayMode::List(self.style.details_delay.unwrap_or_default()),
             style: self.style,
-            interaction_state: Default::default(),
-            indicator_state: Default::default(),
         }
     }
 }
