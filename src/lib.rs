@@ -98,9 +98,8 @@ where
     pub(crate) font: &'static MonoFont<'static>,
     pub(crate) title_font: &'static MonoFont<'static>,
     pub(crate) details_delay: Option<u16>,
-    pub(crate) indicator_style: S,
     pub(crate) interaction: IT,
-    pub(crate) indicator_controller: P,
+    pub(crate) indicator: Indicator<P, S>,
 }
 
 impl Default for MenuStyle<BinaryColor, LineIndicator, Programmed, StaticPosition> {
@@ -120,9 +119,11 @@ where
             font: &FONT_6X10,
             title_font: &FONT_6X10,
             details_delay: None,
-            indicator_style: LineIndicator,
             interaction: Programmed,
-            indicator_controller: StaticPosition,
+            indicator: Indicator {
+                style: LineIndicator,
+                controller: StaticPosition,
+            },
         }
     }
 }
@@ -158,14 +159,16 @@ where
         S2: IndicatorStyle,
     {
         MenuStyle {
-            indicator_style,
             color: self.color,
             scrollbar: self.scrollbar,
             font: self.font,
             title_font: self.title_font,
             details_delay: self.details_delay,
             interaction: self.interaction,
-            indicator_controller: self.indicator_controller,
+            indicator: Indicator {
+                style: indicator_style,
+                controller: self.indicator.controller,
+            },
         }
     }
 
@@ -180,8 +183,7 @@ where
             font: self.font,
             title_font: self.title_font,
             details_delay: self.details_delay,
-            indicator_style: self.indicator_style,
-            indicator_controller: self.indicator_controller,
+            indicator: self.indicator,
         }
     }
 
@@ -196,8 +198,10 @@ where
             font: self.font,
             title_font: self.title_font,
             details_delay: self.details_delay,
-            indicator_style: self.indicator_style,
-            indicator_controller: AnimatedPosition::new(frames),
+            indicator: Indicator {
+                style: self.indicator.style,
+                controller: AnimatedPosition::new(frames),
+            },
         }
     }
 
@@ -275,7 +279,6 @@ where
     title: &'static str,
     items: VG,
     style: MenuStyle<C, S, IT, P>,
-    indicator: Indicator<P, S>,
     state: MenuState<IT, P, S>,
 }
 
@@ -420,13 +423,13 @@ where
         // animations
         if self.state.recompute_targets {
             self.state.recompute_targets = false;
-            self.indicator.change_selected_item(
+            self.style.indicator.change_selected_item(
                 selected_item_bounds.top_left.y,
                 &mut self.state.indicator_state,
             );
         }
 
-        self.indicator.update(
+        self.style.indicator.update(
             self.style
                 .interaction
                 .fill_area_width(&self.state.interaction_state, display_size.width),
@@ -435,9 +438,9 @@ where
 
         // Ensure selection indicator is always visible
         let top_distance =
-            self.indicator.offset(&self.state.indicator_state) - self.state.list_offset;
+            self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset;
         self.state.list_offset += if top_distance > 0 {
-            let indicator_height = self.indicator.item_height(
+            let indicator_height = self.style.indicator.item_height(
                 selected_item_bounds.size().height,
                 &self.state.indicator_state,
             ) as i32;
@@ -532,9 +535,9 @@ where
         )
         .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
 
-        self.indicator.draw(
+        self.style.indicator.draw(
             menuitem_height,
-            self.indicator.offset(&self.state.indicator_state) - self.state.list_offset
+            self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset
                 + menu_title.size().height as i32,
             self.style
                 .interaction

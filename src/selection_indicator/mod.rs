@@ -138,13 +138,10 @@ where
 {
 }
 
-pub(crate) struct Indicator<P, S>
-where
-    P: SelectionIndicatorController,
-    S: IndicatorStyle,
-{
-    controller: P,
-    style: S,
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Indicator<P, S> {
+    pub controller: P,
+    pub style: S,
 }
 
 impl<P, S> Indicator<P, S>
@@ -152,20 +149,16 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn new(controller: P, style: S) -> Self {
-        Self { controller, style }
-    }
-
     pub fn offset(&self, state: &State<P, S>) -> i32 {
         self.controller.offset(&state.position)
     }
 
-    pub fn change_selected_item(&mut self, pos: i32, state: &mut State<P, S>) {
+    pub fn change_selected_item(&self, pos: i32, state: &mut State<P, S>) {
         self.controller.update_target(&mut state.position, pos);
         self.style.on_target_changed(&mut state.state);
     }
 
-    pub fn update(&mut self, fill_width: u32, state: &mut State<P, S>) {
+    pub fn update(&self, fill_width: u32, state: &mut State<P, S>) {
         self.controller.update(&mut state.position);
         self.style.update(&mut state.state, fill_width);
     }

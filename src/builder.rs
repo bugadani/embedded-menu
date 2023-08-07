@@ -1,7 +1,7 @@
 use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::InteractionController,
-    selection_indicator::{style::IndicatorStyle, Indicator, SelectionIndicatorController},
+    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     Menu, MenuDisplayMode, MenuItem, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
@@ -169,7 +169,6 @@ where
             _return_type: PhantomData,
             title: self.title,
             items: LinearLayout::vertical(self.items).arrange().into_inner(),
-            indicator: Indicator::new(self.style.indicator_controller, self.style.indicator_style),
             style: self.style,
         }
     }
