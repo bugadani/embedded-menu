@@ -44,8 +44,8 @@ fn main() -> Result<(), core::convert::Infallible> {
         Select::new("Check this", false).with_detail_text("Description"),
     ];
     let mut selects2 = [
-        Select::new("Check this", false).with_detail_text("Description"),
-        Select::new("Check this", false).with_detail_text("Description"),
+        Select::new("Check this", true).with_detail_text("Description"),
+        Select::new("Check this", true).with_detail_text("Description"),
     ];
 
     let mut menu = Menu::with_style("Menu", style)
