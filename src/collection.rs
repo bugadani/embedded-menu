@@ -61,6 +61,13 @@ where
     I: MenuItem<R>,
 {
     pub fn new(items: &'a mut [I]) -> Self {
+        let mut offset = 0;
+
+        for item in items.iter_mut() {
+            item.translate_mut(Point::new(0, offset));
+            offset += item.bounds().size.height as i32;
+        }
+
         Self {
             items,
             _marker: PhantomData,
@@ -73,19 +80,19 @@ where
     I: MenuItem<R>,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
-        self.items[nth].bounds()
+        self.items[self.count() - 1 - nth].bounds()
     }
 
     fn interact_with(&mut self, nth: usize) -> R {
-        self.items[nth].interact()
+        self.items[self.count() - 1 - nth].interact()
     }
 
     fn title_of(&self, nth: usize) -> &str {
-        self.items[nth].title()
+        self.items[self.count() - 1 - nth].title()
     }
 
     fn details_of(&self, nth: usize) -> &str {
-        self.items[nth].details()
+        self.items[self.count() - 1 - nth].details()
     }
 
     fn count(&self) -> usize {
@@ -148,7 +155,7 @@ where
     where
         D: DrawTarget<Color = Self::Color>,
     {
-        for view in self.items[1..].iter() {
+        for view in self.items.iter() {
             view.draw_styled(style, display)?;
         }
 
