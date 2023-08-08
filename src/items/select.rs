@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use embedded_graphics::{
     pixelcolor::Rgb888,
     prelude::{DrawTarget, PixelColor, Point},
@@ -33,20 +34,20 @@ impl SelectValue for bool {
 }
 
 pub struct Select<'a, R, S: SelectValue> {
-    title_text: &'a str,
-    details: &'a str,
+    title_text: Cow<'a, str>,
+    details: Cow<'a, str>,
     convert: fn(S) -> R,
     value: S,
     line: MenuLine,
 }
 
 impl<'a, S: SelectValue> Select<'a, (), S> {
-    pub fn new(title: &'a str, value: S) -> Self {
+    pub fn new(title: impl Into<Cow<'a, str>>, value: S) -> Self {
         Self {
-            title_text: title,
+            title_text: title.into(),
             value,
             convert: |_| (),
-            details: "",
+            details: "".into(),
             line: MenuLine::empty(),
         }
     }
@@ -63,8 +64,11 @@ impl<'a, R, S: SelectValue> Select<'a, R, S> {
         }
     }
 
-    pub fn with_detail_text(self, details: &'a str) -> Self {
-        Self { details, ..self }
+    pub fn with_detail_text(self, details: impl Into<Cow<'a, str>>) -> Self {
+        Self {
+            details: details.into(),
+            ..self
+        }
     }
 }
 
@@ -80,11 +84,11 @@ where
     }
 
     fn title(&self) -> &str {
-        self.title_text
+        self.title_text.as_ref()
     }
 
     fn details(&self) -> &str {
-        self.details
+        self.details.as_ref()
     }
 
     fn value(&self) -> &str {
@@ -143,6 +147,6 @@ where
         D: DrawTarget<Color = Self::Color>,
     {
         self.line
-            .draw_styled(self.title_text, self.value.name(), style, display)
+            .draw_styled(&self.title_text, self.value.name(), style, display)
     }
 }

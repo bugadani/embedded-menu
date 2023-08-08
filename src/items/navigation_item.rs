@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use embedded_graphics::{
     pixelcolor::Rgb888,
     prelude::{DrawTarget, PixelColor, Point},
@@ -13,10 +14,10 @@ use crate::{
 };
 
 pub struct NavigationItem<'a, R: Copy> {
-    title_text: &'a str,
-    details: &'a str,
+    title_text: Cow<'a, str>,
+    details: Cow<'a, str>,
     return_value: R,
-    marker: &'a str,
+    marker: Cow<'a, str>,
     line: MenuLine,
 }
 
@@ -31,15 +32,15 @@ where
     }
 
     fn title(&self) -> &str {
-        self.title_text
+        self.title_text.as_ref()
     }
 
     fn details(&self) -> &str {
-        self.details
+        self.details.as_ref()
     }
 
     fn value(&self) -> &str {
-        self.marker
+        self.marker.as_ref()
     }
 
     fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P>)
@@ -49,27 +50,33 @@ where
         IT: InteractionController,
         P: SelectionIndicatorController,
     {
-        self.line = MenuLine::new(self.marker, style);
+        self.line = MenuLine::new(self.marker.as_ref(), style);
     }
 }
 
 impl<'a, R: Copy> NavigationItem<'a, R> {
-    pub fn new(title: &'a str, value: R) -> Self {
+    pub fn new(title: impl Into<Cow<'a, str>>, value: R) -> Self {
         Self {
-            title_text: title,
+            title_text: title.into(),
             return_value: value,
-            details: "",
-            marker: "",
+            details: "".into(),
+            marker: "".into(),
             line: MenuLine::empty(),
         }
     }
 
-    pub fn with_marker(self, marker: &'a str) -> Self {
-        Self { marker, ..self }
+    pub fn with_marker(self, marker: impl Into<Cow<'a, str>>) -> Self {
+        Self {
+            marker: marker.into(),
+            ..self
+        }
     }
 
-    pub fn with_detail_text(self, details: &'a str) -> Self {
-        Self { details, ..self }
+    pub fn with_detail_text(self, details: impl Into<Cow<'a, str>>) -> Self {
+        Self {
+            details: details.into(),
+            ..self
+        }
     }
 }
 
@@ -102,7 +109,11 @@ where
     where
         D: DrawTarget<Color = Self::Color>,
     {
-        self.line
-            .draw_styled(self.title_text, self.marker, style, display)
+        self.line.draw_styled(
+            self.title_text.as_ref(),
+            self.marker.as_ref(),
+            style,
+            display,
+        )
     }
 }
