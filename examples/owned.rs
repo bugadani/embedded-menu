@@ -45,7 +45,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .map(|i| Select::new(i, false))
         .collect();
 
-    let mut menu = Menu::new("Menu")
+    let mut menu = Menu::new(format!("Items: {}", items.len()))
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")

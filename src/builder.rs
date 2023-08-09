@@ -10,27 +10,29 @@ use embedded_layout::{
     layout::linear::LinearLayout, object_chain::ChainElement, prelude::*, view_group::ViewGroup,
 };
 
-pub struct MenuBuilder<IT, LL, R, C, P, S>
+pub struct MenuBuilder<T, IT, LL, R, C, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     C: PixelColor,
     S: IndicatorStyle,
     P: SelectionIndicatorController,
 {
     _return_type: PhantomData<R>,
-    title: &'static str,
+    title: T,
     items: LL,
     style: MenuStyle<C, S, IT, P>,
 }
 
-impl<R, C, S, IT, P> MenuBuilder<IT, NoItems, R, C, P, S>
+impl<T, R, C, S, IT, P> MenuBuilder<T, IT, NoItems, R, C, P, S>
 where
+    T: AsRef<str>,
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
     P: SelectionIndicatorController,
 {
-    pub const fn new(title: &'static str, style: MenuStyle<C, S, IT, P>) -> Self {
+    pub const fn new(title: T, style: MenuStyle<C, S, IT, P>) -> Self {
         Self {
             _return_type: PhantomData,
             title,
@@ -40,14 +42,15 @@ where
     }
 }
 
-impl<IT, R, C, P, S> MenuBuilder<IT, NoItems, R, C, P, S>
+impl<T, IT, R, C, P, S> MenuBuilder<T, IT, NoItems, R, C, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<IT, Chain<I>, R, C, P, S> {
+    pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<T, IT, Chain<I>, R, C, P, S> {
         item.set_style(&self.style);
 
         MenuBuilder {
@@ -61,7 +64,7 @@ where
     pub fn add_items<I, IC>(
         self,
         mut items: IC,
-    ) -> MenuBuilder<IT, Chain<MenuItems<IC, I, R>>, R, C, P, S>
+    ) -> MenuBuilder<T, IT, Chain<MenuItems<IC, I, R>>, R, C, P, S>
     where
         I: MenuItem<R>,
         IC: AsRef<[I]> + AsMut<[I]>,
@@ -80,8 +83,9 @@ where
     }
 }
 
-impl<IT, CE, R, C, P, S> MenuBuilder<IT, Chain<CE>, R, C, P, S>
+impl<T, IT, CE, R, C, P, S> MenuBuilder<T, IT, Chain<CE>, R, C, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     Chain<CE>: MenuItemCollection<R>,
     C: PixelColor,
@@ -91,7 +95,7 @@ where
     pub fn add_item<I: MenuItem<R>>(
         self,
         mut item: I,
-    ) -> MenuBuilder<IT, Link<I, Chain<CE>>, R, C, P, S> {
+    ) -> MenuBuilder<T, IT, Link<I, Chain<CE>>, R, C, P, S> {
         item.set_style(&self.style);
 
         MenuBuilder {
@@ -105,7 +109,7 @@ where
     pub fn add_items<I, IC>(
         self,
         mut items: IC,
-    ) -> MenuBuilder<IT, Link<MenuItems<IC, I, R>, Chain<CE>>, R, C, P, S>
+    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I, R>, Chain<CE>>, R, C, P, S>
     where
         I: MenuItem<R>,
         IC: AsRef<[I]> + AsMut<[I]>,
@@ -124,8 +128,9 @@ where
     }
 }
 
-impl<IT, I, CE, R, C, P, S> MenuBuilder<IT, Link<I, CE>, R, C, P, S>
+impl<T, IT, I, CE, R, C, P, S> MenuBuilder<T, IT, Link<I, CE>, R, C, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     Link<I, CE>: MenuItemCollection<R> + ChainElement,
     CE: MenuItemCollection<R> + ChainElement,
@@ -136,7 +141,7 @@ where
     pub fn add_item<I2: MenuItem<R>>(
         self,
         mut item: I2,
-    ) -> MenuBuilder<IT, Link<I2, Link<I, CE>>, R, C, P, S> {
+    ) -> MenuBuilder<T, IT, Link<I2, Link<I, CE>>, R, C, P, S> {
         item.set_style(&self.style);
 
         MenuBuilder {
@@ -150,7 +155,7 @@ where
     pub fn add_items<I2, IC>(
         self,
         mut items: IC,
-    ) -> MenuBuilder<IT, Link<MenuItems<IC, I2, R>, Link<I, CE>>, R, C, P, S>
+    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I2, R>, Link<I, CE>>, R, C, P, S>
     where
         I2: MenuItem<R>,
         IC: AsRef<[I2]> + AsMut<[I2]>,
@@ -169,15 +174,16 @@ where
     }
 }
 
-impl<IT, VG, R, C, P, S> MenuBuilder<IT, VG, R, C, P, S>
+impl<T, IT, VG, R, C, P, S> MenuBuilder<T, IT, VG, R, C, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     VG: ViewGroup + MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    pub fn build(self) -> Menu<IT, VG, R, C, P, S> {
+    pub fn build(self) -> Menu<T, IT, VG, R, C, P, S> {
         let default_timeout = self.style.details_delay.unwrap_or_default();
 
         self.build_with_state(MenuState {
@@ -190,7 +196,7 @@ where
         })
     }
 
-    pub fn build_with_state(self, mut state: MenuState<IT, P, S>) -> Menu<IT, VG, R, C, P, S> {
+    pub fn build_with_state(self, mut state: MenuState<IT, P, S>) -> Menu<T, IT, VG, R, C, P, S> {
         // We have less menu items than before. Avoid crashing.
         let max_idx = self.items.count().saturating_sub(1);
 

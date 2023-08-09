@@ -520,6 +520,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                 S: IndicatorStyle,
             {
                 menu: Menu<
+                    &'static str,
                     IT,
                     embedded_layout::chain! {
                         #(#menu_items_in_ty),*
@@ -577,7 +578,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
             impl #ty_name {
                 fn setup_menu<S, IT, P>(
                     self,
-                    builder: MenuBuilder<IT, NoItems, #events, BinaryColor, P, S>,
+                    builder: MenuBuilder<&'static str, IT, NoItems, #events, BinaryColor, P, S>,
                 ) -> #wrapper<IT, P, S>
                 where
                     S: IndicatorStyle,
