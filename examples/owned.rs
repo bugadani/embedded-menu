@@ -40,7 +40,7 @@ impl SelectValue for TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     // Use a generator to create owned strings that we give to the menu.
-    let mut items: Vec<Select<_, _, _, _>> = (1..10)
+    let items: Vec<Select<_, _, _, _>> = (1..10)
         .map(|i| format!("Item {}", i))
         .map(|i| Select::new(i, false))
         .collect();
@@ -53,7 +53,7 @@ fn main() -> Result<(), core::convert::Infallible> {
                     "Lorem ipsum dolor sit amet, in per offendit assueverit adversarium, no sed clita adipisci nominati.",
                 ),
         )
-        .add_items(items.as_mut_slice())
+        .add_items(items)
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

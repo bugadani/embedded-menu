@@ -58,16 +58,23 @@ where
         }
     }
 
-    pub fn add_items<I: MenuItem<R>>(
+    pub fn add_items<I, IC>(
         self,
-        item: &mut [I],
-    ) -> MenuBuilder<IT, Chain<MenuItems<'_, I, R>>, R, C, P, S> {
-        item.iter_mut().for_each(|i| i.set_style(&self.style));
+        mut items: IC,
+    ) -> MenuBuilder<IT, Chain<MenuItems<IC, I, R>>, R, C, P, S>
+    where
+        I: MenuItem<R>,
+        IC: AsRef<[I]> + AsMut<[I]>,
+    {
+        items
+            .as_mut()
+            .iter_mut()
+            .for_each(|i| i.set_style(&self.style));
 
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            items: Chain::new(MenuItems::new(item)),
+            items: Chain::new(MenuItems::new(items)),
             style: self.style,
         }
     }
@@ -95,16 +102,23 @@ where
         }
     }
 
-    pub fn add_items<I: MenuItem<R>>(
+    pub fn add_items<I, IC>(
         self,
-        item: &mut [I],
-    ) -> MenuBuilder<IT, Link<MenuItems<'_, I, R>, Chain<CE>>, R, C, P, S> {
-        item.iter_mut().for_each(|i| i.set_style(&self.style));
+        mut items: IC,
+    ) -> MenuBuilder<IT, Link<MenuItems<IC, I, R>, Chain<CE>>, R, C, P, S>
+    where
+        I: MenuItem<R>,
+        IC: AsRef<[I]> + AsMut<[I]>,
+    {
+        items
+            .as_mut()
+            .iter_mut()
+            .for_each(|i| i.set_style(&self.style));
 
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            items: self.items.append(MenuItems::new(item)),
+            items: self.items.append(MenuItems::new(items)),
             style: self.style,
         }
     }
@@ -133,16 +147,23 @@ where
         }
     }
 
-    pub fn add_items<I2: MenuItem<R>>(
+    pub fn add_items<I2, IC>(
         self,
-        item: &mut [I2],
-    ) -> MenuBuilder<IT, Link<MenuItems<'_, I2, R>, Link<I, CE>>, R, C, P, S> {
-        item.iter_mut().for_each(|i| i.set_style(&self.style));
+        mut items: IC,
+    ) -> MenuBuilder<IT, Link<MenuItems<IC, I2, R>, Link<I, CE>>, R, C, P, S>
+    where
+        I2: MenuItem<R>,
+        IC: AsRef<[I2]> + AsMut<[I2]>,
+    {
+        items
+            .as_mut()
+            .iter_mut()
+            .for_each(|i| i.set_style(&self.style));
 
         MenuBuilder {
             _return_type: PhantomData,
             title: self.title,
-            items: self.items.append(MenuItems::new(item)),
+            items: self.items.append(MenuItems::new(items)),
             style: self.style,
         }
     }
