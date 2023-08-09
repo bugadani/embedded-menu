@@ -32,16 +32,25 @@ impl SelectValue for bool {
     }
 }
 
-pub struct Select<'a, R, S: SelectValue> {
-    title_text: &'a str,
-    details: &'a str,
+pub struct Select<T, D, R, S>
+where
+    T: AsRef<str>,
+    D: AsRef<str>,
+    S: SelectValue,
+{
+    title_text: T,
+    details: D,
     convert: fn(S) -> R,
     value: S,
     line: MenuLine,
 }
 
-impl<'a, S: SelectValue> Select<'a, (), S> {
-    pub fn new(title: &'a str, value: S) -> Self {
+impl<T, S> Select<T, &'static str, (), S>
+where
+    T: AsRef<str>,
+    S: SelectValue,
+{
+    pub fn new(title: T, value: S) -> Self {
         Self {
             title_text: title,
             value,
@@ -52,8 +61,13 @@ impl<'a, S: SelectValue> Select<'a, (), S> {
     }
 }
 
-impl<'a, R, S: SelectValue> Select<'a, R, S> {
-    pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> Select<'a, R2, S> {
+impl<T, D, R, S> Select<T, D, R, S>
+where
+    T: AsRef<str>,
+    D: AsRef<str>,
+    S: SelectValue,
+{
+    pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> Select<T, D, R2, S> {
         Select {
             convert,
             title_text: self.title_text,
@@ -63,15 +77,29 @@ impl<'a, R, S: SelectValue> Select<'a, R, S> {
         }
     }
 
-    pub fn with_detail_text(self, details: &'a str) -> Self {
-        Self { details, ..self }
+    pub fn with_detail_text<D2: AsRef<str>>(self, details: D2) -> Select<T, D2, R, S> {
+        Select {
+            details,
+            title_text: self.title_text,
+            value: self.value,
+            convert: self.convert,
+            line: self.line,
+        }
     }
 }
 
-impl<R, S: SelectValue> Marker for Select<'_, R, S> {}
-
-impl<R, S> MenuItem<R> for Select<'_, R, S>
+impl<T, D, R, S> Marker for Select<T, D, R, S>
 where
+    T: AsRef<str>,
+    D: AsRef<str>,
+    S: SelectValue,
+{
+}
+
+impl<T, D, R, S> MenuItem<R> for Select<T, D, R, S>
+where
+    T: AsRef<str>,
+    D: AsRef<str>,
     S: SelectValue,
 {
     fn interact(&mut self) -> R {
@@ -80,11 +108,11 @@ where
     }
 
     fn title(&self) -> &str {
-        self.title_text
+        self.title_text.as_ref()
     }
 
     fn details(&self) -> &str {
-        self.details
+        self.details.as_ref()
     }
 
     fn value(&self) -> &str {
@@ -113,7 +141,12 @@ where
     }
 }
 
-impl<R, S: SelectValue> View for Select<'_, R, S> {
+impl<T, D, R, S> View for Select<T, D, R, S>
+where
+    T: AsRef<str>,
+    D: AsRef<str>,
+    S: SelectValue,
+{
     fn translate_impl(&mut self, by: Point) {
         self.line.translate_mut(by);
     }
@@ -123,26 +156,29 @@ impl<R, S: SelectValue> View for Select<'_, R, S> {
     }
 }
 
-impl<C, ST, IT, P, R, S> StyledDrawable<MenuStyle<C, ST, IT, P>> for Select<'_, R, S>
+impl<C, ST, IT, P, T, D, R, S> StyledDrawable<MenuStyle<C, ST, IT, P>> for Select<T, D, R, S>
 where
     C: PixelColor + From<Rgb888>,
     ST: IndicatorStyle,
     IT: InteractionController,
     P: SelectionIndicatorController,
+
+    T: AsRef<str>,
+    D: AsRef<str>,
     S: SelectValue,
 {
     type Color = C;
     type Output = ();
 
-    fn draw_styled<D>(
+    fn draw_styled<DIS>(
         &self,
         style: &MenuStyle<C, ST, IT, P>,
-        display: &mut D,
-    ) -> Result<Self::Output, D::Error>
+        display: &mut DIS,
+    ) -> Result<Self::Output, DIS::Error>
     where
-        D: DrawTarget<Color = Self::Color>,
+        DIS: DrawTarget<Color = Self::Color>,
     {
         self.line
-            .draw_styled(self.title_text, self.value.name(), style, display)
+            .draw_styled(self.title_text.as_ref(), self.value.name(), style, display)
     }
 }

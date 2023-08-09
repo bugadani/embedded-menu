@@ -141,8 +141,10 @@ enum MenuItem {
 impl MenuItem {
     fn menu_item_in_ty(&self, events: &Ident) -> TokenStream {
         match self {
-            MenuItem::Nav { .. } => quote!(NavigationItem<'static, #events>),
-            MenuItem::Data { ty, .. } => quote!(Select<'static, #events, #ty>),
+            MenuItem::Nav { .. } => {
+                quote!(NavigationItem<&'static str, &'static str, &'static str, #events>)
+            }
+            MenuItem::Data { ty, .. } => quote!(Select<&'static str, &'static str, #events, #ty>),
         }
     }
 

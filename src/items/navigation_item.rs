@@ -12,18 +12,34 @@ use crate::{
     Marker, MenuItem, MenuStyle,
 };
 
-pub struct NavigationItem<'a, R: Copy> {
-    title_text: &'a str,
-    details: &'a str,
+pub struct NavigationItem<T, D, M, R>
+where
+    T: AsRef<str>,
+    D: AsRef<str>,
+    M: AsRef<str>,
+    R: Copy,
+{
+    title_text: T,
+    details: D,
     return_value: R,
-    marker: &'a str,
+    marker: M,
     line: MenuLine,
 }
 
-impl<R: Copy> Marker for NavigationItem<'_, R> {}
-
-impl<R> MenuItem<R> for NavigationItem<'_, R>
+impl<T, D, M, R> Marker for NavigationItem<T, D, M, R>
 where
+    T: AsRef<str>,
+    D: AsRef<str>,
+    M: AsRef<str>,
+    R: Copy,
+{
+}
+
+impl<T, D, M, R> MenuItem<R> for NavigationItem<T, D, M, R>
+where
+    T: AsRef<str>,
+    D: AsRef<str>,
+    M: AsRef<str>,
     R: Copy,
 {
     fn interact(&mut self) -> R {
@@ -31,15 +47,15 @@ where
     }
 
     fn title(&self) -> &str {
-        self.title_text
+        self.title_text.as_ref()
     }
 
     fn details(&self) -> &str {
-        self.details
+        self.details.as_ref()
     }
 
     fn value(&self) -> &str {
-        self.marker
+        self.marker.as_ref()
     }
 
     fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P>)
@@ -49,13 +65,17 @@ where
         IT: InteractionController,
         P: SelectionIndicatorController,
     {
-        self.line = MenuLine::new(self.marker, style);
+        self.line = MenuLine::new(self.marker.as_ref(), style);
     }
 }
 
-impl<'a, R: Copy> NavigationItem<'a, R> {
-    pub fn new(title: &'a str, value: R) -> Self {
-        Self {
+impl<T, R> NavigationItem<T, &'static str, &'static str, R>
+where
+    T: AsRef<str>,
+    R: Copy,
+{
+    pub fn new(title: T, value: R) -> Self {
+        NavigationItem {
             title_text: title,
             return_value: value,
             details: "",
@@ -63,17 +83,43 @@ impl<'a, R: Copy> NavigationItem<'a, R> {
             line: MenuLine::empty(),
         }
     }
+}
 
-    pub fn with_marker(self, marker: &'a str) -> Self {
-        Self { marker, ..self }
+impl<T, D, M, R> NavigationItem<T, D, M, R>
+where
+    T: AsRef<str>,
+    D: AsRef<str>,
+    M: AsRef<str>,
+    R: Copy,
+{
+    pub fn with_marker<M2: AsRef<str>>(self, marker: M2) -> NavigationItem<T, D, M2, R> {
+        NavigationItem {
+            marker,
+            title_text: self.title_text,
+            return_value: self.return_value,
+            details: self.details,
+            line: self.line,
+        }
     }
 
-    pub fn with_detail_text(self, details: &'a str) -> Self {
-        Self { details, ..self }
+    pub fn with_detail_text<D2: AsRef<str>>(self, details: D2) -> NavigationItem<T, D2, M, R> {
+        NavigationItem {
+            details,
+            title_text: self.title_text,
+            return_value: self.return_value,
+            marker: self.marker,
+            line: self.line,
+        }
     }
 }
 
-impl<R: Copy> View for NavigationItem<'_, R> {
+impl<T, D, M, R> View for NavigationItem<T, D, M, R>
+where
+    T: AsRef<str>,
+    D: AsRef<str>,
+    M: AsRef<str>,
+    R: Copy,
+{
     fn translate_impl(&mut self, by: Point) {
         self.line.translate_mut(by);
     }
@@ -83,26 +129,34 @@ impl<R: Copy> View for NavigationItem<'_, R> {
     }
 }
 
-impl<C, S, IT, P, R> StyledDrawable<MenuStyle<C, S, IT, P>> for NavigationItem<'_, R>
+impl<C, S, IT, P, T, D, M, R> StyledDrawable<MenuStyle<C, S, IT, P>> for NavigationItem<T, D, M, R>
 where
     C: PixelColor + From<Rgb888>,
     S: IndicatorStyle,
     IT: InteractionController,
     P: SelectionIndicatorController,
+
+    T: AsRef<str>,
+    D: AsRef<str>,
+    M: AsRef<str>,
     R: Copy,
 {
     type Color = C;
     type Output = ();
 
-    fn draw_styled<D>(
+    fn draw_styled<DIS>(
         &self,
         style: &MenuStyle<C, S, IT, P>,
-        display: &mut D,
-    ) -> Result<Self::Output, D::Error>
+        display: &mut DIS,
+    ) -> Result<Self::Output, DIS::Error>
     where
-        D: DrawTarget<Color = Self::Color>,
+        DIS: DrawTarget<Color = Self::Color>,
     {
-        self.line
-            .draw_styled(self.title_text, self.marker, style, display)
+        self.line.draw_styled(
+            self.title_text.as_ref(),
+            self.marker.as_ref(),
+            style,
+            display,
+        )
     }
 }
