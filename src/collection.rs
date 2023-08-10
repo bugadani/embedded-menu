@@ -48,22 +48,24 @@ where
     }
 }
 
-pub struct MenuItems<'a, I, R>
+pub struct MenuItems<C, I, R>
 where
+    C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
 {
-    items: &'a mut [I],
-    _marker: PhantomData<R>,
+    items: C,
+    _marker: PhantomData<(I, R)>,
 }
 
-impl<'a, I, R> MenuItems<'a, I, R>
+impl<C, I, R> MenuItems<C, I, R>
 where
+    C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
 {
-    pub fn new(items: &'a mut [I]) -> Self {
+    pub fn new(mut items: C) -> Self {
         let mut offset = 0;
 
-        for item in items.iter_mut() {
+        for item in items.as_mut().iter_mut() {
             item.translate_mut(Point::new(0, offset));
             offset += item.bounds().size.height as i32;
         }
@@ -75,49 +77,52 @@ where
     }
 }
 
-impl<I, R> MenuItemCollection<R> for MenuItems<'_, I, R>
+impl<C, I, R> MenuItemCollection<R> for MenuItems<C, I, R>
 where
+    C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
-        self.items[nth].bounds()
+        self.items.as_ref()[nth].bounds()
     }
 
     fn interact_with(&mut self, nth: usize) -> R {
-        self.items[nth].interact()
+        self.items.as_mut()[nth].interact()
     }
 
     fn title_of(&self, nth: usize) -> &str {
-        self.items[nth].title()
+        self.items.as_ref()[nth].title()
     }
 
     fn details_of(&self, nth: usize) -> &str {
-        self.items[nth].details()
+        self.items.as_ref()[nth].details()
     }
 
     fn count(&self) -> usize {
-        self.items.len()
+        self.items.as_ref().len()
     }
 }
 
-impl<I, R> View for MenuItems<'_, I, R>
+impl<C, I, R> View for MenuItems<C, I, R>
 where
+    C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
 {
     fn translate_impl(&mut self, by: Point) {
-        for view in self.items.iter_mut() {
+        for view in self.items.as_mut().iter_mut() {
             view.translate_impl(by);
         }
     }
 
     fn bounds(&self) -> Rectangle {
-        if self.items.is_empty() {
+        let items = &self.items.as_ref();
+        if items.is_empty() {
             return Rectangle::zero();
         }
 
-        let mut rect = self.items[0].bounds();
+        let mut rect = items[0].bounds();
 
-        for view in self.items[1..].iter() {
+        for view in items[1..].iter() {
             rect = rect.enveloping(&view.bounds());
         }
 
@@ -125,8 +130,9 @@ where
     }
 }
 
-impl<I, R> ViewGroup for MenuItems<'_, I, R>
+impl<C, I, R> ViewGroup for MenuItems<C, I, R>
 where
+    C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
 {
     fn len(&self) -> usize {
@@ -134,16 +140,17 @@ where
     }
 
     fn at(&self, idx: usize) -> &dyn View {
-        &self.items[idx]
+        &self.items.as_ref()[idx]
     }
 
     fn at_mut(&mut self, idx: usize) -> &mut dyn View {
-        &mut self.items[idx]
+        &mut self.items.as_mut()[idx]
     }
 }
 
-impl<I, C, S, R> StyledDrawable<S> for MenuItems<'_, I, R>
+impl<IC, I, C, S, R> StyledDrawable<S> for MenuItems<IC, I, R>
 where
+    IC: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R> + StyledDrawable<S, Color = C, Output = ()>,
     C: PixelColor + From<Rgb888>,
     R: Copy,
@@ -155,7 +162,7 @@ where
     where
         D: DrawTarget<Color = Self::Color>,
     {
-        for view in self.items.iter() {
+        for view in self.items.as_ref().iter() {
             view.draw_styled(style, display)?;
         }
 

@@ -285,26 +285,28 @@ where
     }
 }
 
-pub struct Menu<IT, VG, R, C, P, S>
+pub struct Menu<T, IT, VG, R, C, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
     _return_type: PhantomData<R>,
-    title: &'static str,
+    title: T,
     items: VG,
     style: MenuStyle<C, S, IT, P>,
     state: MenuState<IT, P, S>,
 }
 
-impl<R, C, S> Menu<Programmed, NoItems, R, C, StaticPosition, S>
+impl<T, R, C, S> Menu<T, Programmed, NoItems, R, C, StaticPosition, S>
 where
+    T: AsRef<str>,
     C: PixelColor,
     S: IndicatorStyle,
 {
-    pub fn new(title: &'static str) -> MenuBuilder<Programmed, NoItems, R, C, StaticPosition, S>
+    pub fn new(title: T) -> MenuBuilder<T, Programmed, NoItems, R, C, StaticPosition, S>
     where
         MenuStyle<C, S, Programmed, StaticPosition>: Default,
     {
@@ -312,23 +314,25 @@ where
     }
 }
 
-impl<IT, R, C, P, S> Menu<IT, NoItems, R, C, P, S>
+impl<T, IT, R, C, P, S> Menu<T, IT, NoItems, R, C, P, S>
 where
+    T: AsRef<str>,
     C: PixelColor,
     S: IndicatorStyle,
     IT: InteractionController,
     P: SelectionIndicatorController,
 {
     pub fn with_style(
-        title: &'static str,
+        title: T,
         style: MenuStyle<C, S, IT, P>,
-    ) -> MenuBuilder<IT, NoItems, R, C, P, S> {
+    ) -> MenuBuilder<T, IT, NoItems, R, C, P, S> {
         MenuBuilder::new(title, style)
     }
 }
 
-impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
+impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     VG: MenuItemCollection<R>,
     C: PixelColor,
@@ -372,8 +376,9 @@ where
     }
 }
 
-impl<IT, VG, R, C, P, S> Menu<IT, VG, R, C, P, S>
+impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     C: PixelColor + From<Rgb888>,
@@ -429,7 +434,7 @@ where
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let menu_title = self.header(self.title, display);
+        let menu_title = self.header(self.title.as_ref(), display);
         let title_height = menu_title.size().height as i32;
 
         let menu_height = display_size.height as i32 - title_height;
@@ -507,8 +512,9 @@ where
     }
 }
 
-impl<IT, VG, R, P, S> Menu<IT, VG, R, BinaryColor, P, S>
+impl<T, IT, VG, R, P, S> Menu<T, IT, VG, R, BinaryColor, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,
@@ -523,7 +529,7 @@ where
 
         let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
 
-        let menu_title = self.header(self.title, display);
+        let menu_title = self.header(self.title.as_ref(), display);
         menu_title.draw(display)?;
 
         let menu_height = display_size.height - menu_title.size().height;
@@ -586,8 +592,9 @@ where
     }
 }
 
-impl<IT, VG, R, P, S> Drawable for Menu<IT, VG, R, BinaryColor, P, S>
+impl<T, IT, VG, R, P, S> Drawable for Menu<T, IT, VG, R, BinaryColor, P, S>
 where
+    T: AsRef<str>,
     IT: InteractionController,
     VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
     P: SelectionIndicatorController,

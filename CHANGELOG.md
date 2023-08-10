@@ -4,6 +4,8 @@ Unreleased (??)
  - `View` is now a supertrait of `MenuItem`
  - Fixed issues with displaying a slice of menuitems
  - Added `MenuState`, `MenuBuilder::build_with_state` and `Menu::state`
+ - `Menu`, `Select` and `NavigationItem` are now generic over their string parameters
+ - `Menu::add_items` now accepts owning collections (e.g. `Vec`)
 
 0.3.1 (2023-08-06)
 ==================
