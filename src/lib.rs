@@ -23,11 +23,11 @@ use crate::{
 use core::marker::PhantomData;
 use embedded_graphics::{
     draw_target::DrawTarget,
-    geometry::{AnchorPoint, AnchorY, Size},
+    geometry::{AnchorPoint, AnchorX, AnchorY},
     mono_font::{ascii::FONT_6X10, MonoFont, MonoTextStyle},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
     prelude::{Dimensions, DrawTargetExt, Point},
-    primitives::{Line, Primitive, PrimitiveStyle, Rectangle},
+    primitives::{Line, Primitive, PrimitiveStyle},
     Drawable,
 };
 use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
@@ -532,24 +532,16 @@ where
         D: DrawTarget<Color = BinaryColor>,
     {
         let display_area = display.bounding_box();
-        let display_size = display_area.size();
 
         let header = self.header(self.title.as_ref(), display);
         header.draw(display)?;
 
-        let content_area = display_area
-            .resized_height(display_size.height - header.size().height, AnchorY::Bottom);
+        let content_area = display_area.resized_height(
+            display_area.size().height - header.size().height,
+            AnchorY::Bottom,
+        );
 
         let menu_height = content_area.size().height;
-
-        // Height of the selected menu item
-        let menuitem_height = self.items.bounds_of(self.state.selected).size().height;
-
-        let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height)).align_to(
-            &content_area,
-            horizontal::Right,
-            vertical::Top,
-        );
 
         let list_height = self.items.bounds().size().height;
         let draw_scrollbar = match self.style.scrollbar {
@@ -558,32 +550,8 @@ where
             DisplayScrollbar::Auto => list_height > menu_height,
         };
 
-        let menu_list_width = if draw_scrollbar {
-            content_area.size().width - scrollbar_area.size().width
-        } else {
-            content_area.size().width
-        };
-
-        let menu_display_area = Rectangle::new(
-            Point::zero(),
-            Size::new(menu_list_width, menu_height),
-        )
-        .align_to(&content_area, horizontal::Left, vertical::Top);
-
-        self.style.indicator.draw(
-            menuitem_height,
-            self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset
-                + header.size().height as i32,
-            self.style
-                .interaction
-                .fill_area_width(&self.state.interaction_state, menu_list_width),
-            &mut display.clipped(&menu_display_area),
-            &self.items,
-            &self.style,
-            &self.state.indicator_state,
-        )?;
-
-        if draw_scrollbar {
+        let menu_display_area = if draw_scrollbar {
+            let scrollbar_area = content_area.resized_width(2, AnchorX::Right);
             let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
 
             let scale = |value| (value * menu_height / list_height) as i32;
@@ -596,7 +564,30 @@ where
                 .into_styled(thin_stroke)
                 .translate(Point::new(1, scale(self.state.list_offset as u32)))
                 .draw(&mut scrollbar_display)?;
-        }
+
+            content_area.resized_width(
+                content_area.size().width - scrollbar_area.size().width,
+                AnchorX::Left,
+            )
+        } else {
+            content_area
+        };
+
+        let selected_menuitem_height = self.items.bounds_of(self.state.selected).size().height;
+        self.style.indicator.draw(
+            selected_menuitem_height,
+            self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset,
+            self.style.interaction.fill_area_width(
+                &self.state.interaction_state,
+                menu_display_area.size().width,
+            ),
+            &mut display
+                .clipped(&menu_display_area)
+                .cropped(&menu_display_area),
+            &self.items,
+            &self.style,
+            &self.state.indicator_state,
+        )?;
 
         Ok(())
     }
