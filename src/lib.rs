@@ -443,10 +443,12 @@ where
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let menu_title = self.header(self.title.as_ref(), display);
-        let title_height = menu_title.size().height as i32;
+        let header = self.header(self.title.as_ref(), display);
 
-        let menu_height = display_size.height as i32 - title_height;
+        let content_area = display_area
+            .resized_height(display_size.height - header.size().height, AnchorY::Bottom);
+
+        let menu_height = content_area.size().height as i32;
 
         // Reset positions
         self.items
