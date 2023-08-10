@@ -23,7 +23,7 @@ use crate::{
 use core::marker::PhantomData;
 use embedded_graphics::{
     draw_target::DrawTarget,
-    geometry::Size,
+    geometry::{AnchorPoint, Size},
     mono_font::{ascii::FONT_6X10, MonoFont, MonoTextStyle},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
     prelude::{Dimensions, DrawTargetExt, Point},
@@ -419,9 +419,10 @@ where
                 TextBoxStyle::with_height_mode(HeightMode::FitToText),
             ))
             .append(
+                // Bottom border
                 Line::new(
-                    Point::zero(),
-                    Point::new(display_area.bottom_right().unwrap().x, 0),
+                    display_area.top_left,
+                    display_area.anchor_point(AnchorPoint::TopRight),
                 )
                 .into_styled(thin_stroke),
             ),
