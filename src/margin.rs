@@ -5,13 +5,28 @@ use embedded_graphics::{
 };
 use embedded_layout::View;
 
-#[derive(Clone, Copy)]
-pub struct Margin<V: View> {
-    pub inner: V,
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct Insets {
+    pub left: i32,
     pub top: i32,
     pub right: i32,
     pub bottom: i32,
-    pub left: i32,
+}
+
+impl Insets {
+    pub fn grow(self, rect: Rectangle) -> Rectangle {
+        let bottom_right = rect.bottom_right().unwrap_or(rect.top_left);
+        Rectangle::with_corners(
+            Point::new(rect.top_left.x - self.left, rect.top_left.y - self.top),
+            Point::new(bottom_right.x + self.right, bottom_right.y + self.bottom),
+        )
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Margin<V: View> {
+    pub inner: V,
+    pub insets: Insets,
 }
 
 pub trait MarginExt: View + Sized {
@@ -23,19 +38,21 @@ where
     T: View,
 {
     fn with_margin(self, top: i32, right: i32, bottom: i32, left: i32) -> Margin<Self> {
-        Margin::new(self, top, right, bottom, left)
+        Margin::new(
+            self,
+            Insets {
+                top,
+                right,
+                bottom,
+                left,
+            },
+        )
     }
 }
 
 impl<V: View> Margin<V> {
-    pub fn new(inner: V, top: i32, right: i32, bottom: i32, left: i32) -> Self {
-        Self {
-            inner,
-            top,
-            right,
-            bottom,
-            left,
-        }
+    pub fn new(inner: V, insets: Insets) -> Self {
+        Self { inner, insets }
     }
 }
 
@@ -49,11 +66,7 @@ impl<V: View> View for Margin<V> {
     /// Returns the bounding box of the `View` as a `Rectangle`
     fn bounds(&self) -> Rectangle {
         let bounds = self.inner.bounds();
-        let bottom_right = bounds.bottom_right().unwrap_or(bounds.top_left);
-        Rectangle::with_corners(
-            Point::new(bounds.top_left.x - self.left, bounds.top_left.y - self.top),
-            Point::new(bottom_right.x + self.right, bottom_right.y + self.bottom),
-        )
+        self.insets.grow(bounds)
     }
 }
 

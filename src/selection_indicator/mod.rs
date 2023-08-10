@@ -1,6 +1,7 @@
 use crate::{
     adapters::invert::BinaryColorDrawTargetExt, collection::MenuItemCollection,
-    interaction::InteractionController, selection_indicator::style::IndicatorStyle, MenuStyle,
+    interaction::InteractionController, margin::Insets, selection_indicator::style::IndicatorStyle,
+    MenuStyle,
 };
 use embedded_graphics::{
     pixelcolor::BinaryColor,
@@ -9,25 +10,6 @@ use embedded_graphics::{
 };
 
 pub mod style;
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Insets {
-    pub left: i32,
-    pub top: i32,
-    pub right: i32,
-    pub bottom: i32,
-}
-
-impl Insets {
-    pub fn new(left: i32, top: i32, right: i32, bottom: i32) -> Self {
-        Self {
-            left,
-            top,
-            right,
-            bottom,
-        }
-    }
-}
 
 pub trait SelectionIndicatorController: Copy {
     type State: Default + Copy;

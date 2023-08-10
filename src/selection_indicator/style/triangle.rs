@@ -19,7 +19,12 @@ impl IndicatorStyle for Triangle {
     type State = ();
 
     fn margin(&self, _state: &Self::State, height: u32) -> Insets {
-        Insets::new(height as i32 / 2 + 1, 0, 0, 0)
+        Insets {
+            left: height as i32 / 2 + 1,
+            top: 0,
+            right: 0,
+            bottom: 0,
+        }
     }
 
     fn shape(&self, _state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape {

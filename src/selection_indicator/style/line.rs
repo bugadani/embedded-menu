@@ -15,7 +15,12 @@ impl IndicatorStyle for Line {
     type State = ();
 
     fn margin(&self, _state: &Self::State, _height: u32) -> Insets {
-        Insets::new(2, 0, 0, 0)
+        Insets {
+            left: 2,
+            top: 0,
+            right: 0,
+            bottom: 0,
+        }
     }
 
     fn shape(&self, _state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape {

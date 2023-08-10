@@ -83,7 +83,7 @@ impl MenuLine {
         let text_style = style.text_style();
 
         let mut inner_bounds = self.bounds.inner.bounds();
-        inner_bounds.size.width = display_area.size.width - self.bounds.left as u32;
+        inner_bounds.size.width = display_area.size.width - self.bounds.insets.left as u32;
         TextBox::with_textbox_style(
             value_text,
             inner_bounds,

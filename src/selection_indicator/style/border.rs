@@ -15,7 +15,12 @@ impl IndicatorStyle for Border {
     type State = ();
 
     fn margin(&self, _state: &Self::State, _height: u32) -> Insets {
-        Insets::new(2, 1, 1, 1)
+        Insets {
+            left: 2,
+            top: 1,
+            right: 1,
+            bottom: 1,
+        }
     }
 
     fn shape(&self, _state: &Self::State, bounds: Rectangle, _fill_width: u32) -> Self::Shape {
