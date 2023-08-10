@@ -23,7 +23,7 @@ use crate::{
 use core::marker::PhantomData;
 use embedded_graphics::{
     draw_target::DrawTarget,
-    geometry::{AnchorPoint, Size},
+    geometry::{AnchorPoint, AnchorY, Size},
     mono_font::{ascii::FONT_6X10, MonoFont, MonoTextStyle},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
     prelude::{Dimensions, DrawTargetExt, Point},
@@ -404,17 +404,13 @@ where
         C: 't,
     {
         let display_area = display.bounding_box();
-        let display_size = display_area.size();
 
         let text_style = self.style.title_style();
         let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
         LinearLayout::vertical(
             Chain::new(TextBox::with_textbox_style(
                 title,
-                Rectangle::new(
-                    Point::zero(),
-                    Size::new(display_size.width, text_style.font.character_size.height),
-                ),
+                display_area,
                 text_style,
                 TextBoxStyle::with_height_mode(HeightMode::FitToText),
             ))
@@ -505,15 +501,14 @@ where
 
         let header = self.header(self.items.title_of(self.state.selected), display);
 
-        let size = header.size();
+        let content_area = display_area
+            .resized_height(display_size.height - header.size().height, AnchorY::Bottom);
+
         LinearLayout::vertical(
             Chain::new(header).append(
                 TextBox::new(
                     self.items.details_of(self.state.selected),
-                    Rectangle::new(
-                        Point::zero(),
-                        Size::new(size.width, display_size.height - size.height),
-                    ),
+                    content_area,
                     self.style.text_style(),
                 )
                 .with_margin(0, 0, 0, 1),
@@ -539,18 +534,21 @@ where
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let menu_title = self.header(self.title.as_ref(), display);
-        menu_title.draw(display)?;
+        let header = self.header(self.title.as_ref(), display);
+        header.draw(display)?;
 
-        let menu_height = display_size.height - menu_title.size().height;
+        let content_area = display_area
+            .resized_height(display_size.height - header.size().height, AnchorY::Bottom);
+
+        let menu_height = content_area.size().height;
 
         // Height of the selected menu item
         let menuitem_height = self.items.bounds_of(self.state.selected).size().height;
 
         let scrollbar_area = Rectangle::new(Point::zero(), Size::new(2, menu_height)).align_to(
-            &menu_title,
+            &content_area,
             horizontal::Right,
-            vertical::TopToBottom,
+            vertical::Top,
         );
 
         let list_height = self.items.bounds().size().height;
@@ -561,21 +559,21 @@ where
         };
 
         let menu_list_width = if draw_scrollbar {
-            display_size.width - scrollbar_area.size().width
+            content_area.size().width - scrollbar_area.size().width
         } else {
-            display_size.width
+            content_area.size().width
         };
 
         let menu_display_area = Rectangle::new(
             Point::zero(),
             Size::new(menu_list_width, menu_height),
         )
-        .align_to(&menu_title, horizontal::Left, vertical::TopToBottom);
+        .align_to(&content_area, horizontal::Left, vertical::Top);
 
         self.style.indicator.draw(
             menuitem_height,
             self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset
-                + menu_title.size().height as i32,
+                + header.size().height as i32,
             self.style
                 .interaction
                 .fill_area_width(&self.state.interaction_state, menu_list_width),
