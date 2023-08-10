@@ -448,8 +448,6 @@ where
         let content_area = display_area
             .resized_height(display_size.height - header.size().height, AnchorY::Bottom);
 
-        let menu_height = content_area.size().height as i32;
-
         // Reset positions
         self.items
             .align_to_mut(&display_area, horizontal::Left, vertical::Top);
@@ -466,10 +464,31 @@ where
             );
         }
 
+        let menu_height = content_area.size().height;
+
+        let list_height = self.items.bounds().size().height;
+        let draw_scrollbar = match self.style.scrollbar {
+            DisplayScrollbar::Display => true,
+            DisplayScrollbar::Hide => false,
+            DisplayScrollbar::Auto => list_height > menu_height,
+        };
+
+        let menu_display_area = if draw_scrollbar {
+            let scrollbar_area = content_area.resized_width(2, AnchorX::Right);
+
+            content_area.resized_width(
+                content_area.size().width - scrollbar_area.size().width,
+                AnchorX::Left,
+            )
+        } else {
+            content_area
+        };
+
         self.style.indicator.update(
-            self.style
-                .interaction
-                .fill_area_width(&self.state.interaction_state, display_size.width),
+            self.style.interaction.fill_area_width(
+                &self.state.interaction_state,
+                menu_display_area.size().width,
+            ),
             &mut self.state.indicator_state,
         );
 
@@ -484,7 +503,7 @@ where
 
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
-            (top_distance + indicator_height - menu_height).max(0)
+            (top_distance + indicator_height - menu_height as i32).max(0)
         } else {
             // We need to move up
             top_distance
