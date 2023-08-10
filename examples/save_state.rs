@@ -77,7 +77,7 @@ fn do_loop(
             .take(item_count)
             .collect::<Vec<_>>();
 
-        let mut menu = Menu::with_style(unsafe { std::mem::transmute(title.as_str()) }, style)
+        let mut menu = Menu::with_style(&title, style)
             .add_item(
                 NavigationItem::new("Foo", MenuEvent::Nothing)
                     .with_marker(">")

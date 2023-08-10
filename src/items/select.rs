@@ -1,7 +1,7 @@
 use embedded_graphics::{
     pixelcolor::Rgb888,
     prelude::{DrawTarget, PixelColor, Point},
-    primitives::{Rectangle, StyledDrawable},
+    primitives::Rectangle,
 };
 use embedded_layout::View;
 
@@ -139,6 +139,22 @@ where
 
         self.line = MenuLine::new(longest_str, style);
     }
+
+    fn draw_styled<C, ST, IT, P, DIS>(
+        &self,
+        style: &MenuStyle<C, ST, IT, P>,
+        display: &mut DIS,
+    ) -> Result<(), DIS::Error>
+    where
+        C: PixelColor + From<Rgb888>,
+        ST: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+        DIS: DrawTarget<Color = C>,
+    {
+        self.line
+            .draw_styled(self.title_text.as_ref(), self.value.name(), style, display)
+    }
 }
 
 impl<T, D, R, S> View for Select<T, D, R, S>
@@ -153,32 +169,5 @@ where
 
     fn bounds(&self) -> Rectangle {
         self.line.bounds()
-    }
-}
-
-impl<C, ST, IT, P, T, D, R, S> StyledDrawable<MenuStyle<C, ST, IT, P>> for Select<T, D, R, S>
-where
-    C: PixelColor + From<Rgb888>,
-    ST: IndicatorStyle,
-    IT: InteractionController,
-    P: SelectionIndicatorController,
-
-    T: AsRef<str>,
-    D: AsRef<str>,
-    S: SelectValue,
-{
-    type Color = C;
-    type Output = ();
-
-    fn draw_styled<DIS>(
-        &self,
-        style: &MenuStyle<C, ST, IT, P>,
-        display: &mut DIS,
-    ) -> Result<Self::Output, DIS::Error>
-    where
-        DIS: DrawTarget<Color = Self::Color>,
-    {
-        self.line
-            .draw_styled(self.title_text.as_ref(), self.value.name(), style, display)
     }
 }

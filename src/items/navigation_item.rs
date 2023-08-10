@@ -1,7 +1,7 @@
 use embedded_graphics::{
     pixelcolor::Rgb888,
     prelude::{DrawTarget, PixelColor, Point},
-    primitives::{Rectangle, StyledDrawable},
+    primitives::Rectangle,
 };
 use embedded_layout::View;
 
@@ -67,6 +67,26 @@ where
     {
         self.line = MenuLine::new(self.marker.as_ref(), style);
     }
+
+    fn draw_styled<C, S, IT, P, DIS>(
+        &self,
+        style: &MenuStyle<C, S, IT, P>,
+        display: &mut DIS,
+    ) -> Result<(), DIS::Error>
+    where
+        C: PixelColor + From<Rgb888>,
+        S: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+        DIS: DrawTarget<Color = C>,
+    {
+        self.line.draw_styled(
+            self.title_text.as_ref(),
+            self.marker.as_ref(),
+            style,
+            display,
+        )
+    }
 }
 
 impl<T, R> NavigationItem<T, &'static str, &'static str, R>
@@ -126,37 +146,5 @@ where
 
     fn bounds(&self) -> Rectangle {
         self.line.bounds()
-    }
-}
-
-impl<C, S, IT, P, T, D, M, R> StyledDrawable<MenuStyle<C, S, IT, P>> for NavigationItem<T, D, M, R>
-where
-    C: PixelColor + From<Rgb888>,
-    S: IndicatorStyle,
-    IT: InteractionController,
-    P: SelectionIndicatorController,
-
-    T: AsRef<str>,
-    D: AsRef<str>,
-    M: AsRef<str>,
-    R: Copy,
-{
-    type Color = C;
-    type Output = ();
-
-    fn draw_styled<DIS>(
-        &self,
-        style: &MenuStyle<C, S, IT, P>,
-        display: &mut DIS,
-    ) -> Result<Self::Output, DIS::Error>
-    where
-        DIS: DrawTarget<Color = Self::Color>,
-    {
-        self.line.draw_styled(
-            self.title_text.as_ref(),
-            self.marker.as_ref(),
-            style,
-            display,
-        )
     }
 }

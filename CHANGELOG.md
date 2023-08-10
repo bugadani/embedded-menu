@@ -6,6 +6,7 @@ Unreleased (??)
  - Added `MenuState`, `MenuBuilder::build_with_state` and `Menu::state`
  - `Menu`, `Select` and `NavigationItem` are now generic over their string parameters
  - `Menu::add_items` now accepts owning collections (e.g. `Vec`)
+ - Replaced `StyledDrawable` wtih `MenuItem::draw_styled` and `MenuItemCollection::draw_styled`
 
 0.3.1 (2023-08-06)
 ==================
