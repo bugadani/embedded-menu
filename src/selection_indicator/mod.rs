@@ -1,11 +1,11 @@
 use crate::{
-    adapters::invert::BinaryColorDrawTargetExt, interaction::InteractionController,
-    selection_indicator::style::IndicatorStyle, MenuStyle,
+    adapters::invert::BinaryColorDrawTargetExt, collection::MenuItemCollection,
+    interaction::InteractionController, selection_indicator::style::IndicatorStyle, MenuStyle,
 };
 use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::{DrawTarget, DrawTargetExt, Point, Size},
-    primitives::{Rectangle, StyledDrawable},
+    primitives::Rectangle,
 };
 
 pub mod style;
@@ -179,13 +179,13 @@ where
         (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
     }
 
-    pub fn draw<D, IT>(
+    pub fn draw<R, D, IT>(
         &self,
         selected_height: u32,
         screen_offset: i32,
         fill_width: u32,
         display: &mut D,
-        items: &impl StyledDrawable<MenuStyle<BinaryColor, S, IT, P>, Color = BinaryColor, Output = ()>,
+        items: &impl MenuItemCollection<R>,
         style: &MenuStyle<BinaryColor, S, IT, P>,
         state: &State<P, S>,
     ) -> Result<(), D::Error>

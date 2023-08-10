@@ -3,11 +3,15 @@ use core::marker::PhantomData;
 use embedded_graphics::{
     pixelcolor::Rgb888,
     prelude::{DrawTarget, PixelColor, Point},
-    primitives::{Rectangle, StyledDrawable},
+    primitives::Rectangle,
 };
 use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
 
-use crate::{Marker, MenuItem};
+use crate::{
+    interaction::InteractionController,
+    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    Marker, MenuItem, MenuStyle,
+};
 
 /// Menu-related extensions for object chain elements
 pub trait MenuItemCollection<R> {
@@ -16,6 +20,17 @@ pub trait MenuItemCollection<R> {
     fn details_of(&self, nth: usize) -> &str;
     fn interact_with(&mut self, nth: usize) -> R;
     fn count(&self) -> usize;
+    fn draw_styled<C, S, IT, P, DIS>(
+        &self,
+        style: &MenuStyle<C, S, IT, P>,
+        display: &mut DIS,
+    ) -> Result<(), DIS::Error>
+    where
+        C: PixelColor + From<Rgb888>,
+        S: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+        DIS: DrawTarget<Color = C>;
 }
 
 // Treat any MenuItem impl as a 1-element collection
@@ -45,6 +60,21 @@ where
 
     fn count(&self) -> usize {
         1
+    }
+
+    fn draw_styled<C, S, IT, P, DIS>(
+        &self,
+        style: &MenuStyle<C, S, IT, P>,
+        display: &mut DIS,
+    ) -> Result<(), DIS::Error>
+    where
+        C: PixelColor + From<Rgb888>,
+        S: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+        DIS: DrawTarget<Color = C>,
+    {
+        MenuItem::draw_styled(self, style, display)
     }
 }
 
@@ -101,6 +131,26 @@ where
     fn count(&self) -> usize {
         self.items.as_ref().len()
     }
+
+    fn draw_styled<PC, S, IT, P, DIS>(
+        &self,
+        style: &MenuStyle<PC, S, IT, P>,
+        display: &mut DIS,
+    ) -> Result<(), DIS::Error>
+    where
+        PC: PixelColor + From<Rgb888>,
+        S: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+
+        DIS: DrawTarget<Color = PC>,
+    {
+        for item in self.items.as_ref() {
+            item.draw_styled(style, display)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl<C, I, R> View for MenuItems<C, I, R>
@@ -148,28 +198,6 @@ where
     }
 }
 
-impl<IC, I, C, S, R> StyledDrawable<S> for MenuItems<IC, I, R>
-where
-    IC: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R> + StyledDrawable<S, Color = C, Output = ()>,
-    C: PixelColor + From<Rgb888>,
-    R: Copy,
-{
-    type Color = C;
-    type Output = ();
-
-    fn draw_styled<D>(&self, style: &S, display: &mut D) -> Result<Self::Output, D::Error>
-    where
-        D: DrawTarget<Color = Self::Color>,
-    {
-        for view in self.items.as_ref().iter() {
-            view.draw_styled(style, display)?;
-        }
-
-        Ok(())
-    }
-}
-
 impl<I, R> MenuItemCollection<R> for Chain<I>
 where
     I: MenuItemCollection<R>,
@@ -192,6 +220,22 @@ where
 
     fn count(&self) -> usize {
         self.object.count()
+    }
+
+    fn draw_styled<PC, S, IT, P, DIS>(
+        &self,
+        style: &MenuStyle<PC, S, IT, P>,
+        display: &mut DIS,
+    ) -> Result<(), DIS::Error>
+    where
+        PC: PixelColor + From<Rgb888>,
+        S: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+
+        DIS: DrawTarget<Color = PC>,
+    {
+        self.object.draw_styled(style, display)
     }
 }
 
@@ -238,5 +282,24 @@ where
 
     fn count(&self) -> usize {
         self.object.count() + self.parent.count()
+    }
+
+    fn draw_styled<PC, S, IT, P, DIS>(
+        &self,
+        style: &MenuStyle<PC, S, IT, P>,
+        display: &mut DIS,
+    ) -> Result<(), DIS::Error>
+    where
+        PC: PixelColor + From<Rgb888>,
+        S: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+
+        DIS: DrawTarget<Color = PC>,
+    {
+        self.parent.draw_styled(style, display)?;
+        self.object.draw_styled(style, display)?;
+
+        Ok(())
     }
 }

@@ -76,9 +76,13 @@ fn main() -> Result<(), core::convert::Infallible> {
                 _ => None,
             };
 
-            let Some(interaction) = interaction else { continue; };
+            let Some(interaction) = interaction else {
+                continue;
+            };
             let output = menu.interact(interaction);
-            let Some(output) = output else { continue; };
+            let Some(output) = output else {
+                continue;
+            };
 
             match output {
                 NavEvents::Quit => break 'running,

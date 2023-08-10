@@ -6,7 +6,6 @@ pub mod collection;
 pub mod interaction;
 pub mod items;
 pub mod selection_indicator;
-pub mod styled;
 
 mod margin;
 
@@ -20,7 +19,6 @@ use crate::{
         AnimatedPosition, Indicator, SelectionIndicatorController, State as IndicatorState,
         StaticPosition,
     },
-    styled::StyledMenuItem,
 };
 use core::marker::PhantomData;
 use embedded_graphics::{
@@ -54,6 +52,18 @@ pub trait MenuItem<D>: Marker + View {
     fn title(&self) -> &str;
     fn details(&self) -> &str;
     fn value(&self) -> &str;
+    fn draw_styled<C, S, IT, P, DIS>(
+        &self,
+        style: &MenuStyle<C, S, IT, P>,
+        display: &mut DIS,
+    ) -> Result<(), DIS::Error>
+    where
+        C: PixelColor + From<Rgb888>,
+        S: IndicatorStyle,
+        IT: InteractionController,
+        P: SelectionIndicatorController,
+
+        DIS: DrawTarget<Color = C>;
 }
 
 #[derive(Clone, Copy)]
@@ -380,7 +390,7 @@ impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
 where
     T: AsRef<str>,
     IT: InteractionController,
-    VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
+    VG: ViewGroup + MenuItemCollection<R>,
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -516,7 +526,7 @@ impl<T, IT, VG, R, P, S> Menu<T, IT, VG, R, BinaryColor, P, S>
 where
     T: AsRef<str>,
     IT: InteractionController,
-    VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
+    VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -596,7 +606,7 @@ impl<T, IT, VG, R, P, S> Drawable for Menu<T, IT, VG, R, BinaryColor, P, S>
 where
     T: AsRef<str>,
     IT: InteractionController,
-    VG: ViewGroup + MenuItemCollection<R> + StyledMenuItem<BinaryColor, S, IT, P>,
+    VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
