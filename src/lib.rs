@@ -502,10 +502,9 @@ where
 
         let header = self.header(self.items.title_of(self.state.selected), display);
 
-        // TODO: embedded-layout should allow appending views to linear layout at this point
         let size = header.size();
         LinearLayout::vertical(
-            header.append(
+            Chain::new(header).append(
                 TextBox::new(
                     self.items.details_of(self.state.selected),
                     Rectangle::new(
