@@ -27,7 +27,7 @@ use embedded_graphics::{
     mono_font::{ascii::FONT_6X10, MonoFont, MonoTextStyle},
     pixelcolor::{BinaryColor, PixelColor, Rgb888},
     prelude::{Dimensions, DrawTargetExt, Point},
-    primitives::{Line, Primitive, PrimitiveStyle, Rectangle, Styled},
+    primitives::{Line, Primitive, PrimitiveStyle, Rectangle},
     Drawable,
 };
 use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
@@ -399,7 +399,10 @@ where
         &self,
         title: &'t str,
         display: &impl Dimensions,
-    ) -> Link<Styled<Line, PrimitiveStyle<C>>, Chain<TextBox<'t, MonoTextStyle<'static, C>>>> {
+    ) -> impl View + 't + Drawable<Color = C>
+    where
+        C: 't,
+    {
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
@@ -424,7 +427,6 @@ where
             ),
         )
         .arrange()
-        .into_inner()
     }
 
     pub fn update(&mut self, display: &impl Dimensions) {
@@ -536,8 +538,6 @@ where
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
-
         let menu_title = self.header(self.title.as_ref(), display);
         menu_title.draw(display)?;
 
@@ -585,6 +585,8 @@ where
         )?;
 
         if draw_scrollbar {
+            let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
+
             let scale = |value| (value * menu_height / list_height) as i32;
 
             let scrollbar_height = scale(menu_height).max(1);
