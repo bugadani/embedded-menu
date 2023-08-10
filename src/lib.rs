@@ -399,15 +399,19 @@ where
         &self,
         title: &'t str,
         display: &impl Dimensions,
-    ) -> impl View + 't + Drawable<Color = C>
+    ) -> Option<impl View + 't + Drawable<Color = C>>
     where
         C: 't,
     {
+        if title.is_empty() {
+            return None;
+        }
+
         let display_area = display.bounding_box();
 
         let text_style = self.style.title_style();
         let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
-        LinearLayout::vertical(
+        let header = LinearLayout::vertical(
             Chain::new(TextBox::with_textbox_style(
                 title,
                 display_area,
@@ -423,7 +427,9 @@ where
                 .into_styled(thin_stroke),
             ),
         )
-        .arrange()
+        .arrange();
+
+        Some(header)
     }
 
     pub fn update(&mut self, display: &impl Dimensions) {
@@ -443,10 +449,11 @@ where
         let display_area = display.bounding_box();
         let display_size = display_area.size();
 
-        let header = self.header(self.title.as_ref(), display);
-
-        let content_area = display_area
-            .resized_height(display_size.height - header.size().height, AnchorY::Bottom);
+        let content_area = if let Some(header) = self.header(self.title.as_ref(), display) {
+            display_area.resized_height(display_size.height - header.size().height, AnchorY::Bottom)
+        } else {
+            display_area
+        };
 
         // Reset positions
         self.items
@@ -521,22 +528,28 @@ where
         let display_size = display_area.size();
 
         let header = self.header(self.items.title_of(self.state.selected), display);
+        let content_area = if let Some(ref header) = header {
+            display_area.resized_height(display_size.height - header.size().height, AnchorY::Bottom)
+        } else {
+            display_area
+        };
 
-        let content_area = display_area
-            .resized_height(display_size.height - header.size().height, AnchorY::Bottom);
-
-        LinearLayout::vertical(
-            Chain::new(header).append(
-                TextBox::new(
-                    self.items.details_of(self.state.selected),
-                    content_area,
-                    self.style.text_style(),
-                )
-                .with_margin(0, 0, 0, 1),
-            ),
+        let details = TextBox::new(
+            self.items.details_of(self.state.selected),
+            content_area,
+            self.style.text_style(),
         )
-        .arrange()
-        .draw(display)
+        .with_margin(0, 0, 0, 1);
+
+        if let Some(header) = header {
+            LinearLayout::vertical(Chain::new(header).append(details))
+                .arrange()
+                .draw(display)?;
+        } else {
+            details.draw(display)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -555,12 +568,15 @@ where
         let display_area = display.bounding_box();
 
         let header = self.header(self.title.as_ref(), display);
-        header.draw(display)?;
-
-        let content_area = display_area.resized_height(
-            display_area.size().height - header.size().height,
-            AnchorY::Bottom,
-        );
+        let content_area = if let Some(header) = header {
+            header.draw(display)?;
+            display_area.resized_height(
+                display_area.size().height - header.size().height,
+                AnchorY::Bottom,
+            )
+        } else {
+            display_area
+        };
 
         let menu_height = content_area.size().height;
 
