@@ -368,17 +368,19 @@ where
                 let selected = (self.state.selected + 1) % count;
 
                 self.state.change_selected_item(selected);
-                None
             }
             Some(InteractionType::Previous) => {
                 let selected = self.state.selected.checked_sub(1).unwrap_or(count - 1);
 
                 self.state.change_selected_item(selected);
-                None
             }
-            Some(InteractionType::Select) => Some(self.items.interact_with(self.state.selected)),
-            _ => None,
+            Some(InteractionType::Select) => {
+                return Some(self.items.interact_with(self.state.selected));
+            }
+            None => {}
         }
+
+        None
     }
 
     pub fn state(&self) -> MenuState<IT, P, S> {
