@@ -359,25 +359,22 @@ where
         }
 
         let count = self.items.count();
-        match self
+        if let Some(interaction) = self
             .style
             .interaction
             .update(&mut self.state.interaction_state, input)
         {
-            Some(InteractionType::Next) => {
-                let selected = (self.state.selected + 1) % count;
+            let selected = self.style.interaction.select(
+                &mut self.state.interaction_state,
+                self.state.selected,
+                count,
+                interaction,
+            );
 
-                self.state.change_selected_item(selected);
-            }
-            Some(InteractionType::Previous) => {
-                let selected = self.state.selected.checked_sub(1).unwrap_or(count - 1);
-
-                self.state.change_selected_item(selected);
-            }
-            Some(InteractionType::Select) => {
+            self.state.change_selected_item(selected);
+            if interaction == InteractionType::Select {
                 return Some(self.items.interact_with(self.state.selected));
             }
-            None => {}
         }
 
         None
