@@ -6,7 +6,7 @@ use embedded_graphics::{
 use embedded_layout::View;
 
 use crate::{
-    interaction::InteractionController,
+    interaction::InputAdapter,
     items::MenuLine,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     Marker, MenuItem, MenuStyle,
@@ -62,7 +62,7 @@ where
     where
         C: PixelColor,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
     {
         self.line = MenuLine::new(self.marker.as_ref(), style);
@@ -76,7 +76,7 @@ where
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>,
     {

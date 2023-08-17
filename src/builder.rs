@@ -1,6 +1,6 @@
 use crate::{
     collection::{MenuItemCollection, MenuItems},
-    interaction::InteractionController,
+    interaction::{InputAdapter, InputState},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     Menu, MenuDisplayMode, MenuItem, MenuState, MenuStyle, NoItems,
 };
@@ -13,7 +13,7 @@ use embedded_layout::{
 pub struct MenuBuilder<T, IT, LL, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     C: PixelColor,
     S: IndicatorStyle,
     P: SelectionIndicatorController,
@@ -29,7 +29,7 @@ where
     T: AsRef<str>,
     C: PixelColor,
     S: IndicatorStyle,
-    IT: InteractionController,
+    IT: InputAdapter,
     P: SelectionIndicatorController,
 {
     pub const fn new(title: T, style: MenuStyle<C, S, IT, P>) -> Self {
@@ -45,7 +45,7 @@ where
 impl<T, IT, R, C, P, S> MenuBuilder<T, IT, NoItems, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -86,7 +86,7 @@ where
 impl<T, IT, CE, R, C, P, S> MenuBuilder<T, IT, Chain<CE>, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     Chain<CE>: MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
@@ -131,7 +131,7 @@ where
 impl<T, IT, I, CE, R, C, P, S> MenuBuilder<T, IT, Link<I, CE>, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     Link<I, CE>: MenuItemCollection<R> + ChainElement,
     CE: MenuItemCollection<R> + ChainElement,
     C: PixelColor,
@@ -177,7 +177,7 @@ where
 impl<T, IT, VG, R, C, P, S> MenuBuilder<T, IT, VG, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     VG: ViewGroup + MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
@@ -193,6 +193,7 @@ where
             display_mode: MenuDisplayMode::List(default_timeout),
             interaction_state: Default::default(),
             indicator_state: Default::default(),
+            last_input_state: InputState::Idle,
         })
     }
 

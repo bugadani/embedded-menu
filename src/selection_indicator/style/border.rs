@@ -5,7 +5,13 @@ use embedded_graphics::{
     Drawable,
 };
 
-use crate::selection_indicator::{style::IndicatorStyle, Insets};
+use crate::{
+    interaction::InputState,
+    selection_indicator::{
+        style::{interpolate, IndicatorStyle},
+        Insets,
+    },
+};
 
 #[derive(Clone, Copy)]
 pub struct Border;
@@ -30,13 +36,19 @@ impl IndicatorStyle for Border {
     fn draw<D>(
         &self,
         _state: &Self::State,
-        fill_width: u32,
+        input_state: InputState,
         display: &mut D,
     ) -> Result<u32, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
         let display_area = display.bounding_box();
+
+        let fill_width = if let InputState::InProgress(progress) = input_state {
+            interpolate(progress as u32, 0, 255, 0, display_area.size.width)
+        } else {
+            0
+        };
 
         display_area
             .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))

@@ -8,10 +8,16 @@ pub enum InteractionType {
     Select,
 }
 
-pub trait InteractionController: Copy {
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum InputState {
+    Idle,
+    InProgress(u8),
+    Active(InteractionType),
+}
+
+pub trait InputAdapter: Copy {
     type Input;
     type State: Default + Copy;
 
-    fn fill_area_width(&self, state: &Self::State, max: u32) -> u32;
-    fn update(&self, state: &mut Self::State, action: Self::Input) -> Option<InteractionType>;
+    fn handle_input(&self, state: &mut Self::State, action: Self::Input) -> InputState;
 }

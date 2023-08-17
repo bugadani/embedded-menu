@@ -6,7 +6,7 @@ use embedded_graphics::{
 use embedded_layout::View;
 
 use crate::{
-    interaction::InteractionController,
+    interaction::InputAdapter,
     items::MenuLine,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     Marker, MenuItem, MenuStyle,
@@ -123,7 +123,7 @@ where
     where
         C: PixelColor,
         ST: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
     {
         let initial = self.value;
@@ -148,7 +148,7 @@ where
     where
         C: PixelColor + From<Rgb888>,
         ST: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>,
     {

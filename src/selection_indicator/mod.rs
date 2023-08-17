@@ -1,6 +1,9 @@
 use crate::{
-    adapters::invert::BinaryColorDrawTargetExt, collection::MenuItemCollection,
-    interaction::InteractionController, margin::Insets, selection_indicator::style::IndicatorStyle,
+    adapters::invert::BinaryColorDrawTargetExt,
+    collection::MenuItemCollection,
+    interaction::{InputAdapter, InputState},
+    margin::Insets,
+    selection_indicator::style::IndicatorStyle,
     MenuStyle,
 };
 use embedded_graphics::{
@@ -151,9 +154,9 @@ where
         self.controller.jump_to_target(&mut state.position);
     }
 
-    pub fn update(&self, fill_width: u32, state: &mut State<P, S>) {
+    pub fn update(&self, input_state: InputState, state: &mut State<P, S>) {
         self.controller.update(&mut state.position);
-        self.style.update(&mut state.state, fill_width);
+        self.style.update(&mut state.state, input_state);
     }
 
     pub fn item_height(&self, menuitem_height: u32, state: &State<P, S>) -> u32 {
@@ -165,7 +168,7 @@ where
         &self,
         selected_height: u32,
         screen_offset: i32,
-        fill_width: u32,
+        input_state: InputState,
         display: &mut D,
         items: &impl MenuItemCollection<R>,
         style: &MenuStyle<BinaryColor, S, IT, P>,
@@ -173,7 +176,7 @@ where
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
-        IT: InteractionController,
+        IT: InputAdapter,
     {
         let Insets {
             left: margin_left,
@@ -184,7 +187,7 @@ where
 
         let fill_width = self.style.draw(
             &state.state,
-            fill_width,
+            input_state,
             &mut display.cropped(&Rectangle::new(
                 Point::new(0, screen_offset),
                 Size::new(

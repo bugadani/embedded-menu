@@ -1,4 +1,4 @@
-use crate::interaction::{InteractionController, InteractionType};
+use crate::interaction::{InputAdapter, InputState, InteractionType};
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct State {
@@ -23,50 +23,51 @@ pub struct SingleTouch {
     pub max_time: u32,
 }
 
-impl InteractionController for SingleTouch {
+fn progress(current: u32, target: u32) -> u8 {
+    if current < target {
+        let time = current as f32 / (target as f32 * 0.9);
+
+        ((time * (255 - 1) as f32) as u32).max(0) as u8
+    } else {
+        0
+    }
+}
+impl InputAdapter for SingleTouch {
     type Input = bool;
     type State = State;
 
-    fn fill_area_width(&self, state: &Self::State, max: u32) -> u32 {
-        if self.ignore_time <= state.interaction_time && state.interaction_time < self.max_time {
-            // Draw indicator bar
-            let time = (state.interaction_time - self.ignore_time) as f32
-                / ((self.max_time - self.ignore_time) as f32 * 0.9);
-
-            ((time * (max - 1) as f32) as u32).max(0)
-        } else {
-            // Don't draw anything
-            0
-        }
-    }
-
-    fn update(&self, state: &mut Self::State, action: Self::Input) -> Option<InteractionType> {
+    fn handle_input(&self, state: &mut Self::State, action: Self::Input) -> InputState {
         if !state.was_released {
             if action {
-                return None;
+                return InputState::Idle;
             }
             state.was_released = true;
         }
 
         if action {
             state.interaction_time = state.interaction_time.saturating_add(1);
-            if state.interaction_time < self.max_time {
-                None
+            if state.interaction_time <= self.ignore_time {
+                InputState::Idle
+            } else if state.interaction_time < self.max_time {
+                InputState::InProgress(progress(
+                    state.interaction_time - self.ignore_time,
+                    self.max_time - self.ignore_time,
+                ))
             } else {
                 state.interacted_before_release = true;
                 state.interaction_time = 0;
-                Some(InteractionType::Select)
+                InputState::Active(InteractionType::Select)
             }
         } else {
             let time = core::mem::replace(&mut state.interaction_time, 0);
 
             if self.debounce_time < time && time < self.max_time && !state.interacted_before_release
             {
-                Some(InteractionType::Next)
+                InputState::Active(InteractionType::Next)
             } else {
                 // Already interacted before releasing, ignore and reset.
                 state.interacted_before_release = false;
-                None
+                InputState::Idle
             }
         }
     }
@@ -74,7 +75,9 @@ impl InteractionController for SingleTouch {
 
 #[cfg(test)]
 mod test {
-    use crate::interaction::{single_touch::SingleTouch, InteractionController, InteractionType};
+    use crate::interaction::{
+        single_touch::SingleTouch, InputAdapter, InputState, InteractionType,
+    };
 
     #[test]
     fn test_interaction() {
@@ -86,60 +89,78 @@ mod test {
         };
 
         let expectations: [&[_]; 6] = [
-            &[(5, false, None)],
+            &[
+                (false, InputState::Idle),
+                (false, InputState::Idle),
+                (false, InputState::Idle),
+                (false, InputState::Idle),
+                (false, InputState::Idle),
+                (false, InputState::Idle),
+            ],
             // repeated short pulse ignored
             &[
-                (1, true, None),
-                (1, false, None),
-                (1, true, None),
-                (1, false, None),
-                (1, true, None),
-                (1, false, None),
+                (true, InputState::Idle),
+                (false, InputState::Idle),
+                (true, InputState::Idle),
+                (false, InputState::Idle),
+                (true, InputState::Idle),
+                (false, InputState::Idle),
             ],
             // longer pulse recongised as Next event on falling edge
             &[
-                (1, false, None),
-                (2, true, None),
-                (1, false, Some(InteractionType::Next)),
+                (false, InputState::Idle),
+                (true, InputState::Idle),
+                (true, InputState::InProgress(70)),
+                (false, InputState::Active(InteractionType::Next)),
             ],
             &[
-                (1, false, None),
-                (3, true, None),
-                (1, false, Some(InteractionType::Next)),
+                (false, InputState::Idle),
+                (true, InputState::Idle),
+                (true, InputState::InProgress(70)),
+                (true, InputState::InProgress(141)),
+                (false, InputState::Active(InteractionType::Next)),
             ],
             // long pulse NOT recognised as Select event on falling edge
             &[
-                (1, false, None),
-                (4, true, None),
-                (1, false, Some(InteractionType::Next)),
+                (false, InputState::Idle),
+                (true, InputState::Idle),
+                (true, InputState::InProgress(70)),
+                (true, InputState::InProgress(141)),
+                (true, InputState::InProgress(211)),
+                (false, InputState::Active(InteractionType::Next)),
             ],
             // long pulse recognised as Select event immediately
             &[
-                (1, false, None),
-                (4, true, None),
-                (1, true, Some(InteractionType::Select)),
-                (4, true, None),
-                (1, true, Some(InteractionType::Select)),
-                (4, true, None),
-                (1, false, None),
+                (false, InputState::Idle),
+                (true, InputState::Idle),
+                (true, InputState::InProgress(70)),
+                (true, InputState::InProgress(141)),
+                (true, InputState::InProgress(211)),
+                (true, InputState::Active(InteractionType::Select)),
+                (true, InputState::Idle),
+                (true, InputState::InProgress(70)),
+                (true, InputState::InProgress(141)),
+                (true, InputState::InProgress(211)),
+                (true, InputState::Active(InteractionType::Select)),
+                (true, InputState::Idle),
+                (true, InputState::InProgress(70)),
+                (true, InputState::InProgress(141)),
+                (true, InputState::InProgress(211)),
+                (false, InputState::Idle),
             ],
         ];
 
         for (row, &inputs) in expectations.iter().enumerate() {
             let mut controller_state = Default::default();
 
-            let mut sample = 0;
-            for (repeat, input, expectation) in inputs.iter() {
-                for _ in 0..*repeat {
-                    let ret = controller.update(&mut controller_state, *input);
+            for (sample, (input, expectation)) in inputs.iter().enumerate() {
+                let ret = controller.handle_input(&mut controller_state, *input);
 
-                    assert_eq!(
-                        ret, *expectation,
-                        "Mismatch at row {}, sample {}",
-                        row, sample
-                    );
-                    sample += 1;
-                }
+                assert_eq!(
+                    ret, *expectation,
+                    "Mismatch at row {}, sample {}",
+                    row, sample
+                );
             }
         }
     }

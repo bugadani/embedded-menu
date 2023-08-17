@@ -497,7 +497,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
             use embedded_layout::object_chain::*;
             use embedded_menu::{
                 builder::MenuBuilder,
-                interaction::{programmed::Programmed, InteractionController},
+                interaction::{programmed::Programmed, InputAdapter},
                 items::{NavigationItem, Select},
                 selection_indicator::{
                     style::{line::Line, IndicatorStyle},
@@ -515,7 +515,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
 
             pub struct #wrapper<IT, P, S>
             where
-                IT: InteractionController,
+                IT: InputAdapter,
                 P: SelectionIndicatorController,
                 S: IndicatorStyle,
             {
@@ -535,7 +535,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
 
             impl<IT, P, S> #wrapper<IT, P, S>
             where
-                IT: InteractionController,
+                IT: InputAdapter,
                 P: SelectionIndicatorController,
                 S: IndicatorStyle,
             {
@@ -560,7 +560,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
 
             impl<IT, P, S> Drawable for #wrapper<IT, P, S>
             where
-                IT: InteractionController,
+                IT: InputAdapter,
                 P: SelectionIndicatorController,
                 S: IndicatorStyle,
             {
@@ -582,7 +582,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                 ) -> #wrapper<IT, P, S>
                 where
                     S: IndicatorStyle,
-                    IT: InteractionController,
+                    IT: InputAdapter,
                     P: SelectionIndicatorController,
                 {
                     #wrapper {
@@ -603,7 +603,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                 ) -> #wrapper<IT, P, S>
                 where
                     S: IndicatorStyle,
-                    IT: InteractionController,
+                    IT: InputAdapter,
                     P: SelectionIndicatorController,
                 {
                     let builder = Menu::with_style(#title, style);

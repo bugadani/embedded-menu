@@ -5,7 +5,7 @@ pub use navigation_item::NavigationItem;
 pub use select::Select;
 
 use crate::{
-    interaction::InteractionController,
+    interaction::InputAdapter,
     margin::{Margin, MarginExt},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     MenuStyle,
@@ -31,7 +31,7 @@ impl MenuLine {
     where
         C: PixelColor,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
     {
         let style = style.text_style();
@@ -70,7 +70,7 @@ impl MenuLine {
         D: DrawTarget<Color = C>,
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
     {
         let text_bounds = self.bounds.bounds();

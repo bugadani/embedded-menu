@@ -1,17 +1,13 @@
-use crate::interaction::{InteractionController, InteractionType};
+use crate::interaction::{InputAdapter, InputState, InteractionType};
 
 #[derive(Clone, Copy)]
 pub struct Programmed;
 
-impl InteractionController for Programmed {
+impl InputAdapter for Programmed {
     type Input = InteractionType;
     type State = ();
 
-    fn fill_area_width(&self, _state: &Self::State, _max: u32) -> u32 {
-        0
-    }
-
-    fn update(&self, _state: &mut Self::State, action: Self::Input) -> Option<InteractionType> {
-        Some(action)
+    fn handle_input(&self, _state: &mut Self::State, action: Self::Input) -> InputState {
+        InputState::Active(action)
     }
 }

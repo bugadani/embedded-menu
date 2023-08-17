@@ -6,9 +6,12 @@ use embedded_graphics::{
 };
 use embedded_layout::View;
 
-use crate::selection_indicator::{
-    style::{triangle::Arrow, IndicatorStyle},
-    Insets,
+use crate::{
+    interaction::InputState,
+    selection_indicator::{
+        style::{interpolate, triangle::Arrow, IndicatorStyle},
+        Insets,
+    },
 };
 
 #[derive(Clone, Copy)]
@@ -35,8 +38,8 @@ impl IndicatorStyle for AnimatedTriangle {
         state.current = 0;
     }
 
-    fn update(&self, state: &mut Self::State, fill_width: u32) {
-        state.current = if fill_width == 0 {
+    fn update(&self, state: &mut Self::State, input_state: InputState) {
+        state.current = if input_state == InputState::Idle {
             (state.current + 1) % self.period
         } else {
             0
@@ -74,13 +77,19 @@ impl IndicatorStyle for AnimatedTriangle {
     fn draw<D>(
         &self,
         state: &Self::State,
-        fill_width: u32,
+        input_state: InputState,
         display: &mut D,
     ) -> Result<u32, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
         let display_area = display.bounding_box();
+
+        let fill_width = if let InputState::InProgress(progress) = input_state {
+            interpolate(progress as u32, 0, 255, 0, display_area.size.width)
+        } else {
+            0
+        };
 
         self.shape(state, display_area, fill_width).draw(display)?;
 

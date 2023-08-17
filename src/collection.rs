@@ -8,7 +8,7 @@ use embedded_graphics::{
 use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
 
 use crate::{
-    interaction::InteractionController,
+    interaction::InputAdapter,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     Marker, MenuItem, MenuStyle,
 };
@@ -28,7 +28,7 @@ pub trait MenuItemCollection<R> {
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>;
 }
@@ -70,7 +70,7 @@ where
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>,
     {
@@ -140,7 +140,7 @@ where
     where
         PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
 
         DIS: DrawTarget<Color = PC>,
@@ -230,7 +230,7 @@ where
     where
         PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
 
         DIS: DrawTarget<Color = PC>,
@@ -292,7 +292,7 @@ where
     where
         PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
 
         DIS: DrawTarget<Color = PC>,

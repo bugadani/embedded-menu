@@ -12,7 +12,7 @@ mod margin;
 use crate::{
     builder::MenuBuilder,
     collection::MenuItemCollection,
-    interaction::{programmed::Programmed, InteractionController, InteractionType},
+    interaction::{programmed::Programmed, InputAdapter, InputState, InteractionType},
     margin::MarginExt,
     selection_indicator::{
         style::{line::Line as LineIndicator, IndicatorStyle},
@@ -47,7 +47,7 @@ pub trait MenuItem<D>: Marker + View {
     where
         C: PixelColor,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController;
     fn title(&self) -> &str;
     fn details(&self) -> &str;
@@ -60,7 +60,7 @@ pub trait MenuItem<D>: Marker + View {
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InteractionController,
+        IT: InputAdapter,
         P: SelectionIndicatorController,
 
         DIS: DrawTarget<Color = C>;
@@ -100,7 +100,7 @@ pub struct MenuStyle<C, S, IT, P>
 where
     C: PixelColor,
     S: IndicatorStyle,
-    IT: InteractionController,
+    IT: InputAdapter,
     P: SelectionIndicatorController,
 {
     pub(crate) color: C,
@@ -142,7 +142,7 @@ impl<C, S, IT, P> MenuStyle<C, S, IT, P>
 where
     C: PixelColor,
     S: IndicatorStyle,
-    IT: InteractionController,
+    IT: InputAdapter,
     P: SelectionIndicatorController,
 {
     pub const fn with_font(self, font: &'static MonoFont<'static>) -> Self {
@@ -184,7 +184,7 @@ where
 
     pub const fn with_interaction_controller<IT2>(self, interaction: IT2) -> MenuStyle<C, S, IT2, P>
     where
-        IT2: InteractionController,
+        IT2: InputAdapter,
     {
         MenuStyle {
             interaction,
@@ -228,7 +228,7 @@ pub struct NoItems;
 
 pub struct MenuState<IT, P, S>
 where
-    IT: InteractionController,
+    IT: InputAdapter,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -238,11 +238,12 @@ where
     display_mode: MenuDisplayMode,
     interaction_state: IT::State,
     indicator_state: IndicatorState<P, S>,
+    last_input_state: InputState,
 }
 
 impl<IT, P, S> Default for MenuState<IT, P, S>
 where
-    IT: InteractionController,
+    IT: InputAdapter,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -254,13 +255,14 @@ where
             display_mode: Default::default(),
             interaction_state: Default::default(),
             indicator_state: Default::default(),
+            last_input_state: InputState::Idle,
         }
     }
 }
 
 impl<IT, P, S> Clone for MenuState<IT, P, S>
 where
-    IT: InteractionController,
+    IT: InputAdapter,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -271,7 +273,7 @@ where
 
 impl<IT, P, S> Copy for MenuState<IT, P, S>
 where
-    IT: InteractionController,
+    IT: InputAdapter,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -279,7 +281,7 @@ where
 
 impl<IT, P, S> MenuState<IT, P, S>
 where
-    IT: InteractionController,
+    IT: InputAdapter,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
@@ -298,7 +300,7 @@ where
 pub struct Menu<T, IT, VG, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -329,7 +331,7 @@ where
     T: AsRef<str>,
     C: PixelColor,
     S: IndicatorStyle,
-    IT: InteractionController,
+    IT: InputAdapter,
     P: SelectionIndicatorController,
 {
     pub fn with_style(
@@ -343,7 +345,7 @@ where
 impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     VG: MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
@@ -359,25 +361,34 @@ where
         }
 
         let count = self.items.count();
-        match self
+
+        let input = self
             .style
             .interaction
-            .update(&mut self.state.interaction_state, input)
-        {
-            Some(InteractionType::Next) => {
-                let selected = (self.state.selected + 1) % count;
+            .handle_input(&mut self.state.interaction_state, input);
 
-                self.state.change_selected_item(selected);
-            }
-            Some(InteractionType::Previous) => {
-                let selected = self.state.selected.checked_sub(1).unwrap_or(count - 1);
+        if let InputState::Active(interaction) = input {
+            // We don't store Active because we don't assume interact is called periodically.
+            // This means that we have to not expect the Active state during rendering, either.
+            self.state.last_input_state = InputState::Idle;
 
-                self.state.change_selected_item(selected);
+            match interaction {
+                InteractionType::Next => {
+                    let selected = (self.state.selected + 1) % count;
+
+                    self.state.change_selected_item(selected);
+                }
+                InteractionType::Previous => {
+                    let selected = self.state.selected.checked_sub(1).unwrap_or(count - 1);
+
+                    self.state.change_selected_item(selected);
+                }
+                InteractionType::Select => {
+                    return Some(self.items.interact_with(self.state.selected));
+                }
             }
-            Some(InteractionType::Select) => {
-                return Some(self.items.interact_with(self.state.selected));
-            }
-            None => {}
+        } else {
+            self.state.last_input_state = input;
         }
 
         None
@@ -391,7 +402,7 @@ where
 impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     VG: ViewGroup + MenuItemCollection<R>,
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
@@ -475,31 +486,9 @@ where
 
         let menu_height = content_area.size().height;
 
-        let list_height = self.items.bounds().size().height;
-        let draw_scrollbar = match self.style.scrollbar {
-            DisplayScrollbar::Display => true,
-            DisplayScrollbar::Hide => false,
-            DisplayScrollbar::Auto => list_height > menu_height,
-        };
-
-        let menu_display_area = if draw_scrollbar {
-            let scrollbar_area = content_area.resized_width(2, AnchorX::Right);
-
-            content_area.resized_width(
-                content_area.size().width - scrollbar_area.size().width,
-                AnchorX::Left,
-            )
-        } else {
-            content_area
-        };
-
-        self.style.indicator.update(
-            self.style.interaction.fill_area_width(
-                &self.state.interaction_state,
-                menu_display_area.size().width,
-            ),
-            &mut self.state.indicator_state,
-        );
+        self.style
+            .indicator
+            .update(self.state.last_input_state, &mut self.state.indicator_state);
 
         // Ensure selection indicator is always visible
         let top_distance =
@@ -558,7 +547,7 @@ where
 impl<T, IT, VG, R, P, S> Menu<T, IT, VG, R, BinaryColor, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -616,10 +605,7 @@ where
         self.style.indicator.draw(
             selected_menuitem_height,
             self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset,
-            self.style.interaction.fill_area_width(
-                &self.state.interaction_state,
-                menu_display_area.size().width,
-            ),
+            self.state.last_input_state,
             &mut display
                 .clipped(&menu_display_area)
                 .cropped(&menu_display_area),
@@ -635,7 +621,7 @@ where
 impl<T, IT, VG, R, P, S> Drawable for Menu<T, IT, VG, R, BinaryColor, P, S>
 where
     T: AsRef<str>,
-    IT: InteractionController,
+    IT: InputAdapter,
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
