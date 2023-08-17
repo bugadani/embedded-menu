@@ -30,7 +30,12 @@ impl IndicatorStyle for Line {
         )
     }
 
-    fn draw<D>(&self, state: &Self::State, fill_width: u32, display: &mut D) -> Result<(), D::Error>
+    fn draw<D>(
+        &self,
+        state: &Self::State,
+        fill_width: u32,
+        display: &mut D,
+    ) -> Result<u32, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
@@ -38,6 +43,8 @@ impl IndicatorStyle for Line {
 
         self.shape(state, display_area, fill_width)
             .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
-            .draw(display)
+            .draw(display)?;
+
+        Ok(fill_width)
     }
 }

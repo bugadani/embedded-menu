@@ -31,7 +31,12 @@ impl IndicatorStyle for Triangle {
         Arrow::new(bounds, fill_width)
     }
 
-    fn draw<D>(&self, state: &Self::State, fill_width: u32, display: &mut D) -> Result<(), D::Error>
+    fn draw<D>(
+        &self,
+        state: &Self::State,
+        fill_width: u32,
+        display: &mut D,
+    ) -> Result<u32, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
@@ -39,7 +44,7 @@ impl IndicatorStyle for Triangle {
 
         self.shape(state, display_area, fill_width).draw(display)?;
 
-        Ok(())
+        Ok(fill_width)
     }
 }
 

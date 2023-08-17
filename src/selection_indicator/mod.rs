@@ -182,7 +182,7 @@ where
             bottom: margin_bottom,
         } = self.style.margin(&state.state, selected_height);
 
-        self.style.draw(
+        let fill_width = self.style.draw(
             &state.state,
             fill_width,
             &mut display.cropped(&Rectangle::new(

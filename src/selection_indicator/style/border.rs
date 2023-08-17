@@ -32,7 +32,7 @@ impl IndicatorStyle for Border {
         _state: &Self::State,
         fill_width: u32,
         display: &mut D,
-    ) -> Result<(), D::Error>
+    ) -> Result<u32, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
@@ -47,6 +47,8 @@ impl IndicatorStyle for Border {
             Size::new(fill_width, display_area.size.height),
         )
         .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
-        .draw(display)
+        .draw(display)?;
+
+        Ok(fill_width)
     }
 }

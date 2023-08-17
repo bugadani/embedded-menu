@@ -24,7 +24,7 @@ pub trait IndicatorStyle: Clone + Copy {
         state: &Self::State,
         fill_width: u32,
         display: &mut D,
-    ) -> Result<(), D::Error>
+    ) -> Result<u32, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>;
 }
