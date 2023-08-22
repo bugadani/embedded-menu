@@ -371,12 +371,12 @@ where
             // We don't store Active because we don't assume interact is called periodically.
             // This means that we have to not expect the Active state during rendering, either.
             self.state.last_input_state = InputState::Idle;
-            if interaction == InteractionType::Select {
-                return Some(self.items.interact_with(self.state.selected));
-            }
 
             let selected = interaction.calculate_selection(self.state.selected, count);
             self.state.change_selected_item(selected);
+            if interaction.should_select() {
+                return Some(self.items.interact_with(self.state.selected));
+            }
         } else {
             self.state.last_input_state = input;
         }

@@ -28,6 +28,10 @@ pub enum InteractionType {
     JumpTo(usize),
     /// Select the currently selected item, executing any relevant action.
     Select,
+    /// Select a specific item, executing any relevant action. This is equivalent
+    /// to `JumpTo(x)` followed by `Select`. This can be used to implement special
+    /// inputs that handle direct actions.
+    SelectItem(usize),
 }
 
 impl InteractionType {
@@ -39,11 +43,7 @@ impl InteractionType {
         match self {
             InteractionType::Next => (selected + 1) % count,
             InteractionType::Previous => selected.checked_sub(1).unwrap_or(count - 1),
-            InteractionType::Select => unsafe {
-                // This should be handled prior to calling this function. It is okay for
-                // the compiler to optimize this away.
-                unreachable_unchecked();
-            },
+            InteractionType::Select => selected,
             InteractionType::ForwardWrapping(n) => (selected + n) % count,
             InteractionType::Forward(n) => selected.saturating_add(n).min(count - 1),
             InteractionType::BackwardWrapping(n) => selected
@@ -53,7 +53,16 @@ impl InteractionType {
             InteractionType::Beginning => 0,
             InteractionType::End => count - 1,
             InteractionType::JumpTo(n) => n.min(count - 1),
+            InteractionType::SelectItem(n) => n.min(count - 1),
         }
+    }
+
+    /// Returns whether or not an interaction should select an item.
+    pub(crate) fn should_select(&self) -> bool {
+        matches!(
+            self,
+            InteractionType::Select | InteractionType::SelectItem(_)
+        )
     }
 }
 
