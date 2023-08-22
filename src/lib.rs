@@ -20,6 +20,7 @@ use crate::{
         StaticPosition,
     },
 };
+use core::hint::unreachable_unchecked;
 use core::marker::PhantomData;
 use embedded_graphics::{
     draw_target::DrawTarget,
@@ -37,6 +38,30 @@ use embedded_text::{
 };
 
 pub use embedded_menu_macros::{Menu, SelectValue};
+
+/// Internal function to change the selection based on interaction. Moved
+/// separated to allow for easier testing.
+fn calculate_selection(selected: usize, count: usize, interaction: InteractionType) -> usize {
+    // The lazy evaluation is necessary to prevent overflows.
+    #[allow(clippy::unnecessary_lazy_evaluations)]
+    match interaction {
+        InteractionType::Next => (selected + 1) % count,
+        InteractionType::Previous => selected.checked_sub(1).unwrap_or(count - 1),
+        InteractionType::Select => unsafe {
+            // This should be handled prior to calling this function.
+            unreachable_unchecked();
+        },
+        InteractionType::ForwardWrapping(n) => (selected + n) % count,
+        InteractionType::Forward(n) => selected.saturating_add(n).min(count - 1),
+        InteractionType::BackwardWrapping(n) => selected
+            .checked_sub(n)
+            .unwrap_or_else(|| count - (n - selected) % count),
+        InteractionType::Backward(n) => selected.saturating_sub(n),
+        InteractionType::Beginning => 0,
+        InteractionType::End => count - 1,
+        InteractionType::JumpTo(n) => n.min(count - 1),
+    }
+}
 
 /// Marker trait necessary to avoid a "conflicting implementations" error.
 pub trait Marker {}
@@ -371,22 +396,12 @@ where
             // We don't store Active because we don't assume interact is called periodically.
             // This means that we have to not expect the Active state during rendering, either.
             self.state.last_input_state = InputState::Idle;
-
-            match interaction {
-                InteractionType::Next => {
-                    let selected = (self.state.selected + 1) % count;
-
-                    self.state.change_selected_item(selected);
-                }
-                InteractionType::Previous => {
-                    let selected = self.state.selected.checked_sub(1).unwrap_or(count - 1);
-
-                    self.state.change_selected_item(selected);
-                }
-                InteractionType::Select => {
-                    return Some(self.items.interact_with(self.state.selected));
-                }
+            if interaction == InteractionType::Select {
+                return Some(self.items.interact_with(self.state.selected));
             }
+
+            let selected = calculate_selection(self.state.selected, count, interaction);
+            self.state.change_selected_item(selected);
         } else {
             self.state.last_input_state = input;
         }
@@ -639,4 +654,78 @@ where
             self.display_list(display)
         }
     }
+}
+
+#[test]
+fn selection() {
+    let count = 30;
+    let mut selected = 3;
+    for _ in 0..5 {
+        selected = calculate_selection(selected, count, InteractionType::Previous);
+    }
+    assert_eq!(selected, 28);
+
+    for _ in 0..5 {
+        selected = calculate_selection(selected, count, InteractionType::Next);
+    }
+    assert_eq!(selected, 3);
+
+    for _ in 0..5 {
+        selected = calculate_selection(selected, count, InteractionType::BackwardWrapping(5));
+    }
+    assert_eq!(selected, 8);
+
+    for _ in 0..5 {
+        selected = calculate_selection(selected, count, InteractionType::ForwardWrapping(5));
+    }
+    assert_eq!(selected, 3);
+
+    selected = calculate_selection(selected, count, InteractionType::JumpTo(20));
+    assert_eq!(selected, 20);
+
+    selected = calculate_selection(selected, count, InteractionType::Beginning);
+    assert_eq!(selected, 0);
+
+    selected = calculate_selection(selected, count, InteractionType::End);
+    assert_eq!(selected, 29);
+
+    for _ in 0..5 {
+        selected = calculate_selection(selected, count, InteractionType::Backward(5));
+    }
+    assert_eq!(selected, 4);
+
+    for _ in 0..5 {
+        selected = calculate_selection(selected, count, InteractionType::Forward(5));
+    }
+    assert_eq!(selected, 29);
+}
+
+#[test]
+fn selection_large_stupid_numbers() {
+    let count = 30;
+    let mut selected = 3;
+
+    selected = calculate_selection(selected, count, InteractionType::BackwardWrapping(75));
+    assert_eq!(selected, 18);
+
+    selected = calculate_selection(selected, count, InteractionType::ForwardWrapping(75));
+    assert_eq!(selected, 3);
+
+    selected = calculate_selection(selected, count, InteractionType::BackwardWrapping(100000));
+    assert_eq!(selected, 23);
+
+    selected = calculate_selection(selected, count, InteractionType::ForwardWrapping(100000));
+    assert_eq!(selected, 3);
+
+    selected = calculate_selection(selected, count, InteractionType::JumpTo(100));
+    assert_eq!(selected, 29);
+
+    selected = calculate_selection(selected, count, InteractionType::JumpTo(0));
+    assert_eq!(selected, 0);
+
+    selected = calculate_selection(selected, count, InteractionType::Forward(100000));
+    assert_eq!(selected, 29);
+
+    selected = calculate_selection(selected, count, InteractionType::Backward(100000));
+    assert_eq!(selected, 0);
 }
