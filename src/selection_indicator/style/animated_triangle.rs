@@ -2,9 +2,9 @@ use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::{DrawTarget, Point},
     primitives::Rectangle,
+    transform::Transform,
     Drawable,
 };
-use embedded_layout::View;
 
 use crate::{
     interaction::InputState,
@@ -79,7 +79,7 @@ impl IndicatorStyle for AnimatedTriangle {
         state: &Self::State,
         input_state: InputState,
         display: &mut D,
-    ) -> Result<u32, D::Error>
+    ) -> Result<Self::Shape, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
@@ -91,8 +91,10 @@ impl IndicatorStyle for AnimatedTriangle {
             0
         };
 
-        self.shape(state, display_area, fill_width).draw(display)?;
+        let shape = self.shape(state, display_area, fill_width);
 
-        Ok(fill_width)
+        shape.draw(display)?;
+
+        Ok(shape)
     }
 }

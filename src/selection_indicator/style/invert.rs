@@ -33,7 +33,7 @@ impl IndicatorStyle for Invert {
         state: &Self::State,
         input_state: InputState,
         display: &mut D,
-    ) -> Result<u32, D::Error>
+    ) -> Result<Self::Shape, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
@@ -46,10 +46,12 @@ impl IndicatorStyle for Invert {
                 0
             };
 
-        self.shape(state, display_area, fill_width)
+        let shape = self.shape(state, display_area, fill_width);
+
+        shape
             .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
             .draw(display)?;
 
-        Ok(fill_width)
+        Ok(shape)
     }
 }
