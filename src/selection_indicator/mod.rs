@@ -204,7 +204,10 @@ where
             &state.state,
             Rectangle::new(
                 Point::new(0, screen_offset),
-                Size::new(fill_width, selected_height),
+                Size::new(
+                    fill_width,
+                    (selected_height as i32 + margin_top + margin_bottom) as u32,
+                ),
             ),
             fill_width,
         ));
