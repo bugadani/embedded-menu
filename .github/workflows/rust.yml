@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - uses: dtolnay/rust-toolchain@master
       with:
@@ -34,7 +34,7 @@ jobs:
     - formatting
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - uses: dtolnay/rust-toolchain@master
       with:
@@ -64,7 +64,7 @@ jobs:
             rust: nightly
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - uses: dtolnay/rust-toolchain@master
       with:
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - uses: dtolnay/rust-toolchain@master
       with:
