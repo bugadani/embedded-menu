@@ -1,15 +1,14 @@
-//! Run using `cargo run --example simple --target x86_64-pc-windows-msvc`
+//! Run using `cargo run --example simple --target x86_64-pc-windows-msvc` --features=simulator
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
-    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
-    Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::InteractionType, selection_indicator::style::animated_triangle::AnimatedTriangle,
-    Menu, MenuStyle, SelectValue,
+    interaction::simulator::Simulator,
+    selection_indicator::style::animated_triangle::AnimatedTriangle, Menu, MenuStyle, SelectValue,
 };
 
 #[derive(Copy, Clone, Debug, PartialEq, SelectValue)]
@@ -50,7 +49,8 @@ fn main() -> Result<(), core::convert::Infallible> {
         MenuStyle::new(BinaryColor::On)
             .with_details_delay(250)
             .with_animated_selection_indicator(10)
-            .with_selection_indicator(AnimatedTriangle::new(200)),
+            .with_selection_indicator(AnimatedTriangle::new(200))
+            .with_input_adapter(Simulator { page_size: 5 }),
     );
 
     let output_settings = OutputSettingsBuilder::new()
@@ -65,26 +65,14 @@ fn main() -> Result<(), core::convert::Infallible> {
         window.update(&display);
 
         for event in window.events() {
-            let interaction = match event {
-                SimulatorEvent::KeyDown { keycode, .. } => match keycode {
-                    Keycode::Return => Some(InteractionType::Select),
-                    Keycode::Up => Some(InteractionType::Previous),
-                    Keycode::Down => Some(InteractionType::Next),
-                    _ => None,
-                },
-                SimulatorEvent::Quit => break 'running,
-                _ => None,
+            let Some(event) = menu.interact(event) else {
+                match event {
+                    SimulatorEvent::Quit => break 'running,
+                    _ => continue,
+                }
             };
 
-            let Some(interaction) = interaction else {
-                continue;
-            };
-            let output = menu.interact(interaction);
-            let Some(output) = output else {
-                continue;
-            };
-
-            match output {
+            match event {
                 NavEvents::Quit => break 'running,
             }
         }

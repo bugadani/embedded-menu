@@ -17,8 +17,17 @@ embedded-text = "0.6.0"
 
 embedded-menu-macros = { version = "0.2.0", path = "embedded-menu-macros" }
 
+embedded-graphics-simulator = { version = "0.5.0", optional = true }
+
+[features]
+simulator = ["embedded-graphics-simulator"]
+
 [dev-dependencies]
 embedded-graphics-simulator = "0.5.0"
 
 [workspace]
 members = [".", "embedded-menu-macros"]
+
+[[example]]
+name = "macros"
+required-features = ["simulator"]

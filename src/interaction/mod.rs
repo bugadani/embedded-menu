@@ -3,6 +3,9 @@ use core::hint::unreachable_unchecked;
 pub mod programmed;
 pub mod single_touch;
 
+#[cfg(feature = "simulator")]
+pub mod simulator;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum InteractionType {
     /// Equivalent to `BackwardWrapping(1)`, kept for backward compatibility.
@@ -28,8 +31,8 @@ pub enum InteractionType {
 }
 
 impl InteractionType {
-    /// Internal function to change the selection based on interaction. Moved
-    /// separated to allow for easier testing.
+    /// Internal function to change the selection based on interaction.
+    /// Separated to allow for easier testing.
     pub(crate) fn calculate_selection(self, selected: usize, count: usize) -> usize {
         // The lazy evaluation is necessary to prevent overflows.
         #[allow(clippy::unnecessary_lazy_evaluations)]

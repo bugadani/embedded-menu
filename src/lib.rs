@@ -108,7 +108,7 @@ where
     pub(crate) font: &'static MonoFont<'static>,
     pub(crate) title_font: &'static MonoFont<'static>,
     pub(crate) details_delay: Option<u16>,
-    pub(crate) interaction: IT,
+    pub(crate) input_adapter: IT,
     pub(crate) indicator: Indicator<P, S>,
 }
 
@@ -129,7 +129,7 @@ where
             font: &FONT_6X10,
             title_font: &FONT_6X10,
             details_delay: None,
-            interaction: Programmed,
+            input_adapter: Programmed,
             indicator: Indicator {
                 style: LineIndicator,
                 controller: StaticPosition,
@@ -174,7 +174,7 @@ where
             font: self.font,
             title_font: self.title_font,
             details_delay: self.details_delay,
-            interaction: self.interaction,
+            input_adapter: self.input_adapter,
             indicator: Indicator {
                 style: indicator_style,
                 controller: self.indicator.controller,
@@ -182,12 +182,12 @@ where
         }
     }
 
-    pub const fn with_interaction_controller<IT2>(self, interaction: IT2) -> MenuStyle<C, S, IT2, P>
+    pub const fn with_input_adapter<IT2>(self, input_adapter: IT2) -> MenuStyle<C, S, IT2, P>
     where
         IT2: InputAdapter,
     {
         MenuStyle {
-            interaction,
+            input_adapter,
             color: self.color,
             scrollbar: self.scrollbar,
             font: self.font,
@@ -202,7 +202,7 @@ where
         frames: i32,
     ) -> MenuStyle<C, S, IT, AnimatedPosition> {
         MenuStyle {
-            interaction: self.interaction,
+            input_adapter: self.input_adapter,
             color: self.color,
             scrollbar: self.scrollbar,
             font: self.font,
@@ -364,7 +364,7 @@ where
 
         let input = self
             .style
-            .interaction
+            .input_adapter
             .handle_input(&mut self.state.interaction_state, input);
 
         if let InputState::Active(interaction) = input {
