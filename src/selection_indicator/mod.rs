@@ -160,7 +160,7 @@ where
     }
 
     pub fn item_height(&self, menuitem_height: u32, state: &State<P, S>) -> u32 {
-        let indicator_insets = self.style.margin(&state.state, menuitem_height);
+        let indicator_insets = self.style.padding(&state.state, menuitem_height);
         (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
     }
 
@@ -178,49 +178,46 @@ where
         D: DrawTarget<Color = BinaryColor>,
         IT: InputAdapter,
     {
-        let Insets {
-            left: margin_left,
-            top: margin_top,
-            right: margin_right,
-            bottom: margin_bottom,
-        } = self.style.margin(&state.state, selected_height);
+        let Rectangle {
+            top_left: display_top_left,
+            size: display_size,
+        } = display.bounding_box();
 
+        let Insets {
+            left: padding_left,
+            top: padding_top,
+            right: padding_right,
+            bottom: padding_bottom,
+        } = self.style.padding(&state.state, selected_height);
+
+        let selected_item_height = (selected_height as i32 + padding_top + padding_bottom) as u32;
+        let content_offset = Point::new(padding_left, padding_top);
+        let content_size = Size::new(
+            (display_size.width as i32 - padding_left - padding_right) as u32,
+            display_size.height,
+        );
+        let content_area = Rectangle::new(display_top_left + content_offset, content_size);
+
+        // Draw the selection indicator
         let fill_width = self.style.draw(
             &state.state,
             input_state,
             &mut display.cropped(&Rectangle::new(
                 Point::new(0, screen_offset),
-                Size::new(
-                    display.bounding_box().size.width,
-                    (selected_height as i32 + margin_top + margin_bottom) as u32,
-                ),
+                Size::new(display_size.width, selected_item_height),
             )),
         )?;
 
-        let display_top_left = display.bounding_box().top_left;
-        let display_size = display.bounding_box().size;
-
+        // Calculate the area that needs to be inverted for the label to be visible over the indicator
         let mut inverting = display.invert_area(&self.style.shape(
             &state.state,
             Rectangle::new(
                 Point::new(0, screen_offset),
-                Size::new(
-                    fill_width,
-                    (selected_height as i32 + margin_top + margin_bottom) as u32,
-                ),
+                Size::new(fill_width, selected_item_height),
             ),
             fill_width,
         ));
 
-        items.draw_styled(
-            style,
-            &mut inverting.cropped(&Rectangle::new(
-                display_top_left + Point::new(margin_left, margin_top),
-                Size::new(
-                    (display_size.width as i32 - margin_left - margin_right) as u32,
-                    display_size.height,
-                ),
-            )),
-        )
+        items.draw_styled(style, &mut inverting.cropped(&content_area))
     }
 }

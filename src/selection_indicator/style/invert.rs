@@ -15,7 +15,7 @@ impl IndicatorStyle for Invert {
     type Shape = Rectangle;
     type State = ();
 
-    fn margin(&self, _state: &Self::State, _height: u32) -> Insets {
+    fn padding(&self, _state: &Self::State, _height: u32) -> Insets {
         Insets {
             left: 2,
             top: 0,

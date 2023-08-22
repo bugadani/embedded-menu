@@ -24,7 +24,7 @@ impl IndicatorStyle for Triangle {
     type Shape = Arrow;
     type State = ();
 
-    fn margin(&self, _state: &Self::State, height: u32) -> Insets {
+    fn padding(&self, _state: &Self::State, height: u32) -> Insets {
         Insets {
             left: height as i32 / 2 + 1,
             top: 0,
