@@ -9,6 +9,7 @@ Unreleased (??)
  - Replaced `StyledDrawable` wtih `MenuItem::draw_styled` and `MenuItemCollection::draw_styled`
  - Empty menu titles are no longer displayed
  - Reworked input handling. `InteractionController` has been replaced by `InputAdapter`
+ - Added more options for `InteractionType`
 
 0.3.1 (2023-08-06)
 ==================
