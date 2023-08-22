@@ -1,0 +1,98 @@
+name: Rust
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  formatting:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: stable
+        components: rustfmt
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+  build-nostd:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    needs:
+    - formatting
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: nightly
+        targets: thumbv7em-none-eabihf
+
+    - name: Build no_std
+      run: cargo build --verbose --target thumbv7em-none-eabihf -Z avoid-dev-deps
+
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    needs:
+    - formatting
+
+    strategy:
+      matrix:
+        include:
+          - name: stable
+            rust: stable
+
+          - name: beta
+            rust: beta
+
+          - name: nightly
+            rust: nightly
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+
+    - name: Build
+      run: cargo build --verbose
+
+    - name: Run tests
+      run: |
+        cargo test --lib --verbose
+        cargo test --lib --verbose --no-default-features
+
+    - name: Check examples
+      run: cargo check --examples --verbose
+
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: stable
+    
+    - name: Check doc links
+      run: |
+        cargo doc --color=never &> ./out
+        cat ./out
+        ! grep "^warning:" ./out
