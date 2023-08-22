@@ -1,12 +1,11 @@
-//! Run using `cargo run --example scrolling --target x86_64-pc-windows-msvc`
+//! Run using `cargo run --example scrolling --target x86_64-pc-windows-msvc` --features=simulator
 
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
-    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
-    Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::{programmed::Programmed, InteractionType},
+    interaction::simulator::Simulator,
     items::{select::SelectValue, NavigationItem, Select},
     selection_indicator::{style::line::Line, AnimatedPosition},
     Menu, MenuState, MenuStyle,
@@ -52,11 +51,13 @@ enum MenuEvent {
 
 fn do_loop(
     window: &mut Window,
-    state: &mut MenuState<Programmed, AnimatedPosition, Line>,
+    state: &mut MenuState<Simulator, AnimatedPosition, Line>,
     data: &mut MenuData,
     item_count: usize,
 ) -> bool {
-    let style = MenuStyle::new(BinaryColor::On).with_animated_selection_indicator(10);
+    let style = MenuStyle::new(BinaryColor::On)
+        .with_input_adapter(Simulator::default())
+        .with_animated_selection_indicator(10);
 
     let title = format!("{item_count} items");
 
@@ -98,27 +99,17 @@ fn do_loop(
         window.update(&display);
 
         for event in window.events() {
-            let change = match event {
-                SimulatorEvent::KeyDown {
-                    keycode,
-                    repeat: false,
-                    ..
-                } => match keycode {
-                    Keycode::Return => menu.interact(InteractionType::Select),
-                    Keycode::Up => menu.interact(InteractionType::Previous),
-                    Keycode::Down => menu.interact(InteractionType::Next),
-                    _ => None,
-                },
-                SimulatorEvent::Quit => return false,
-                _ => None,
-            };
-
-            if let Some(change) = change {
+            if let Some(change) = menu.interact(event) {
                 match change {
                     MenuEvent::SliceCheckbox(idx, value) => data.slice_data[idx] = value,
                     MenuEvent::Select(select) => data.select = select,
                     MenuEvent::Nothing => {}
                 }
+            }
+
+            match event {
+                SimulatorEvent::Quit => return false,
+                _ => continue,
             }
         }
 

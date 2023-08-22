@@ -65,15 +65,13 @@ fn main() -> Result<(), core::convert::Infallible> {
         window.update(&display);
 
         for event in window.events() {
-            let Some(event) = menu.interact(event) else {
-                match event {
-                    SimulatorEvent::Quit => break 'running,
-                    _ => continue,
-                }
-            };
+            if let Some(NavEvents::Quit) = menu.interact(event) {
+                break 'running;
+            }
 
             match event {
-                NavEvents::Quit => break 'running,
+                SimulatorEvent::Quit => break 'running,
+                _ => continue,
             }
         }
     }

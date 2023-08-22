@@ -1,4 +1,4 @@
-//! Run using `cargo run --example simple --target x86_64-pc-windows-msvc`
+//! Run using `cargo run --example simple --target x86_64-pc-windows-msvc` --features=simulator
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
@@ -9,11 +9,10 @@ use embedded_graphics::{
     Drawable,
 };
 use embedded_graphics_simulator::{
-    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
-    Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::InteractionType,
+    interaction::simulator::Simulator,
     items::{select::SelectValue, NavigationItem, Select},
     Menu, MenuStyle,
 };
@@ -49,6 +48,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         MenuStyle::new(BinaryColor::On)
             .with_font(&FONT_6X10)
             .with_title_font(&FONT_8X13_BOLD)
+            .with_input_adapter(Simulator::default())
             .with_details_delay(100),
     )
     .add_item(
@@ -73,20 +73,12 @@ fn main() -> Result<(), core::convert::Infallible> {
         window.update(&display);
 
         for event in window.events() {
+            menu.interact(event);
+
             match event {
-                SimulatorEvent::KeyDown {
-                    keycode,
-                    repeat: false,
-                    ..
-                } => match keycode {
-                    Keycode::Return => menu.interact(InteractionType::Select),
-                    Keycode::Up => menu.interact(InteractionType::Previous),
-                    Keycode::Down => menu.interact(InteractionType::Next),
-                    _ => None,
-                },
                 SimulatorEvent::Quit => break 'running,
-                _ => None,
-            };
+                _ => continue,
+            }
         }
     }
 

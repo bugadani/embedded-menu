@@ -29,5 +29,33 @@ embedded-graphics-simulator = "0.5.0"
 members = [".", "embedded-menu-macros"]
 
 [[example]]
+name = "font"
+required-features = ["simulator"]
+
+[[example]]
 name = "macros"
+required-features = ["simulator"]
+
+[[example]]
+name = "no_title"
+required-features = ["simulator"]
+
+[[example]]
+name = "owned"
+required-features = ["simulator"]
+
+[[example]]
+name = "save_state"
+required-features = ["simulator"]
+
+[[example]]
+name = "scrolling"
+required-features = ["simulator"]
+
+[[example]]
+name = "scrolling_slice"
+required-features = ["simulator"]
+
+[[example]]
+name = "small"
 required-features = ["simulator"]

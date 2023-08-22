@@ -76,7 +76,6 @@ jobs:
     - name: Run tests
       run: |
         cargo test --lib --verbose
-        cargo test --lib --verbose --no-default-features
 
     - name: Check examples
       run: |

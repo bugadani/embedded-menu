@@ -1,4 +1,4 @@
-//! Run using `cargo run --example small --target x86_64-pc-windows-msvc`
+//! Run using `cargo run --example small --target x86_64-pc-windows-msvc` --features=simulator
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
@@ -9,13 +9,12 @@ use embedded_graphics::{
     Drawable,
 };
 use embedded_graphics_simulator::{
-    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
-    Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::InteractionType,
+    interaction::simulator::Simulator,
     items::{select::SelectValue, NavigationItem, Select},
-    Menu,
+    Menu, MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -44,16 +43,15 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::new("Menu")
-        .add_item(
-            NavigationItem::new("Foo", ())
-                .with_marker(">")
-                .with_detail_text("Some longer description text"),
-        )
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", false).with_detail_text("Description"))
-        .build();
+    let mut menu = Menu::with_style(
+        "Menu",
+        MenuStyle::new(BinaryColor::On).with_input_adapter(Simulator::default()),
+    )
+    .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
+    .add_item(Select::new("Check this", false))
+    .add_item(Select::new("Check this", false))
+    .add_item(Select::new("Check this too", false))
+    .build();
 
     let output_settings = OutputSettingsBuilder::new()
         .theme(BinaryColorTheme::OledBlue)
@@ -68,20 +66,12 @@ fn main() -> Result<(), core::convert::Infallible> {
         window.update(&display);
 
         for event in window.events() {
+            menu.interact(event);
+
             match event {
-                SimulatorEvent::KeyDown {
-                    keycode,
-                    repeat: false,
-                    ..
-                } => match keycode {
-                    Keycode::Return => menu.interact(InteractionType::Select),
-                    Keycode::Up => menu.interact(InteractionType::Previous),
-                    Keycode::Down => menu.interact(InteractionType::Next),
-                    _ => None,
-                },
                 SimulatorEvent::Quit => break 'running,
-                _ => None,
-            };
+                _ => continue,
+            }
         }
     }
 

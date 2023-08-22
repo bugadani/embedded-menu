@@ -1,14 +1,13 @@
-//! Run using `cargo run --example simple --target x86_64-pc-windows-msvc`
+//! Run using `cargo run --example simple --target x86_64-pc-windows-msvc` --features=simulator
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
-    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
-    Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::InteractionType,
+    interaction::simulator::Simulator,
     items::{select::SelectValue, NavigationItem, Select},
     Menu, MenuStyle,
 };
@@ -39,18 +38,17 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::with_style("", MenuStyle::default().with_details_delay(100))
-        .add_item(
-            NavigationItem::new("Foo", ())
-                .with_marker(">")
-                .with_detail_text(
-                    "Lorem ipsum dolor sit amet, in per offendit assueverit adversarium, no sed clita adipisci nominati.",
-                ),
-        )
-        .add_item(Select::new("Check this 1", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this 2", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this 3", TestEnum::A).with_detail_text("Description"))
-        .build();
+    let mut menu = Menu::with_style(
+        "",
+        MenuStyle::default()
+            .with_input_adapter(Simulator::default())
+            .with_details_delay(100),
+    )
+    .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
+    .add_item(Select::new("Check this 1", false).with_detail_text("Description"))
+    .add_item(Select::new("Check this 2", false).with_detail_text("Description"))
+    .add_item(Select::new("Check this 3", TestEnum::A).with_detail_text("Description"))
+    .build();
 
     let output_settings = OutputSettingsBuilder::new()
         .theme(BinaryColorTheme::OledBlue)
@@ -64,20 +62,12 @@ fn main() -> Result<(), core::convert::Infallible> {
         window.update(&display);
 
         for event in window.events() {
+            menu.interact(event);
+
             match event {
-                SimulatorEvent::KeyDown {
-                    keycode,
-                    repeat: false,
-                    ..
-                } => match keycode {
-                    Keycode::Return => menu.interact(InteractionType::Select),
-                    Keycode::Up => menu.interact(InteractionType::Previous),
-                    Keycode::Down => menu.interact(InteractionType::Next),
-                    _ => None,
-                },
                 SimulatorEvent::Quit => break 'running,
-                _ => None,
-            };
+                _ => continue,
+            }
         }
     }
 
