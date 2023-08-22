@@ -10,6 +10,7 @@ Unreleased (??)
  - Empty menu titles are no longer displayed
  - Reworked input handling. `InteractionController` has been replaced by `InputAdapter`
  - Added more options for `InteractionType`
+ - Added `selection_indicator::invert::Invert`
 
 0.3.1 (2023-08-06)
 ==================
