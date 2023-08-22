@@ -10,6 +10,7 @@ use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::{DrawTarget, DrawTargetExt, Point, Size},
     primitives::Rectangle,
+    transform::Transform,
 };
 
 pub mod style;
@@ -160,14 +161,14 @@ where
     }
 
     pub fn item_height(&self, menuitem_height: u32, state: &State<P, S>) -> u32 {
-        let indicator_insets = self.style.margin(&state.state, menuitem_height);
+        let indicator_insets = self.style.padding(&state.state, menuitem_height);
         (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
     }
 
     pub fn draw<R, D, IT>(
         &self,
         selected_height: u32,
-        screen_offset: i32,
+        selected_offset: i32,
         input_state: InputState,
         display: &mut D,
         items: &impl MenuItemCollection<R>,
@@ -178,49 +179,41 @@ where
         D: DrawTarget<Color = BinaryColor>,
         IT: InputAdapter,
     {
-        let Insets {
-            left: margin_left,
-            top: margin_top,
-            right: margin_right,
-            bottom: margin_bottom,
-        } = self.style.margin(&state.state, selected_height);
-
-        let fill_width = self.style.draw(
-            &state.state,
-            input_state,
-            &mut display.cropped(&Rectangle::new(
-                Point::new(0, screen_offset),
-                Size::new(
-                    display.bounding_box().size.width,
-                    (selected_height as i32 + margin_top + margin_bottom) as u32,
-                ),
-            )),
-        )?;
-
-        let display_top_left = display.bounding_box().top_left;
         let display_size = display.bounding_box().size;
 
-        let mut inverting = display.invert_area(&self.style.shape(
-            &state.state,
-            Rectangle::new(
-                Point::new(0, screen_offset),
-                Size::new(
-                    fill_width,
-                    (selected_height as i32 + margin_top + margin_bottom) as u32,
-                ),
-            ),
-            fill_width,
-        ));
+        // We treat the horizontal insets as padding, but the vertical insets only as an expansion
+        // for the selection indicator. Menu items are placed tightly, ignoring the vertical insets.
+        let Insets {
+            left: padding_left,
+            top: padding_top,
+            right: padding_right,
+            bottom: padding_bottom,
+        } = self.style.padding(&state.state, selected_height);
 
-        items.draw_styled(
-            style,
-            &mut inverting.cropped(&Rectangle::new(
-                display_top_left + Point::new(margin_left, margin_top),
-                Size::new(
-                    (display_size.width as i32 - margin_left - margin_right) as u32,
-                    display_size.height,
-                ),
-            )),
-        )
+        // Draw the selection indicator
+        let selected_item_height = (selected_height as i32 + padding_top + padding_bottom) as u32;
+        let selected_item_area = Rectangle::new(
+            Point::new(0, selected_offset),
+            Size::new(display_size.width, selected_item_height),
+        );
+
+        let invert_area = self.style.draw(
+            &state.state,
+            input_state,
+            &mut display.cropped(&selected_item_area),
+        )?;
+
+        // Translate inverting area to its position
+        let invert_area = invert_area.translate(selected_item_area.top_left);
+        let mut inverting = display.invert_area(&invert_area);
+
+        // Draw the menu content
+        let content_width = (display_size.width as i32 - padding_left - padding_right) as u32;
+        let content_area = Rectangle::new(
+            Point::new(padding_left, padding_top),
+            Size::new(content_width, display_size.height),
+        );
+
+        items.draw_styled(style, &mut inverting.cropped(&content_area))
     }
 }

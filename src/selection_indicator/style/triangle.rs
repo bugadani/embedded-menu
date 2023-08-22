@@ -2,12 +2,10 @@ use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::{DrawTarget, Point, Size},
     primitives::{ContainsPoint, Primitive, PrimitiveStyle, Rectangle, Triangle as TriangleShape},
+    transform::Transform,
     Drawable,
 };
-use embedded_layout::{
-    prelude::{horizontal::LeftToRight, vertical::Center, Align},
-    View,
-};
+use embedded_layout::prelude::{horizontal::LeftToRight, vertical::Center, Align};
 
 use crate::{
     interaction::InputState,
@@ -24,7 +22,7 @@ impl IndicatorStyle for Triangle {
     type Shape = Arrow;
     type State = ();
 
-    fn margin(&self, _state: &Self::State, height: u32) -> Insets {
+    fn padding(&self, _state: &Self::State, height: u32) -> Insets {
         Insets {
             left: height as i32 / 2 + 1,
             top: 0,
@@ -42,7 +40,7 @@ impl IndicatorStyle for Triangle {
         state: &Self::State,
         input_state: InputState,
         display: &mut D,
-    ) -> Result<u32, D::Error>
+    ) -> Result<Self::Shape, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
@@ -54,9 +52,11 @@ impl IndicatorStyle for Triangle {
             0
         };
 
-        self.shape(state, display_area, fill_width).draw(display)?;
+        let shape = self.shape(state, display_area, fill_width);
 
-        Ok(fill_width)
+        shape.draw(display)?;
+
+        Ok(shape)
     }
 }
 
@@ -98,17 +98,18 @@ impl ContainsPoint for Arrow {
     }
 }
 
-impl View for Arrow {
-    fn translate_impl(&mut self, by: Point) {
-        self.body.translate_mut(by);
-        self.tip.translate_mut(by);
+impl Transform for Arrow {
+    fn translate(&self, by: Point) -> Self {
+        Self {
+            body: self.body.translate(by),
+            tip: self.tip.translate(by),
+        }
     }
 
-    fn bounds(&self) -> Rectangle {
-        Rectangle::new(
-            self.body.top_left,
-            self.body.size + Size::new(self.tip.size().width, 0),
-        )
+    fn translate_mut(&mut self, by: Point) -> &mut Self {
+        self.body.translate_mut(by);
+        self.tip.translate_mut(by);
+        self
     }
 }
 

@@ -20,7 +20,7 @@ impl IndicatorStyle for Line {
     type Shape = Rectangle;
     type State = ();
 
-    fn margin(&self, _state: &Self::State, _height: u32) -> Insets {
+    fn padding(&self, _state: &Self::State, _height: u32) -> Insets {
         Insets {
             left: 2,
             top: 0,
@@ -41,7 +41,7 @@ impl IndicatorStyle for Line {
         state: &Self::State,
         input_state: InputState,
         display: &mut D,
-    ) -> Result<u32, D::Error>
+    ) -> Result<Self::Shape, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
@@ -53,10 +53,12 @@ impl IndicatorStyle for Line {
             0
         };
 
-        self.shape(state, display_area, fill_width)
+        let shape = self.shape(state, display_area, fill_width);
+
+        shape
             .into_styled(PrimitiveStyle::with_fill(BinaryColor::On))
             .draw(display)?;
 
-        Ok(fill_width)
+        Ok(shape)
     }
 }
