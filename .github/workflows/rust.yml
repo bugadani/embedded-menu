@@ -76,10 +76,11 @@ jobs:
     - name: Run tests
       run: |
         cargo test --lib --verbose
-        cargo test --lib --verbose --no-default-features
 
     - name: Check examples
-      run: cargo check --examples --verbose
+      run: |
+        cargo check --examples --verbose
+        cargo check --examples --verbose --features=simulator
 
   docs:
     runs-on: ubuntu-latest

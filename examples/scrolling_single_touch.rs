@@ -1,4 +1,4 @@
-//! Run using `cargo run --example scrolling_single_touch --target x86_64-pc-windows-msvc`
+//! Run using `cargo run --example scrolling_single_touch --target x86_64-pc-windows-msvc` --features=simulator
 //!
 //! Navigate using only the spacebar. Short(ish) press moves on to the next item, long press activates.
 //! Watch the animated selection indicator fill up. Long press is registered as the bar reaches full width.
@@ -43,18 +43,19 @@ impl SelectValue for TestEnum {
 fn main() -> Result<(), core::convert::Infallible> {
     let style = MenuStyle::default()
         .with_selection_indicator(AnimatedTriangle::new(160))
-        .with_interaction_controller(SingleTouch {
+        .with_input_adapter(SingleTouch {
             ignore_time: 10,
             debounce_time: 1,
             max_time: 100,
         })
-        .with_animated_selection_indicator(10);
+        .with_animated_selection_indicator(10)
+        .with_details_delay(100);
 
     let mut menu = Menu::with_style("Menu with even longer title", style)
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")
-                .with_detail_text("Some longer description text"),
+                .with_detail_text("Some longer description text that will need to be word wrapped"),
         )
         .add_item(Select::new("Check this", false).with_detail_text("Description"))
         .add_item(Select::new("Check this", false).with_detail_text("Description"))

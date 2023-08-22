@@ -11,6 +11,8 @@ Unreleased (??)
  - Reworked input handling. `InteractionController` has been replaced by `InputAdapter`
  - Added more options for `InteractionType`
  - Added `selection_indicator::invert::Invert`
+ - Renamed `MenuStyle::with_interaction_controller` to `with_input_adapter`
+ - Added the `simulator` feature and the `interaction::simulator::Simulator` input adapter
 
 0.3.1 (2023-08-06)
 ==================

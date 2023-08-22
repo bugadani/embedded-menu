@@ -1,12 +1,11 @@
-//! Run using `cargo run --example scrolling --target x86_64-pc-windows-msvc`
+//! Run using `cargo run --example scrolling --target x86_64-pc-windows-msvc` --features=simulator
 
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
-    sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
-    Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::InteractionType,
+    interaction::simulator::Simulator,
     items::{select::SelectValue, NavigationItem, Select},
     Menu, MenuStyle,
 };
@@ -37,13 +36,16 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let style = MenuStyle::new(BinaryColor::On).with_animated_selection_indicator(10);
+    let style = MenuStyle::new(BinaryColor::On)
+        .with_input_adapter(Simulator::default())
+        .with_animated_selection_indicator(10)
+        .with_details_delay(100);
 
     let mut menu = Menu::with_style("Menu", style)
         .add_item(
             NavigationItem::new("Foo", ())
                 .with_marker(">")
-                .with_detail_text("Some longer description text"),
+                .with_detail_text("Some longer description text that will need to be word wrapped"),
         )
         .add_item(Select::new("Check this", false).with_detail_text("Description"))
         .add_item(Select::new("Check this", false).with_detail_text("Description"))
@@ -75,20 +77,12 @@ fn main() -> Result<(), core::convert::Infallible> {
         window.update(&display);
 
         for event in window.events() {
+            menu.interact(event);
+
             match event {
-                SimulatorEvent::KeyDown {
-                    keycode,
-                    repeat: false,
-                    ..
-                } => match keycode {
-                    Keycode::Return => menu.interact(InteractionType::Select),
-                    Keycode::Up => menu.interact(InteractionType::Previous),
-                    Keycode::Down => menu.interact(InteractionType::Next),
-                    _ => None,
-                },
                 SimulatorEvent::Quit => break 'running,
-                _ => None,
-            };
+                _ => continue,
+            }
         }
     }
 

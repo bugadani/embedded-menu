@@ -17,8 +17,45 @@ embedded-text = "0.6.0"
 
 embedded-menu-macros = { version = "0.2.0", path = "embedded-menu-macros" }
 
+embedded-graphics-simulator = { version = "0.5.0", optional = true }
+
+[features]
+simulator = ["embedded-graphics-simulator"]
+
 [dev-dependencies]
 embedded-graphics-simulator = "0.5.0"
 
 [workspace]
 members = [".", "embedded-menu-macros"]
+
+[[example]]
+name = "font"
+required-features = ["simulator"]
+
+[[example]]
+name = "macros"
+required-features = ["simulator"]
+
+[[example]]
+name = "no_title"
+required-features = ["simulator"]
+
+[[example]]
+name = "owned"
+required-features = ["simulator"]
+
+[[example]]
+name = "save_state"
+required-features = ["simulator"]
+
+[[example]]
+name = "scrolling"
+required-features = ["simulator"]
+
+[[example]]
+name = "scrolling_slice"
+required-features = ["simulator"]
+
+[[example]]
+name = "small"
+required-features = ["simulator"]
