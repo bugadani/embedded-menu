@@ -8,8 +8,16 @@ use crate::{interaction::InputState, selection_indicator::Insets};
 
 pub mod animated_triangle;
 pub mod border;
+pub mod invert;
 pub mod line;
 pub mod triangle;
+
+// Re-export the styles themselves to make them easier to use.
+pub use animated_triangle::AnimatedTriangle;
+pub use border::Border;
+pub use invert::Invert;
+pub use line::Line;
+pub use triangle::Triangle;
 
 pub fn interpolate(value: u32, x_min: u32, x_max: u32, y_min: u32, y_max: u32) -> u32 {
     let x_range = x_max - x_min;
@@ -41,4 +49,12 @@ pub trait IndicatorStyle: Clone + Copy {
     ) -> Result<u32, D::Error>
     where
         D: DrawTarget<Color = BinaryColor>;
+}
+
+#[test]
+fn interpolate_basic() {
+    assert_eq!(interpolate(0, 0, 100, 0, 100), 0);
+    assert_eq!(interpolate(50, 0, 100, 0, 100), 50);
+    assert_eq!(interpolate(100, 0, 100, 0, 100), 100);
+    assert_eq!(interpolate(100, 0, 10, 0, 100), 1000);
 }
