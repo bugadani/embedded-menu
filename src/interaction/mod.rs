@@ -4,9 +4,6 @@ pub mod single_touch;
 #[cfg(feature = "simulator")]
 pub mod simulator;
 
-#[derive(Clone, Copy)]
-pub enum NoAction {}
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Interaction<R> {
     /// Change the selection
