@@ -37,7 +37,10 @@ impl SelectValue for TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     let style = MenuStyle::new(BinaryColor::On)
-        .with_input_adapter(Simulator::default())
+        .with_input_adapter(Simulator {
+            page_size: 5,
+            esc_value: (),
+        })
         .with_animated_selection_indicator(10)
         .with_details_delay(100);
 

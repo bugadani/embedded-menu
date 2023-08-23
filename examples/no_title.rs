@@ -41,7 +41,10 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::with_style(
         "",
         MenuStyle::default()
-            .with_input_adapter(Simulator::default())
+            .with_input_adapter(Simulator {
+                page_size: 5,
+                esc_value: (),
+            })
             .with_details_delay(100),
     )
     .add_item(NavigationItem::new("Foo", ()).with_marker(">"))

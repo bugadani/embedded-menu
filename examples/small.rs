@@ -45,7 +45,10 @@ impl SelectValue for TestEnum {
 fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::with_style(
         "Menu",
-        MenuStyle::new(BinaryColor::On).with_input_adapter(Simulator::default()),
+        MenuStyle::new(BinaryColor::On).with_input_adapter(Simulator {
+            page_size: 5,
+            esc_value: (),
+        }),
     )
     .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
     .add_item(Select::new("Check this", false))

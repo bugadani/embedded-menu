@@ -1,7 +1,7 @@
 use crate::{
     adapters::invert::BinaryColorDrawTargetExt,
     collection::MenuItemCollection,
-    interaction::{InputAdapter, InputState},
+    interaction::{InputAdapterSource, InputState},
     margin::Insets,
     selection_indicator::style::IndicatorStyle,
     MenuStyle,
@@ -155,7 +155,10 @@ where
         self.controller.jump_to_target(&mut state.position);
     }
 
-    pub fn update(&self, input_state: InputState, state: &mut State<P, S>) {
+    pub fn update<R>(&self, input_state: InputState<R>, state: &mut State<P, S>)
+    where
+        R: Copy,
+    {
         self.controller.update(&mut state.position);
         self.style.update(&mut state.state, input_state);
     }
@@ -169,15 +172,16 @@ where
         &self,
         selected_height: u32,
         selected_offset: i32,
-        input_state: InputState,
+        input_state: InputState<R>,
         display: &mut D,
         items: &impl MenuItemCollection<R>,
-        style: &MenuStyle<BinaryColor, S, IT, P>,
+        style: &MenuStyle<BinaryColor, S, IT, P, R>,
         state: &State<P, S>,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
+        R: Copy,
     {
         let display_size = display.bounding_box().size;
 

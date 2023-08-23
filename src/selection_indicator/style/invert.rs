@@ -28,10 +28,10 @@ impl IndicatorStyle for Invert {
         Rectangle::new(bounds.top_left, Size::new(fill_width, bounds.size.height))
     }
 
-    fn draw<D>(
+    fn draw<D, R>(
         &self,
         state: &Self::State,
-        input_state: InputState,
+        input_state: InputState<R>,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where

@@ -1,5 +1,7 @@
+use core::marker::PhantomData;
+
 use crate::{
-    interaction::{InputAdapter, InputState, InteractionType},
+    interaction::{InputAdapter, InputAdapterSource, InputState, InteractionType},
     selection_indicator::style::interpolate,
 };
 
@@ -26,11 +28,50 @@ pub struct SingleTouch {
     pub max_time: u32,
 }
 
-impl InputAdapter for SingleTouch {
+impl<R> InputAdapterSource<R> for SingleTouch
+where
+    R: Copy,
+{
+    type InputAdapter = SingleTouchAdapter<R>;
+
+    fn adapter(&self) -> Self::InputAdapter {
+        SingleTouchAdapter {
+            ignore_time: self.ignore_time,
+            debounce_time: self.debounce_time,
+            max_time: self.max_time,
+            marker: PhantomData,
+        }
+    }
+}
+
+/// Single touch navigation in hierarchical lists
+///
+/// Short press: select next item
+/// Long press: activate current item
+#[derive(Clone, Copy)]
+pub struct SingleTouchAdapter<R>
+where
+    R: Copy,
+{
+    ignore_time: u32,
+    debounce_time: u32,
+    max_time: u32,
+    marker: PhantomData<R>,
+}
+
+impl<R> InputAdapter for SingleTouchAdapter<R>
+where
+    R: Copy,
+{
     type Input = bool;
+    type Value = R;
     type State = State;
 
-    fn handle_input(&self, state: &mut Self::State, action: Self::Input) -> InputState {
+    fn handle_input(
+        &self,
+        state: &mut Self::State,
+        action: Self::Input,
+    ) -> InputState<Self::Value> {
         if !state.was_released {
             if action {
                 return InputState::Idle;
@@ -73,7 +114,7 @@ impl InputAdapter for SingleTouch {
 #[cfg(test)]
 mod test {
     use crate::interaction::{
-        single_touch::SingleTouch, InputAdapter, InputState, InteractionType,
+        single_touch::SingleTouch, InputAdapter, InputAdapterSource, InputState, InteractionType,
     };
 
     #[test]
@@ -83,9 +124,10 @@ mod test {
             ignore_time: 1,
             debounce_time: 1,
             max_time: 5,
-        };
+        }
+        .adapter();
 
-        let expectations: [&[_]; 6] = [
+        let expectations: [&[(bool, InputState<()>)]; 6] = [
             &[
                 (false, InputState::Idle),
                 (false, InputState::Idle),

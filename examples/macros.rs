@@ -4,7 +4,7 @@
 
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, Window,
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
@@ -50,7 +50,10 @@ fn main() -> Result<(), core::convert::Infallible> {
             .with_details_delay(250)
             .with_animated_selection_indicator(10)
             .with_selection_indicator(AnimatedTriangle::new(200))
-            .with_input_adapter(Simulator { page_size: 5 }),
+            .with_input_adapter(Simulator {
+                page_size: 5,
+                esc_value: DemoMenuMenuEvents::NavigationEvent(NavEvents::Quit),
+            }),
     );
 
     let output_settings = OutputSettingsBuilder::new()
@@ -67,11 +70,6 @@ fn main() -> Result<(), core::convert::Infallible> {
         for event in window.events() {
             if let Some(NavEvents::Quit) = menu.interact(event) {
                 break 'running;
-            }
-
-            match event {
-                SimulatorEvent::Quit => break 'running,
-                _ => continue,
             }
         }
     }

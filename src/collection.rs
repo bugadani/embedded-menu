@@ -8,13 +8,16 @@ use embedded_graphics::{
 use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
 
 use crate::{
-    interaction::InputAdapter,
+    interaction::InputAdapterSource,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     Marker, MenuItem, MenuStyle,
 };
 
 /// Menu-related extensions for object chain elements
-pub trait MenuItemCollection<R> {
+pub trait MenuItemCollection<R>
+where
+    R: Copy,
+{
     fn bounds_of(&self, nth: usize) -> Rectangle;
     fn title_of(&self, nth: usize) -> &str;
     fn details_of(&self, nth: usize) -> &str;
@@ -22,13 +25,13 @@ pub trait MenuItemCollection<R> {
     fn count(&self) -> usize;
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<C, S, IT, P>,
+        style: &MenuStyle<C, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>;
 }
@@ -37,6 +40,7 @@ pub trait MenuItemCollection<R> {
 impl<I, R> MenuItemCollection<R> for I
 where
     I: MenuItem<R> + Marker,
+    R: Copy,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         debug_assert!(nth == 0);
@@ -64,13 +68,13 @@ where
 
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<C, S, IT, P>,
+        style: &MenuStyle<C, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>,
     {
@@ -82,6 +86,7 @@ pub struct MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
+    R: Copy,
 {
     items: C,
     /// Used to keep track of the whole collection's position in case it's empty.
@@ -93,6 +98,7 @@ impl<C, I, R> MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
+    R: Copy,
 {
     pub fn new(mut items: C) -> Self {
         let mut offset = 0;
@@ -114,6 +120,7 @@ impl<C, I, R> MenuItemCollection<R> for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
+    R: Copy,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.items.as_ref()[nth].bounds()
@@ -137,15 +144,14 @@ where
 
     fn draw_styled<PC, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<PC, S, IT, P>,
+        style: &MenuStyle<PC, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-
         DIS: DrawTarget<Color = PC>,
     {
         for item in self.items.as_ref() {
@@ -160,6 +166,7 @@ impl<C, I, R> View for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
+    R: Copy,
 {
     fn translate_impl(&mut self, by: Point) {
         self.position += by;
@@ -188,6 +195,7 @@ impl<C, I, R> ViewGroup for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
+    R: Copy,
 {
     fn len(&self) -> usize {
         self.count()
@@ -205,6 +213,7 @@ where
 impl<I, R> MenuItemCollection<R> for Chain<I>
 where
     I: MenuItemCollection<R>,
+    R: Copy,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.object.bounds_of(nth)
@@ -228,13 +237,13 @@ where
 
     fn draw_styled<PC, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<PC, S, IT, P>,
+        style: &MenuStyle<PC, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
 
         DIS: DrawTarget<Color = PC>,
@@ -247,6 +256,7 @@ impl<I, LE, R> MenuItemCollection<R> for Link<I, LE>
 where
     I: MenuItemCollection<R>,
     LE: MenuItemCollection<R> + ChainElement,
+    R: Copy,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         let count = self.parent.count();
@@ -290,13 +300,13 @@ where
 
     fn draw_styled<PC, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<PC, S, IT, P>,
+        style: &MenuStyle<PC, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
 
         DIS: DrawTarget<Color = PC>,

@@ -6,7 +6,7 @@ use embedded_graphics::{
 use embedded_layout::View;
 
 use crate::{
-    interaction::InputAdapter,
+    interaction::InputAdapterSource,
     items::MenuLine,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     Marker, MenuItem, MenuStyle,
@@ -58,11 +58,11 @@ where
         self.marker.as_ref()
     }
 
-    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P>)
+    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, R>)
     where
         C: PixelColor,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
     {
         self.line = MenuLine::new(self.marker.as_ref(), style);
@@ -70,13 +70,13 @@ where
 
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<C, S, IT, P>,
+        style: &MenuStyle<C, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>,
     {

@@ -33,10 +33,10 @@ impl IndicatorStyle for Border {
         bounds
     }
 
-    fn draw<D>(
+    fn draw<D, R>(
         &self,
         _state: &Self::State,
-        input_state: InputState,
+        input_state: InputState<R>,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where

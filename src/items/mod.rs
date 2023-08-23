@@ -5,7 +5,7 @@ pub use navigation_item::NavigationItem;
 pub use select::Select;
 
 use crate::{
-    interaction::InputAdapter,
+    interaction::InputAdapterSource,
     margin::{Margin, MarginExt},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     MenuStyle,
@@ -27,12 +27,13 @@ pub struct MenuLine {
 }
 
 impl MenuLine {
-    pub fn new<C, S, IT, P>(longest_value: &str, style: &MenuStyle<C, S, IT, P>) -> Self
+    pub fn new<C, S, IT, P, R>(longest_value: &str, style: &MenuStyle<C, S, IT, P, R>) -> Self
     where
         C: PixelColor,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
+        R: Copy,
     {
         let style = style.text_style();
 
@@ -59,19 +60,20 @@ impl MenuLine {
         }
     }
 
-    pub fn draw_styled<D, C, S, IT, P>(
+    pub fn draw_styled<D, C, S, IT, P, R>(
         &self,
         title: &str,
         value_text: &str,
-        style: &MenuStyle<C, S, IT, P>,
+        style: &MenuStyle<C, S, IT, P, R>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = C>,
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
+        R: Copy,
     {
         let text_bounds = self.bounds.bounds();
         let display_area = display.bounding_box();

@@ -1,13 +1,44 @@
-use crate::interaction::{InputAdapter, InputState, InteractionType};
+use core::marker::PhantomData;
+
+use crate::interaction::{InputAdapter, InputAdapterSource, InputState, InteractionType};
 
 #[derive(Clone, Copy)]
 pub struct Programmed;
 
-impl InputAdapter for Programmed {
-    type Input = InteractionType;
+impl<R> InputAdapterSource<R> for Programmed
+where
+    R: Copy,
+{
+    type InputAdapter = ProgrammedAdapter<R>;
+
+    fn adapter(&self) -> Self::InputAdapter {
+        ProgrammedAdapter {
+            _marker: PhantomData,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct ProgrammedAdapter<R>
+where
+    R: Copy,
+{
+    _marker: PhantomData<R>,
+}
+
+impl<R> InputAdapter for ProgrammedAdapter<R>
+where
+    R: Copy,
+{
+    type Input = InteractionType<R>;
+    type Value = R;
     type State = ();
 
-    fn handle_input(&self, _state: &mut Self::State, action: Self::Input) -> InputState {
+    fn handle_input(
+        &self,
+        _state: &mut Self::State,
+        action: Self::Input,
+    ) -> InputState<Self::Value> {
         InputState::Active(action)
     }
 }

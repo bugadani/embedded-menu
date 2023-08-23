@@ -167,14 +167,14 @@ impl MenuItem {
                 event,
                 details: None,
             }) => quote! {
-                NavigationItem::new(#label, #events::__NavigationEvent(#event))
+                NavigationItem::new(#label, #events::NavigationEvent(#event))
             },
             MenuItem::Nav(NavItem {
                 label,
                 event,
                 details: Some(details),
             }) => quote! {
-                NavigationItem::new(#label, #events::__NavigationEvent(#event)).with_detail_text(#details)
+                NavigationItem::new(#label, #events::NavigationEvent(#event)).with_detail_text(#details)
             },
             MenuItem::Data {
                 data:
@@ -497,7 +497,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
             use embedded_layout::object_chain::*;
             use embedded_menu::{
                 builder::MenuBuilder,
-                interaction::{programmed::Programmed, InputAdapter},
+                interaction::{programmed::Programmed, InputAdapter, InputAdapterSource},
                 items::{NavigationItem, Select},
                 selection_indicator::{
                     style::{line::Line, IndicatorStyle},
@@ -508,14 +508,14 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
 
             #[derive(Clone, Copy)]
             #[allow(non_camel_case_types)]
-            enum #events {
-                __NavigationEvent(#navigation_event_ty),
+            pub enum #events {
+                NavigationEvent(#navigation_event_ty),
                 #(#event_variants),*
             }
 
             pub struct #wrapper<IT, P, S>
             where
-                IT: InputAdapter,
+                IT: InputAdapterSource<#events>,
                 P: SelectionIndicatorController,
                 S: IndicatorStyle,
             {
@@ -535,7 +535,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
 
             impl<IT, P, S> #wrapper<IT, P, S>
             where
-                IT: InputAdapter,
+                IT: InputAdapterSource<#events>,
                 P: SelectionIndicatorController,
                 S: IndicatorStyle,
             {
@@ -544,10 +544,10 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                 }
 
                 #[allow(unreachable_code)]
-                pub fn interact(&mut self, event: IT::Input) -> Option<#navigation_event_ty> {
+                pub fn interact(&mut self, event: <IT::InputAdapter as InputAdapter>::Input) -> Option<#navigation_event_ty> {
                     match self.menu.interact(event)? {
                         #(#events::#event_set_data_fields(value) => self.data.#event_set_data_fields = value,)*
-                        #events::__NavigationEvent(event) => return Some(event),
+                        #events::NavigationEvent(event) => return Some(event),
                     };
 
                     None
@@ -560,7 +560,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
 
             impl<IT, P, S> Drawable for #wrapper<IT, P, S>
             where
-                IT: InputAdapter,
+                IT: InputAdapterSource<#events>,
                 P: SelectionIndicatorController,
                 S: IndicatorStyle,
             {
@@ -582,7 +582,7 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
                 ) -> #wrapper<IT, P, S>
                 where
                     S: IndicatorStyle,
-                    IT: InputAdapter,
+                    IT: InputAdapterSource<#events>,
                     P: SelectionIndicatorController,
                 {
                     #wrapper {
@@ -599,11 +599,11 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
 
                 pub fn create_menu_with_style<S, IT, P>(
                     self,
-                    style: MenuStyle<BinaryColor, S, IT, P>,
+                    style: MenuStyle<BinaryColor, S, IT, P, #events>,
                 ) -> #wrapper<IT, P, S>
                 where
                     S: IndicatorStyle,
-                    IT: InputAdapter,
+                    IT: InputAdapterSource<#events>,
                     P: SelectionIndicatorController,
                 {
                     let builder = Menu::with_style(#title, style);
@@ -612,6 +612,6 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
             }
         }
 
-        pub use #module::#wrapper;
+        pub use #module::{#wrapper, DemoMenuMenuEvents};
     })
 }

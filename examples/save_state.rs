@@ -2,7 +2,7 @@
 
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, Window,
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
@@ -47,16 +47,20 @@ enum MenuEvent {
     SliceCheckbox(usize, bool),
     Select(TestEnum),
     Nothing,
+    Quit,
 }
 
 fn do_loop(
     window: &mut Window,
-    state: &mut MenuState<Simulator, AnimatedPosition, Line>,
+    state: &mut MenuState<Simulator<MenuEvent>, AnimatedPosition, Line>,
     data: &mut MenuData,
     item_count: usize,
 ) -> bool {
     let style = MenuStyle::new(BinaryColor::On)
-        .with_input_adapter(Simulator::default())
+        .with_input_adapter(Simulator {
+            page_size: 5,
+            esc_value: MenuEvent::Quit,
+        })
         .with_animated_selection_indicator(10);
 
     let title = format!("{item_count} items");
@@ -104,12 +108,8 @@ fn do_loop(
                     MenuEvent::SliceCheckbox(idx, value) => data.slice_data[idx] = value,
                     MenuEvent::Select(select) => data.select = select,
                     MenuEvent::Nothing => {}
+                    MenuEvent::Quit => return false,
                 }
-            }
-
-            match event {
-                SimulatorEvent::Quit => return false,
-                _ => continue,
             }
         }
 

@@ -35,10 +35,10 @@ impl IndicatorStyle for Triangle {
         Arrow::new(bounds, fill_width)
     }
 
-    fn draw<D>(
+    fn draw<D, R>(
         &self,
         state: &Self::State,
-        input_state: InputState,
+        input_state: InputState<R>,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
