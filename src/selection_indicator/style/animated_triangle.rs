@@ -39,7 +39,7 @@ impl IndicatorStyle for AnimatedTriangle {
     }
 
     fn update(&self, state: &mut Self::State, input_state: InputState) {
-        state.current = if let InputState::Idle = input_state {
+        state.current = if input_state == InputState::Idle {
             (state.current + 1) % self.period
         } else {
             0
