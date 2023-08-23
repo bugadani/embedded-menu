@@ -1,5 +1,3 @@
-use core::hint::unreachable_unchecked;
-
 pub mod programmed;
 pub mod single_touch;
 
@@ -11,6 +9,22 @@ pub enum NoAction {}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Interaction<R> {
+    /// Change the selection
+    Navigation(Navigation),
+    /// Return a value
+    Action(Action<R>),
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Action<R> {
+    /// Select the currently selected item, executing any relevant action.
+    Select,
+    /// Return a value
+    Return(R),
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Navigation {
     /// Equivalent to `BackwardWrapping(1)`, kept for backward compatibility.
     Previous,
     /// Equivalent to `ForwardWrapping(1)`, kept for backward compatibility.
@@ -29,35 +43,26 @@ pub enum Interaction<R> {
     End,
     /// Jump to the `usize`th item in the list, clamping at the beginning and end if necessary.
     JumpTo(usize),
-    /// Select the currently selected item, executing any relevant action.
-    Select,
-    /// Return a value
-    Action(R),
 }
 
-impl<R> Interaction<R> {
+impl Navigation {
     /// Internal function to change the selection based on interaction.
     /// Separated to allow for easier testing.
     pub(crate) fn calculate_selection(self, selected: usize, count: usize) -> usize {
         // The lazy evaluation is necessary to prevent overflows.
         #[allow(clippy::unnecessary_lazy_evaluations)]
         match self {
-            Interaction::Next => (selected + 1) % count,
-            Interaction::Previous => selected.checked_sub(1).unwrap_or(count - 1),
-            Interaction::ForwardWrapping(n) => (selected + n) % count,
-            Interaction::Forward(n) => selected.saturating_add(n).min(count - 1),
-            Interaction::BackwardWrapping(n) => selected
+            Self::Next => (selected + 1) % count,
+            Self::Previous => selected.checked_sub(1).unwrap_or(count - 1),
+            Self::ForwardWrapping(n) => (selected + n) % count,
+            Self::Forward(n) => selected.saturating_add(n).min(count - 1),
+            Self::BackwardWrapping(n) => selected
                 .checked_sub(n)
                 .unwrap_or_else(|| count - (n - selected) % count),
-            Interaction::Backward(n) => selected.saturating_sub(n),
-            Interaction::Beginning => 0,
-            Interaction::End => count - 1,
-            Interaction::JumpTo(n) => n.min(count - 1),
-            Interaction::Select | Interaction::Action(_) => unsafe {
-                // This should be handled prior to calling this function. It is okay for
-                // the compiler to optimize this away.
-                unreachable_unchecked()
-            },
+            Self::Backward(n) => selected.saturating_sub(n),
+            Self::Beginning => 0,
+            Self::End => count - 1,
+            Self::JumpTo(n) => n.min(count - 1),
         }
     }
 }
@@ -93,43 +98,41 @@ mod test {
         let count = 30;
         let mut selected = 3;
         for _ in 0..5 {
-            selected = Interaction::<NoAction>::Previous.calculate_selection(selected, count);
+            selected = Navigation::Previous.calculate_selection(selected, count);
         }
         assert_eq!(selected, 28);
 
         for _ in 0..5 {
-            selected = Interaction::<NoAction>::Next.calculate_selection(selected, count);
+            selected = Navigation::Next.calculate_selection(selected, count);
         }
         assert_eq!(selected, 3);
 
         for _ in 0..5 {
-            selected =
-                Interaction::<NoAction>::BackwardWrapping(5).calculate_selection(selected, count);
+            selected = Navigation::BackwardWrapping(5).calculate_selection(selected, count);
         }
         assert_eq!(selected, 8);
 
         for _ in 0..5 {
-            selected =
-                Interaction::<NoAction>::ForwardWrapping(5).calculate_selection(selected, count);
+            selected = Navigation::ForwardWrapping(5).calculate_selection(selected, count);
         }
         assert_eq!(selected, 3);
 
-        selected = Interaction::<NoAction>::JumpTo(20).calculate_selection(selected, count);
+        selected = Navigation::JumpTo(20).calculate_selection(selected, count);
         assert_eq!(selected, 20);
 
-        selected = Interaction::<NoAction>::Beginning.calculate_selection(selected, count);
+        selected = Navigation::Beginning.calculate_selection(selected, count);
         assert_eq!(selected, 0);
 
-        selected = Interaction::<NoAction>::End.calculate_selection(selected, count);
+        selected = Navigation::End.calculate_selection(selected, count);
         assert_eq!(selected, 29);
 
         for _ in 0..5 {
-            selected = Interaction::<NoAction>::Backward(5).calculate_selection(selected, count);
+            selected = Navigation::Backward(5).calculate_selection(selected, count);
         }
         assert_eq!(selected, 4);
 
         for _ in 0..5 {
-            selected = Interaction::<NoAction>::Forward(5).calculate_selection(selected, count);
+            selected = Navigation::Forward(5).calculate_selection(selected, count);
         }
         assert_eq!(selected, 29);
     }
@@ -139,32 +142,28 @@ mod test {
         let count = 30;
         let mut selected = 3;
 
-        selected =
-            Interaction::<NoAction>::BackwardWrapping(75).calculate_selection(selected, count);
+        selected = Navigation::BackwardWrapping(75).calculate_selection(selected, count);
         assert_eq!(selected, 18);
 
-        selected =
-            Interaction::<NoAction>::ForwardWrapping(75).calculate_selection(selected, count);
+        selected = Navigation::ForwardWrapping(75).calculate_selection(selected, count);
         assert_eq!(selected, 3);
 
-        selected =
-            Interaction::<NoAction>::BackwardWrapping(100000).calculate_selection(selected, count);
+        selected = Navigation::BackwardWrapping(100000).calculate_selection(selected, count);
         assert_eq!(selected, 23);
 
-        selected =
-            Interaction::<NoAction>::ForwardWrapping(100000).calculate_selection(selected, count);
+        selected = Navigation::ForwardWrapping(100000).calculate_selection(selected, count);
         assert_eq!(selected, 3);
 
-        selected = Interaction::<NoAction>::JumpTo(100).calculate_selection(selected, count);
+        selected = Navigation::JumpTo(100).calculate_selection(selected, count);
         assert_eq!(selected, 29);
 
-        selected = Interaction::<NoAction>::JumpTo(0).calculate_selection(selected, count);
+        selected = Navigation::JumpTo(0).calculate_selection(selected, count);
         assert_eq!(selected, 0);
 
-        selected = Interaction::<NoAction>::Forward(100000).calculate_selection(selected, count);
+        selected = Navigation::Forward(100000).calculate_selection(selected, count);
         assert_eq!(selected, 29);
 
-        selected = Interaction::<NoAction>::Backward(100000).calculate_selection(selected, count);
+        selected = Navigation::Backward(100000).calculate_selection(selected, count);
         assert_eq!(selected, 0);
     }
 }

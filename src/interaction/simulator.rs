@@ -1,6 +1,8 @@
 use embedded_graphics_simulator::{sdl2::Keycode, SimulatorEvent};
 
-use crate::interaction::{InputAdapter, InputAdapterSource, InputState, Interaction};
+use crate::interaction::{
+    Action, InputAdapter, InputAdapterSource, InputState, Interaction, Navigation,
+};
 
 /// Input adapter to work with the embedded-graphics simulator
 #[derive(Clone, Copy)]
@@ -41,15 +43,23 @@ where
             SimulatorEvent::KeyDown { repeat: false, .. } => return InputState::Idle,
             SimulatorEvent::KeyDown { repeat: true, .. } => return InputState::InProgress(255),
             SimulatorEvent::KeyUp { keycode, .. } => match keycode {
-                Keycode::Return => InputState::Active(Interaction::Select),
-                Keycode::Up => InputState::Active(Interaction::Previous),
-                Keycode::Down => InputState::Active(Interaction::Next),
-                Keycode::PageDown => InputState::Active(Interaction::Forward(self.page_size)),
-                Keycode::PageUp => InputState::Active(Interaction::Backward(self.page_size)),
-                Keycode::Escape => InputState::Active(Interaction::Action(self.esc_value)),
+                Keycode::Return => InputState::Active(Interaction::Action(Action::Select)),
+                Keycode::Up => InputState::Active(Interaction::Navigation(Navigation::Previous)),
+                Keycode::Down => InputState::Active(Interaction::Navigation(Navigation::Next)),
+                Keycode::PageDown => {
+                    InputState::Active(Interaction::Navigation(Navigation::Forward(self.page_size)))
+                }
+                Keycode::PageUp => InputState::Active(Interaction::Navigation(
+                    Navigation::Backward(self.page_size),
+                )),
+                Keycode::Escape => {
+                    InputState::Active(Interaction::Action(Action::Return(self.esc_value)))
+                }
                 _ => InputState::Idle,
             },
-            SimulatorEvent::Quit => InputState::Active(Interaction::Action(self.esc_value)),
+            SimulatorEvent::Quit => {
+                InputState::Active(Interaction::Action(Action::Return(self.esc_value)))
+            }
             _ => InputState::Idle,
         }
     }
