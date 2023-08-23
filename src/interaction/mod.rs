@@ -68,10 +68,27 @@ impl Navigation {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum InputState<R> {
+pub enum InputResult<R> {
+    StateUpdate(InputState),
+    Interaction(Interaction<R>),
+}
+
+impl<R> From<Interaction<R>> for InputResult<R> {
+    fn from(interaction: Interaction<R>) -> Self {
+        Self::Interaction(interaction)
+    }
+}
+
+impl<R> From<InputState> for InputResult<R> {
+    fn from(state: InputState) -> Self {
+        Self::StateUpdate(state)
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum InputState {
     Idle,
     InProgress(u8),
-    Active(Interaction<R>),
 }
 
 pub trait InputAdapterSource<R>: Copy {
@@ -85,8 +102,11 @@ pub trait InputAdapter: Copy {
     type Value: Copy;
     type State: Default + Copy;
 
-    fn handle_input(&self, state: &mut Self::State, action: Self::Input)
-        -> InputState<Self::Value>;
+    fn handle_input(
+        &self,
+        state: &mut Self::State,
+        action: Self::Input,
+    ) -> InputResult<Self::Value>;
 }
 
 #[cfg(test)]

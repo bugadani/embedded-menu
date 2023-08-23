@@ -13,7 +13,8 @@ use crate::{
     builder::MenuBuilder,
     collection::MenuItemCollection,
     interaction::{
-        programmed::Programmed, Action, InputAdapter, InputAdapterSource, InputState, Interaction,
+        programmed::Programmed, Action, InputAdapter, InputAdapterSource, InputResult, InputState,
+        Interaction,
     },
     margin::MarginExt,
     selection_indicator::{
@@ -256,7 +257,7 @@ where
     display_mode: MenuDisplayMode,
     interaction_state: IT::State,
     indicator_state: IndicatorState<P, S>,
-    last_input_state: InputState<IT::Value>,
+    last_input_state: InputState,
 }
 
 impl<IT, P, S> Default for MenuState<IT, P, S>
@@ -390,25 +391,26 @@ where
             .adapter()
             .handle_input(&mut self.state.interaction_state, input);
 
-        if let InputState::Active(interaction) = input {
-            // We don't store Active because we don't assume interact is called periodically.
-            // This means that we have to not expect the Active state during rendering, either.
-            self.state.last_input_state = InputState::Idle;
-            match interaction {
-                Interaction::Navigation(navigation) => {
-                    let selected = navigation.calculate_selection(self.state.selected, count);
-                    self.state.change_selected_item(selected);
-                }
-                Interaction::Action(action) => {
-                    let value = match action {
-                        Action::Select => self.items.interact_with(self.state.selected),
-                        Action::Return(value) => value,
-                    };
-                    return Some(value);
+        match input {
+            InputResult::Interaction(interaction) => {
+                // We don't store interactions because we don't assume interact is called periodically.
+                // This means that we have to not expect the Active state during rendering, either.
+                self.state.last_input_state = InputState::Idle;
+                match interaction {
+                    Interaction::Navigation(navigation) => {
+                        let selected = navigation.calculate_selection(self.state.selected, count);
+                        self.state.change_selected_item(selected);
+                    }
+                    Interaction::Action(action) => {
+                        let value = match action {
+                            Action::Select => self.items.interact_with(self.state.selected),
+                            Action::Return(value) => value,
+                        };
+                        return Some(value);
+                    }
                 }
             }
-        } else {
-            self.state.last_input_state = input;
+            InputResult::StateUpdate(state) => self.state.last_input_state = state,
         }
 
         None

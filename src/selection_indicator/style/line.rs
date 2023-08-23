@@ -36,10 +36,10 @@ impl IndicatorStyle for Line {
         )
     }
 
-    fn draw<D, R>(
+    fn draw<D>(
         &self,
         state: &Self::State,
-        input_state: InputState<R>,
+        input_state: InputState,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where

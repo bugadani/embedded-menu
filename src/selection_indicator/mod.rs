@@ -155,10 +155,7 @@ where
         self.controller.jump_to_target(&mut state.position);
     }
 
-    pub fn update<R>(&self, input_state: InputState<R>, state: &mut State<P, S>)
-    where
-        R: Copy,
-    {
+    pub fn update(&self, input_state: InputState, state: &mut State<P, S>) {
         self.controller.update(&mut state.position);
         self.style.update(&mut state.state, input_state);
     }
@@ -172,7 +169,7 @@ where
         &self,
         selected_height: u32,
         selected_offset: i32,
-        input_state: InputState<R>,
+        input_state: InputState,
         display: &mut D,
         items: &impl MenuItemCollection<R>,
         style: &MenuStyle<BinaryColor, S, IT, P, R>,

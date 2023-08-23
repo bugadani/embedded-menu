@@ -39,13 +39,13 @@ pub trait IndicatorStyle: Clone + Copy {
     type State: Default + Copy;
 
     fn on_target_changed(&self, _state: &mut Self::State) {}
-    fn update<R>(&self, _state: &mut Self::State, _input_state: InputState<R>) {}
+    fn update(&self, _state: &mut Self::State, _input_state: InputState) {}
     fn padding(&self, state: &Self::State, height: u32) -> Insets;
     fn shape(&self, state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape;
-    fn draw<D, R>(
+    fn draw<D>(
         &self,
         state: &Self::State,
-        input_state: InputState<R>,
+        input_state: InputState,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where

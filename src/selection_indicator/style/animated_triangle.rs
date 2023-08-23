@@ -38,7 +38,7 @@ impl IndicatorStyle for AnimatedTriangle {
         state.current = 0;
     }
 
-    fn update<R>(&self, state: &mut Self::State, input_state: InputState<R>) {
+    fn update(&self, state: &mut Self::State, input_state: InputState) {
         state.current = if let InputState::Idle = input_state {
             (state.current + 1) % self.period
         } else {
@@ -74,10 +74,10 @@ impl IndicatorStyle for AnimatedTriangle {
         Arrow::new(bounds, fill_width).translate(Point::new(-offset, 0))
     }
 
-    fn draw<D, R>(
+    fn draw<D>(
         &self,
         state: &Self::State,
-        input_state: InputState<R>,
+        input_state: InputState,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where

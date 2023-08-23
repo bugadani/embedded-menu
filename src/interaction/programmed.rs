@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::interaction::{InputAdapter, InputAdapterSource, InputState, Interaction};
+use crate::interaction::{InputAdapter, InputAdapterSource, InputResult, Interaction};
 
 #[derive(Clone, Copy)]
 pub struct Programmed;
@@ -38,7 +38,7 @@ where
         &self,
         _state: &mut Self::State,
         action: Self::Input,
-    ) -> InputState<Self::Value> {
-        InputState::Active(action)
+    ) -> InputResult<Self::Value> {
+        InputResult::from(action)
     }
 }

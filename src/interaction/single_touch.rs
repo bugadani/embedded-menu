@@ -1,7 +1,9 @@
 use core::marker::PhantomData;
 
 use crate::{
-    interaction::{Action, InputAdapter, InputAdapterSource, InputState, Interaction, Navigation},
+    interaction::{
+        Action, InputAdapter, InputAdapterSource, InputResult, InputState, Interaction, Navigation,
+    },
     selection_indicator::style::interpolate,
 };
 
@@ -71,10 +73,10 @@ where
         &self,
         state: &mut Self::State,
         action: Self::Input,
-    ) -> InputState<Self::Value> {
+    ) -> InputResult<Self::Value> {
         if !state.was_released {
             if action {
-                return InputState::Idle;
+                return InputResult::from(InputState::Idle);
             }
             state.was_released = true;
         }
@@ -82,30 +84,30 @@ where
         if action {
             state.interaction_time = state.interaction_time.saturating_add(1);
             if state.interaction_time <= self.ignore_time && !state.repeated {
-                InputState::Idle
+                InputResult::from(InputState::Idle)
             } else if state.interaction_time < self.max_time {
                 let ignore_time = if state.repeated { 0 } else { self.ignore_time };
-                InputState::InProgress(interpolate(
+                InputResult::from(InputState::InProgress(interpolate(
                     state.interaction_time - ignore_time,
                     0,
                     self.max_time - ignore_time,
                     0,
                     255,
-                ) as u8)
+                ) as u8))
             } else {
                 state.repeated = true;
                 state.interaction_time = 0;
-                InputState::Active(Interaction::Action(Action::Select))
+                InputResult::from(Interaction::Action(Action::Select))
             }
         } else {
             let time = core::mem::replace(&mut state.interaction_time, 0);
 
             if self.debounce_time < time && time < self.max_time && !state.repeated {
-                InputState::Active(Interaction::Navigation(Navigation::Next))
+                InputResult::from(Interaction::Navigation(Navigation::Next))
             } else {
                 // Already interacted before releasing, ignore and reset.
                 state.repeated = false;
-                InputState::Idle
+                InputResult::from(InputState::Idle)
             }
         }
     }
@@ -114,8 +116,8 @@ where
 #[cfg(test)]
 mod test {
     use crate::interaction::{
-        single_touch::SingleTouch, Action, InputAdapter, InputAdapterSource, InputState,
-        Interaction, Navigation,
+        single_touch::SingleTouch, Action, InputAdapter, InputAdapterSource, InputResult,
+        InputState, Interaction, Navigation,
     };
 
     #[test]
@@ -128,79 +130,64 @@ mod test {
         }
         .adapter();
 
-        let expectations: [&[(bool, InputState<()>)]; 6] = [
+        let expectations: [&[(bool, InputResult<()>)]; 6] = [
             &[
-                (false, InputState::Idle),
-                (false, InputState::Idle),
-                (false, InputState::Idle),
-                (false, InputState::Idle),
-                (false, InputState::Idle),
-                (false, InputState::Idle),
+                (false, InputState::Idle.into()),
+                (false, InputState::Idle.into()),
+                (false, InputState::Idle.into()),
+                (false, InputState::Idle.into()),
+                (false, InputState::Idle.into()),
+                (false, InputState::Idle.into()),
             ],
             // repeated short pulse ignored
             &[
-                (true, InputState::Idle),
-                (false, InputState::Idle),
-                (true, InputState::Idle),
-                (false, InputState::Idle),
-                (true, InputState::Idle),
-                (false, InputState::Idle),
+                (true, InputState::Idle.into()),
+                (false, InputState::Idle.into()),
+                (true, InputState::Idle.into()),
+                (false, InputState::Idle.into()),
+                (true, InputState::Idle.into()),
+                (false, InputState::Idle.into()),
             ],
             // longer pulse recongised as Next event on falling edge
             &[
-                (false, InputState::Idle),
-                (true, InputState::Idle),
-                (true, InputState::InProgress(63)),
-                (
-                    false,
-                    InputState::Active(Interaction::Navigation(Navigation::Next)),
-                ),
+                (false, InputState::Idle.into()),
+                (true, InputState::Idle.into()),
+                (true, InputState::InProgress(63).into()),
+                (false, Interaction::Navigation(Navigation::Next).into()),
             ],
             &[
-                (false, InputState::Idle),
-                (true, InputState::Idle),
-                (true, InputState::InProgress(63)),
-                (true, InputState::InProgress(127)),
-                (
-                    false,
-                    InputState::Active(Interaction::Navigation(Navigation::Next)),
-                ),
+                (false, InputState::Idle.into()),
+                (true, InputState::Idle.into()),
+                (true, InputState::InProgress(63).into()),
+                (true, InputState::InProgress(127).into()),
+                (false, Interaction::Navigation(Navigation::Next).into()),
             ],
             // long pulse NOT recognised as Select event on falling edge
             &[
-                (false, InputState::Idle),
-                (true, InputState::Idle),
-                (true, InputState::InProgress(63)),
-                (true, InputState::InProgress(127)),
-                (true, InputState::InProgress(191)),
-                (
-                    false,
-                    InputState::Active(Interaction::Navigation(Navigation::Next)),
-                ),
+                (false, InputState::Idle.into()),
+                (true, InputState::Idle.into()),
+                (true, InputState::InProgress(63).into()),
+                (true, InputState::InProgress(127).into()),
+                (true, InputState::InProgress(191).into()),
+                (false, Interaction::Navigation(Navigation::Next).into()),
             ],
             // long pulse recognised as Select event immediately
             &[
-                (false, InputState::Idle),
-                (true, InputState::Idle),
-                (true, InputState::InProgress(63)),
-                (true, InputState::InProgress(127)),
-                (true, InputState::InProgress(191)),
-                (
-                    true,
-                    InputState::Active(Interaction::Action(Action::Select)),
-                ),
-                (true, InputState::InProgress(51)),
-                (true, InputState::InProgress(102)),
-                (true, InputState::InProgress(153)),
-                (true, InputState::InProgress(204)),
-                (
-                    true,
-                    InputState::Active(Interaction::Action(Action::Select)),
-                ),
-                (true, InputState::InProgress(51)),
-                (true, InputState::InProgress(102)),
-                (true, InputState::InProgress(153)),
-                (false, InputState::Idle),
+                (false, InputState::Idle.into()),
+                (true, InputState::Idle.into()),
+                (true, InputState::InProgress(63).into()),
+                (true, InputState::InProgress(127).into()),
+                (true, InputState::InProgress(191).into()),
+                (true, Interaction::Action(Action::Select).into()),
+                (true, InputState::InProgress(51).into()),
+                (true, InputState::InProgress(102).into()),
+                (true, InputState::InProgress(153).into()),
+                (true, InputState::InProgress(204).into()),
+                (true, Interaction::Action(Action::Select).into()),
+                (true, InputState::InProgress(51).into()),
+                (true, InputState::InProgress(102).into()),
+                (true, InputState::InProgress(153).into()),
+                (false, InputState::Idle.into()),
             ],
         ];
 

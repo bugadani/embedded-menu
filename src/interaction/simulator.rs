@@ -1,7 +1,7 @@
 use embedded_graphics_simulator::{sdl2::Keycode, SimulatorEvent};
 
 use crate::interaction::{
-    Action, InputAdapter, InputAdapterSource, InputState, Interaction, Navigation,
+    Action, InputAdapter, InputAdapterSource, InputResult, InputState, Interaction, Navigation,
 };
 
 /// Input adapter to work with the embedded-graphics simulator
@@ -38,29 +38,31 @@ where
         &self,
         _state: &mut Self::State,
         action: Self::Input,
-    ) -> InputState<Self::Value> {
+    ) -> InputResult<Self::Value> {
         match action {
-            SimulatorEvent::KeyDown { repeat: false, .. } => return InputState::Idle,
-            SimulatorEvent::KeyDown { repeat: true, .. } => return InputState::InProgress(255),
+            SimulatorEvent::KeyDown { repeat: false, .. } => InputResult::from(InputState::Idle),
+            SimulatorEvent::KeyDown { repeat: true, .. } => {
+                InputResult::from(InputState::InProgress(255))
+            }
             SimulatorEvent::KeyUp { keycode, .. } => match keycode {
-                Keycode::Return => InputState::Active(Interaction::Action(Action::Select)),
-                Keycode::Up => InputState::Active(Interaction::Navigation(Navigation::Previous)),
-                Keycode::Down => InputState::Active(Interaction::Navigation(Navigation::Next)),
+                Keycode::Return => InputResult::from(Interaction::Action(Action::Select)),
+                Keycode::Up => InputResult::from(Interaction::Navigation(Navigation::Previous)),
+                Keycode::Down => InputResult::from(Interaction::Navigation(Navigation::Next)),
                 Keycode::PageDown => {
-                    InputState::Active(Interaction::Navigation(Navigation::Forward(self.page_size)))
+                    InputResult::from(Interaction::Navigation(Navigation::Forward(self.page_size)))
                 }
-                Keycode::PageUp => InputState::Active(Interaction::Navigation(
+                Keycode::PageUp => InputResult::from(Interaction::Navigation(
                     Navigation::Backward(self.page_size),
                 )),
                 Keycode::Escape => {
-                    InputState::Active(Interaction::Action(Action::Return(self.esc_value)))
+                    InputResult::from(Interaction::Action(Action::Return(self.esc_value)))
                 }
-                _ => InputState::Idle,
+                _ => InputResult::from(InputState::Idle),
             },
             SimulatorEvent::Quit => {
-                InputState::Active(Interaction::Action(Action::Return(self.esc_value)))
+                InputResult::from(Interaction::Action(Action::Return(self.esc_value)))
             }
-            _ => InputState::Idle,
+            _ => InputResult::from(InputState::Idle),
         }
     }
 }
