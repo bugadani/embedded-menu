@@ -13,7 +13,6 @@ Unreleased (??)
  - Added `selection_indicator::invert::Invert`
  - Renamed `MenuStyle::with_interaction_controller` to `with_input_adapter`
  - Added the `simulator` feature and the `interaction::simulator::Simulator` input adapter
- - All menu item return value must be `Copy`
 
 0.3.1 (2023-08-06)
 ==================

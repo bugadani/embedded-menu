@@ -14,10 +14,7 @@ use crate::{
 };
 
 /// Menu-related extensions for object chain elements
-pub trait MenuItemCollection<R>
-where
-    R: Copy,
-{
+pub trait MenuItemCollection<R> {
     fn bounds_of(&self, nth: usize) -> Rectangle;
     fn title_of(&self, nth: usize) -> &str;
     fn details_of(&self, nth: usize) -> &str;
@@ -40,7 +37,6 @@ where
 impl<I, R> MenuItemCollection<R> for I
 where
     I: MenuItem<R> + Marker,
-    R: Copy,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         debug_assert!(nth == 0);
@@ -86,7 +82,6 @@ pub struct MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
-    R: Copy,
 {
     items: C,
     /// Used to keep track of the whole collection's position in case it's empty.
@@ -98,7 +93,6 @@ impl<C, I, R> MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
-    R: Copy,
 {
     pub fn new(mut items: C) -> Self {
         let mut offset = 0;
@@ -120,7 +114,6 @@ impl<C, I, R> MenuItemCollection<R> for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
-    R: Copy,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.items.as_ref()[nth].bounds()
@@ -166,7 +159,6 @@ impl<C, I, R> View for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
-    R: Copy,
 {
     fn translate_impl(&mut self, by: Point) {
         self.position += by;
@@ -195,7 +187,6 @@ impl<C, I, R> ViewGroup for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
     I: MenuItem<R>,
-    R: Copy,
 {
     fn len(&self) -> usize {
         self.count()
@@ -213,7 +204,6 @@ where
 impl<I, R> MenuItemCollection<R> for Chain<I>
 where
     I: MenuItemCollection<R>,
-    R: Copy,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.object.bounds_of(nth)
@@ -256,7 +246,6 @@ impl<I, LE, R> MenuItemCollection<R> for Link<I, LE>
 where
     I: MenuItemCollection<R>,
     LE: MenuItemCollection<R> + ChainElement,
-    R: Copy,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         let count = self.parent.count();

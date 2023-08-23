@@ -30,10 +30,7 @@ pub struct SingleTouch {
     pub max_time: u32,
 }
 
-impl<R> InputAdapterSource<R> for SingleTouch
-where
-    R: Copy,
-{
+impl<R> InputAdapterSource<R> for SingleTouch {
     type InputAdapter = SingleTouchAdapter<R>;
 
     fn adapter(&self) -> Self::InputAdapter {
@@ -50,21 +47,22 @@ where
 ///
 /// Short press: select next item
 /// Long press: activate current item
-#[derive(Clone, Copy)]
-pub struct SingleTouchAdapter<R>
-where
-    R: Copy,
-{
+pub struct SingleTouchAdapter<R> {
     ignore_time: u32,
     debounce_time: u32,
     max_time: u32,
     marker: PhantomData<R>,
 }
 
-impl<R> InputAdapter for SingleTouchAdapter<R>
-where
-    R: Copy,
-{
+impl<R> Clone for SingleTouchAdapter<R> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<R> Copy for SingleTouchAdapter<R> {}
+
+impl<R> InputAdapter for SingleTouchAdapter<R> {
     type Input = bool;
     type Value = R;
     type State = State;

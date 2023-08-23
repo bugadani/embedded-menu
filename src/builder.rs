@@ -17,7 +17,6 @@ where
     C: PixelColor,
     S: IndicatorStyle,
     P: SelectionIndicatorController,
-    R: Copy,
 {
     title: T,
     items: LL,
@@ -31,7 +30,6 @@ where
     S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
-    R: Copy,
 {
     pub const fn new(title: T, style: MenuStyle<C, S, IT, P, R>) -> Self {
         Self {
@@ -49,7 +47,6 @@ where
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    R: Copy,
 {
     pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<T, IT, Chain<I>, R, C, P, S> {
         item.set_style(&self.style);
@@ -90,7 +87,6 @@ where
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    R: Copy,
 {
     pub fn add_item<I: MenuItem<R>>(
         self,
@@ -135,7 +131,6 @@ where
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    R: Copy,
 {
     pub fn add_item<I2: MenuItem<R>>(
         self,
@@ -179,7 +174,6 @@ where
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    R: Copy,
 {
     pub fn build(self) -> Menu<T, IT, VG, R, C, P, S> {
         let default_timeout = self.style.details_delay.unwrap_or_default();

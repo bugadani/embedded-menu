@@ -44,10 +44,7 @@ pub use embedded_menu_macros::{Menu, SelectValue};
 /// Marker trait necessary to avoid a "conflicting implementations" error.
 pub trait Marker {}
 
-pub trait MenuItem<R>: Marker + View
-where
-    R: Copy,
-{
+pub trait MenuItem<R>: Marker + View {
     fn interact(&mut self) -> R;
     fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, R>)
     where
@@ -107,7 +104,6 @@ where
     S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
-    R: Copy,
 {
     pub(crate) color: C,
     pub(crate) scrollbar: DisplayScrollbar,
@@ -119,10 +115,7 @@ where
     _marker: PhantomData<R>,
 }
 
-impl<R> Default for MenuStyle<BinaryColor, LineIndicator, Programmed, StaticPosition, R>
-where
-    R: Copy,
-{
+impl<R> Default for MenuStyle<BinaryColor, LineIndicator, Programmed, StaticPosition, R> {
     fn default() -> Self {
         Self::new(BinaryColor::On)
     }
@@ -131,7 +124,6 @@ where
 impl<C, R> MenuStyle<C, LineIndicator, Programmed, StaticPosition, R>
 where
     C: PixelColor,
-    R: Copy,
 {
     pub const fn new(color: C) -> Self {
         Self {
@@ -156,7 +148,6 @@ where
     S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
-    R: Copy,
 {
     pub const fn with_font(self, font: &'static MonoFont<'static>) -> Self {
         Self { font, ..self }
@@ -323,7 +314,6 @@ where
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    R: Copy,
 {
     _return_type: PhantomData<R>,
     title: T,
@@ -337,7 +327,6 @@ where
     T: AsRef<str>,
     C: PixelColor,
     S: IndicatorStyle,
-    R: Copy,
 {
     pub fn new(title: T) -> MenuBuilder<T, Programmed, NoItems, R, C, StaticPosition, S>
     where
@@ -354,7 +343,6 @@ where
     S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
-    R: Copy,
 {
     pub fn with_style(
         title: T,
@@ -372,7 +360,6 @@ where
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    R: Copy,
 {
     fn selected_has_details(&self) -> bool {
         !self.items.details_of(self.state.selected).is_empty()
@@ -429,7 +416,6 @@ where
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    R: Copy,
 {
     fn header<'t>(
         &self,
@@ -574,7 +560,6 @@ where
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    R: Copy,
 {
     fn display_list<D>(&self, display: &mut D) -> Result<(), D::Error>
     where
@@ -649,7 +634,6 @@ where
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    R: Copy,
 {
     type Color = BinaryColor;
     type Output = ();

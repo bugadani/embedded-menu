@@ -33,7 +33,6 @@ impl MenuLine {
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        R: Copy,
     {
         let style = style.text_style();
 
@@ -73,7 +72,6 @@ impl MenuLine {
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        R: Copy,
     {
         let text_bounds = self.bounds.bounds();
         let display_area = display.bounding_box();

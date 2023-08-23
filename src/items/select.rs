@@ -37,7 +37,6 @@ where
     T: AsRef<str>,
     D: AsRef<str>,
     S: SelectValue,
-    R: Copy,
 {
     title_text: T,
     details: D,
@@ -67,7 +66,6 @@ where
     T: AsRef<str>,
     D: AsRef<str>,
     S: SelectValue,
-    R: Copy,
 {
     pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> Select<T, D, R2, S> {
         Select {
@@ -95,7 +93,6 @@ where
     T: AsRef<str>,
     D: AsRef<str>,
     S: SelectValue,
-    R: Copy,
 {
 }
 
@@ -104,7 +101,6 @@ where
     T: AsRef<str>,
     D: AsRef<str>,
     S: SelectValue,
-    R: Copy,
 {
     fn interact(&mut self) -> R {
         self.value = self.value.next();
@@ -166,7 +162,6 @@ where
     T: AsRef<str>,
     D: AsRef<str>,
     S: SelectValue,
-    R: Copy,
 {
     fn translate_impl(&mut self, by: Point) {
         self.line.translate_mut(by);

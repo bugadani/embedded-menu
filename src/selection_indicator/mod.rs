@@ -178,7 +178,6 @@ where
     where
         D: DrawTarget<Color = BinaryColor>,
         IT: InputAdapterSource<R>,
-        R: Copy,
     {
         let display_size = display.bounding_box().size;
 

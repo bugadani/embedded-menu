@@ -99,7 +99,7 @@ pub trait InputAdapterSource<R>: Copy {
 
 pub trait InputAdapter: Copy {
     type Input;
-    type Value: Copy;
+    type Value;
     type State: Default + Copy;
 
     fn handle_input(

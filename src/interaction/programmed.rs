@@ -5,10 +5,7 @@ use crate::interaction::{InputAdapter, InputAdapterSource, InputResult, Interact
 #[derive(Clone, Copy)]
 pub struct Programmed;
 
-impl<R> InputAdapterSource<R> for Programmed
-where
-    R: Copy,
-{
+impl<R> InputAdapterSource<R> for Programmed {
     type InputAdapter = ProgrammedAdapter<R>;
 
     fn adapter(&self) -> Self::InputAdapter {
@@ -18,18 +15,19 @@ where
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct ProgrammedAdapter<R>
-where
-    R: Copy,
-{
+pub struct ProgrammedAdapter<R> {
     _marker: PhantomData<R>,
 }
 
-impl<R> InputAdapter for ProgrammedAdapter<R>
-where
-    R: Copy,
-{
+impl<R> Clone for ProgrammedAdapter<R> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<R> Copy for ProgrammedAdapter<R> {}
+
+impl<R> InputAdapter for ProgrammedAdapter<R> {
     type Input = Interaction<R>;
     type Value = R;
     type State = ();
