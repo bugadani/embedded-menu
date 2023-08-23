@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::interaction::{InputAdapter, InputAdapterSource, InputState, InteractionType};
+use crate::interaction::{InputAdapter, InputAdapterSource, InputState, Interaction};
 
 #[derive(Clone, Copy)]
 pub struct Programmed;
@@ -30,7 +30,7 @@ impl<R> InputAdapter for ProgrammedAdapter<R>
 where
     R: Copy,
 {
-    type Input = InteractionType<R>;
+    type Input = Interaction<R>;
     type Value = R;
     type State = ();
 

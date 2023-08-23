@@ -8,7 +8,7 @@ use embedded_graphics_simulator::{
     Window,
 };
 use embedded_menu::{
-    interaction::InteractionType,
+    interaction::Interaction,
     items::{select::SelectValue, NavigationItem, Select},
     Menu,
 };
@@ -64,9 +64,9 @@ fn main() -> Result<(), core::convert::Infallible> {
                     repeat: false,
                     ..
                 } => match keycode {
-                    Keycode::Return => menu.interact(InteractionType::Select),
-                    Keycode::Up => menu.interact(InteractionType::Previous),
-                    Keycode::Down => menu.interact(InteractionType::Next),
+                    Keycode::Return => menu.interact(Interaction::Select),
+                    Keycode::Up => menu.interact(Interaction::Previous),
+                    Keycode::Down => menu.interact(Interaction::Next),
                     _ => None,
                 },
                 SimulatorEvent::Quit => break 'running,

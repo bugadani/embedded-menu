@@ -10,7 +10,7 @@ pub mod simulator;
 pub enum NoAction {}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum InteractionType<R> {
+pub enum Interaction<R> {
     /// Equivalent to `BackwardWrapping(1)`, kept for backward compatibility.
     Previous,
     /// Equivalent to `ForwardWrapping(1)`, kept for backward compatibility.
@@ -35,25 +35,25 @@ pub enum InteractionType<R> {
     Action(R),
 }
 
-impl<R> InteractionType<R> {
+impl<R> Interaction<R> {
     /// Internal function to change the selection based on interaction.
     /// Separated to allow for easier testing.
     pub(crate) fn calculate_selection(self, selected: usize, count: usize) -> usize {
         // The lazy evaluation is necessary to prevent overflows.
         #[allow(clippy::unnecessary_lazy_evaluations)]
         match self {
-            InteractionType::Next => (selected + 1) % count,
-            InteractionType::Previous => selected.checked_sub(1).unwrap_or(count - 1),
-            InteractionType::ForwardWrapping(n) => (selected + n) % count,
-            InteractionType::Forward(n) => selected.saturating_add(n).min(count - 1),
-            InteractionType::BackwardWrapping(n) => selected
+            Interaction::Next => (selected + 1) % count,
+            Interaction::Previous => selected.checked_sub(1).unwrap_or(count - 1),
+            Interaction::ForwardWrapping(n) => (selected + n) % count,
+            Interaction::Forward(n) => selected.saturating_add(n).min(count - 1),
+            Interaction::BackwardWrapping(n) => selected
                 .checked_sub(n)
                 .unwrap_or_else(|| count - (n - selected) % count),
-            InteractionType::Backward(n) => selected.saturating_sub(n),
-            InteractionType::Beginning => 0,
-            InteractionType::End => count - 1,
-            InteractionType::JumpTo(n) => n.min(count - 1),
-            InteractionType::Select | InteractionType::Action(_) => unsafe {
+            Interaction::Backward(n) => selected.saturating_sub(n),
+            Interaction::Beginning => 0,
+            Interaction::End => count - 1,
+            Interaction::JumpTo(n) => n.min(count - 1),
+            Interaction::Select | Interaction::Action(_) => unsafe {
                 // This should be handled prior to calling this function. It is okay for
                 // the compiler to optimize this away.
                 unreachable_unchecked()
@@ -66,7 +66,7 @@ impl<R> InteractionType<R> {
 pub enum InputState<R> {
     Idle,
     InProgress(u8),
-    Active(InteractionType<R>),
+    Active(Interaction<R>),
 }
 
 pub trait InputAdapterSource<R>: Copy {
@@ -93,44 +93,43 @@ mod test {
         let count = 30;
         let mut selected = 3;
         for _ in 0..5 {
-            selected = InteractionType::<NoAction>::Previous.calculate_selection(selected, count);
+            selected = Interaction::<NoAction>::Previous.calculate_selection(selected, count);
         }
         assert_eq!(selected, 28);
 
         for _ in 0..5 {
-            selected = InteractionType::<NoAction>::Next.calculate_selection(selected, count);
+            selected = Interaction::<NoAction>::Next.calculate_selection(selected, count);
         }
         assert_eq!(selected, 3);
 
         for _ in 0..5 {
-            selected = InteractionType::<NoAction>::BackwardWrapping(5)
-                .calculate_selection(selected, count);
+            selected =
+                Interaction::<NoAction>::BackwardWrapping(5).calculate_selection(selected, count);
         }
         assert_eq!(selected, 8);
 
         for _ in 0..5 {
-            selected = InteractionType::<NoAction>::ForwardWrapping(5)
-                .calculate_selection(selected, count);
+            selected =
+                Interaction::<NoAction>::ForwardWrapping(5).calculate_selection(selected, count);
         }
         assert_eq!(selected, 3);
 
-        selected = InteractionType::<NoAction>::JumpTo(20).calculate_selection(selected, count);
+        selected = Interaction::<NoAction>::JumpTo(20).calculate_selection(selected, count);
         assert_eq!(selected, 20);
 
-        selected = InteractionType::<NoAction>::Beginning.calculate_selection(selected, count);
+        selected = Interaction::<NoAction>::Beginning.calculate_selection(selected, count);
         assert_eq!(selected, 0);
 
-        selected = InteractionType::<NoAction>::End.calculate_selection(selected, count);
+        selected = Interaction::<NoAction>::End.calculate_selection(selected, count);
         assert_eq!(selected, 29);
 
         for _ in 0..5 {
-            selected =
-                InteractionType::<NoAction>::Backward(5).calculate_selection(selected, count);
+            selected = Interaction::<NoAction>::Backward(5).calculate_selection(selected, count);
         }
         assert_eq!(selected, 4);
 
         for _ in 0..5 {
-            selected = InteractionType::<NoAction>::Forward(5).calculate_selection(selected, count);
+            selected = Interaction::<NoAction>::Forward(5).calculate_selection(selected, count);
         }
         assert_eq!(selected, 29);
     }
@@ -141,33 +140,31 @@ mod test {
         let mut selected = 3;
 
         selected =
-            InteractionType::<NoAction>::BackwardWrapping(75).calculate_selection(selected, count);
+            Interaction::<NoAction>::BackwardWrapping(75).calculate_selection(selected, count);
         assert_eq!(selected, 18);
 
         selected =
-            InteractionType::<NoAction>::ForwardWrapping(75).calculate_selection(selected, count);
+            Interaction::<NoAction>::ForwardWrapping(75).calculate_selection(selected, count);
         assert_eq!(selected, 3);
 
-        selected = InteractionType::<NoAction>::BackwardWrapping(100000)
-            .calculate_selection(selected, count);
+        selected =
+            Interaction::<NoAction>::BackwardWrapping(100000).calculate_selection(selected, count);
         assert_eq!(selected, 23);
 
-        selected = InteractionType::<NoAction>::ForwardWrapping(100000)
-            .calculate_selection(selected, count);
+        selected =
+            Interaction::<NoAction>::ForwardWrapping(100000).calculate_selection(selected, count);
         assert_eq!(selected, 3);
 
-        selected = InteractionType::<NoAction>::JumpTo(100).calculate_selection(selected, count);
+        selected = Interaction::<NoAction>::JumpTo(100).calculate_selection(selected, count);
         assert_eq!(selected, 29);
 
-        selected = InteractionType::<NoAction>::JumpTo(0).calculate_selection(selected, count);
+        selected = Interaction::<NoAction>::JumpTo(0).calculate_selection(selected, count);
         assert_eq!(selected, 0);
 
-        selected =
-            InteractionType::<NoAction>::Forward(100000).calculate_selection(selected, count);
+        selected = Interaction::<NoAction>::Forward(100000).calculate_selection(selected, count);
         assert_eq!(selected, 29);
 
-        selected =
-            InteractionType::<NoAction>::Backward(100000).calculate_selection(selected, count);
+        selected = Interaction::<NoAction>::Backward(100000).calculate_selection(selected, count);
         assert_eq!(selected, 0);
     }
 }

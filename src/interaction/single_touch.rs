@@ -1,7 +1,7 @@
 use core::marker::PhantomData;
 
 use crate::{
-    interaction::{InputAdapter, InputAdapterSource, InputState, InteractionType},
+    interaction::{InputAdapter, InputAdapterSource, InputState, Interaction},
     selection_indicator::style::interpolate,
 };
 
@@ -95,13 +95,13 @@ where
             } else {
                 state.repeated = true;
                 state.interaction_time = 0;
-                InputState::Active(InteractionType::Select)
+                InputState::Active(Interaction::Select)
             }
         } else {
             let time = core::mem::replace(&mut state.interaction_time, 0);
 
             if self.debounce_time < time && time < self.max_time && !state.repeated {
-                InputState::Active(InteractionType::Next)
+                InputState::Active(Interaction::Next)
             } else {
                 // Already interacted before releasing, ignore and reset.
                 state.repeated = false;
@@ -114,7 +114,7 @@ where
 #[cfg(test)]
 mod test {
     use crate::interaction::{
-        single_touch::SingleTouch, InputAdapter, InputAdapterSource, InputState, InteractionType,
+        single_touch::SingleTouch, InputAdapter, InputAdapterSource, InputState, Interaction,
     };
 
     #[test]
@@ -150,14 +150,14 @@ mod test {
                 (false, InputState::Idle),
                 (true, InputState::Idle),
                 (true, InputState::InProgress(63)),
-                (false, InputState::Active(InteractionType::Next)),
+                (false, InputState::Active(Interaction::Next)),
             ],
             &[
                 (false, InputState::Idle),
                 (true, InputState::Idle),
                 (true, InputState::InProgress(63)),
                 (true, InputState::InProgress(127)),
-                (false, InputState::Active(InteractionType::Next)),
+                (false, InputState::Active(Interaction::Next)),
             ],
             // long pulse NOT recognised as Select event on falling edge
             &[
@@ -166,7 +166,7 @@ mod test {
                 (true, InputState::InProgress(63)),
                 (true, InputState::InProgress(127)),
                 (true, InputState::InProgress(191)),
-                (false, InputState::Active(InteractionType::Next)),
+                (false, InputState::Active(Interaction::Next)),
             ],
             // long pulse recognised as Select event immediately
             &[
@@ -175,12 +175,12 @@ mod test {
                 (true, InputState::InProgress(63)),
                 (true, InputState::InProgress(127)),
                 (true, InputState::InProgress(191)),
-                (true, InputState::Active(InteractionType::Select)),
+                (true, InputState::Active(Interaction::Select)),
                 (true, InputState::InProgress(51)),
                 (true, InputState::InProgress(102)),
                 (true, InputState::InProgress(153)),
                 (true, InputState::InProgress(204)),
-                (true, InputState::Active(InteractionType::Select)),
+                (true, InputState::Active(Interaction::Select)),
                 (true, InputState::InProgress(51)),
                 (true, InputState::InProgress(102)),
                 (true, InputState::InProgress(153)),

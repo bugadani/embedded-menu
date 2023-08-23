@@ -13,7 +13,7 @@ use crate::{
     builder::MenuBuilder,
     collection::MenuItemCollection,
     interaction::{
-        programmed::Programmed, InputAdapter, InputAdapterSource, InputState, InteractionType,
+        programmed::Programmed, InputAdapter, InputAdapterSource, InputState, Interaction,
     },
     margin::MarginExt,
     selection_indicator::{
@@ -395,10 +395,10 @@ where
             // This means that we have to not expect the Active state during rendering, either.
             self.state.last_input_state = InputState::Idle;
             match interaction {
-                InteractionType::Select => {
+                Interaction::Select => {
                     return Some(self.items.interact_with(self.state.selected));
                 }
-                InteractionType::Action(action) => return Some(action),
+                Interaction::Action(action) => return Some(action),
                 _ => {}
             }
 
