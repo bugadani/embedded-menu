@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use embedded_graphics::{
     pixelcolor::Rgb888,
-    prelude::{DrawTarget, PixelColor, Point},
+    prelude::{DrawTarget, PixelColor, Point, Size},
     primitives::Rectangle,
 };
 use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
@@ -84,6 +84,8 @@ where
     I: MenuItem<R>,
 {
     items: C,
+    /// Used to keep track of the whole collection's position in case it's empty.
+    position: Point,
     _marker: PhantomData<(I, R)>,
 }
 
@@ -102,6 +104,7 @@ where
 
         Self {
             items,
+            position: Point::zero(),
             _marker: PhantomData,
         }
     }
@@ -159,6 +162,7 @@ where
     I: MenuItem<R>,
 {
     fn translate_impl(&mut self, by: Point) {
+        self.position += by;
         for view in self.items.as_mut().iter_mut() {
             view.translate_impl(by);
         }
@@ -167,7 +171,7 @@ where
     fn bounds(&self) -> Rectangle {
         let items = &self.items.as_ref();
         if items.is_empty() {
-            return Rectangle::zero();
+            return Rectangle::new(self.position, Size::zero());
         }
 
         let mut rect = items[0].bounds();
