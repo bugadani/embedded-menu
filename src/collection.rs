@@ -8,7 +8,7 @@ use embedded_graphics::{
 use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
 
 use crate::{
-    interaction::InputAdapter,
+    interaction::InputAdapterSource,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     Marker, MenuItem, MenuStyle,
 };
@@ -22,13 +22,13 @@ pub trait MenuItemCollection<R> {
     fn count(&self) -> usize;
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<C, S, IT, P>,
+        style: &MenuStyle<C, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>;
 }
@@ -64,13 +64,13 @@ where
 
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<C, S, IT, P>,
+        style: &MenuStyle<C, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>,
     {
@@ -137,15 +137,14 @@ where
 
     fn draw_styled<PC, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<PC, S, IT, P>,
+        style: &MenuStyle<PC, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-
         DIS: DrawTarget<Color = PC>,
     {
         for item in self.items.as_ref() {
@@ -228,13 +227,13 @@ where
 
     fn draw_styled<PC, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<PC, S, IT, P>,
+        style: &MenuStyle<PC, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
 
         DIS: DrawTarget<Color = PC>,
@@ -290,13 +289,13 @@ where
 
     fn draw_styled<PC, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<PC, S, IT, P>,
+        style: &MenuStyle<PC, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
 
         DIS: DrawTarget<Color = PC>,

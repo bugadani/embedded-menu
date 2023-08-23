@@ -48,7 +48,10 @@ fn main() -> Result<(), core::convert::Infallible> {
         MenuStyle::new(BinaryColor::On)
             .with_font(&FONT_6X10)
             .with_title_font(&FONT_8X13_BOLD)
-            .with_input_adapter(Simulator::default())
+            .with_input_adapter(Simulator {
+                page_size: 5,
+                esc_value: (),
+            })
             .with_details_delay(100),
     )
     .add_item(

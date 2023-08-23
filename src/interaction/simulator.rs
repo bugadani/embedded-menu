@@ -1,37 +1,68 @@
 use embedded_graphics_simulator::{sdl2::Keycode, SimulatorEvent};
 
-use crate::interaction::{InputAdapter, InputState, InteractionType};
+use crate::interaction::{
+    Action, InputAdapter, InputAdapterSource, InputResult, InputState, Interaction, Navigation,
+};
 
 /// Input adapter to work with the embedded-graphics simulator
 #[derive(Clone, Copy)]
-pub struct Simulator {
+pub struct Simulator<R>
+where
+    R: Copy,
+{
     /// Number of menu items to skip when pressing page up or page down.
     pub page_size: usize,
+    pub esc_value: R,
 }
 
-impl Default for Simulator {
-    fn default() -> Self {
-        Self { page_size: 5 }
+impl<R> InputAdapterSource<R> for Simulator<R>
+where
+    R: Copy,
+{
+    type InputAdapter = Self;
+
+    fn adapter(&self) -> Self::InputAdapter {
+        *self
     }
 }
 
-impl InputAdapter for Simulator {
+impl<R> InputAdapter for Simulator<R>
+where
+    R: Copy,
+{
     type Input = SimulatorEvent;
+    type Value = R;
     type State = ();
 
-    fn handle_input(&self, _state: &mut Self::State, action: Self::Input) -> InputState {
+    fn handle_input(
+        &self,
+        _state: &mut Self::State,
+        action: Self::Input,
+    ) -> InputResult<Self::Value> {
         match action {
-            SimulatorEvent::KeyDown { repeat: false, .. } => return InputState::Idle,
-            SimulatorEvent::KeyDown { repeat: true, .. } => return InputState::InProgress(255),
+            SimulatorEvent::KeyDown { repeat: false, .. } => InputResult::from(InputState::Idle),
+            SimulatorEvent::KeyDown { repeat: true, .. } => {
+                InputResult::from(InputState::InProgress(255))
+            }
             SimulatorEvent::KeyUp { keycode, .. } => match keycode {
-                Keycode::Return => InputState::Active(InteractionType::Select),
-                Keycode::Up => InputState::Active(InteractionType::Previous),
-                Keycode::Down => InputState::Active(InteractionType::Next),
-                Keycode::PageDown => InputState::Active(InteractionType::Forward(self.page_size)),
-                Keycode::PageUp => InputState::Active(InteractionType::Backward(self.page_size)),
-                _ => InputState::Idle,
+                Keycode::Return => InputResult::from(Interaction::Action(Action::Select)),
+                Keycode::Up => InputResult::from(Interaction::Navigation(Navigation::Previous)),
+                Keycode::Down => InputResult::from(Interaction::Navigation(Navigation::Next)),
+                Keycode::PageDown => {
+                    InputResult::from(Interaction::Navigation(Navigation::Forward(self.page_size)))
+                }
+                Keycode::PageUp => InputResult::from(Interaction::Navigation(
+                    Navigation::Backward(self.page_size),
+                )),
+                Keycode::Escape => {
+                    InputResult::from(Interaction::Action(Action::Return(self.esc_value)))
+                }
+                _ => InputResult::from(InputState::Idle),
             },
-            _ => InputState::Idle,
+            SimulatorEvent::Quit => {
+                InputResult::from(Interaction::Action(Action::Return(self.esc_value)))
+            }
+            _ => InputResult::from(InputState::Idle),
         }
     }
 }

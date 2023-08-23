@@ -46,7 +46,10 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     let mut menu = Menu::with_style(
         format!("Items: {}", items.len()),
-        MenuStyle::new(BinaryColor::On).with_input_adapter(Simulator::default()),
+        MenuStyle::new(BinaryColor::On).with_input_adapter(Simulator {
+            page_size: 5,
+            esc_value: (),
+        }),
     )
     .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
     .add_items(items)

@@ -12,7 +12,10 @@ mod margin;
 use crate::{
     builder::MenuBuilder,
     collection::MenuItemCollection,
-    interaction::{programmed::Programmed, InputAdapter, InputState, InteractionType},
+    interaction::{
+        programmed::Programmed, Action, InputAdapter, InputAdapterSource, InputResult, InputState,
+        Interaction,
+    },
     margin::MarginExt,
     selection_indicator::{
         style::{line::Line as LineIndicator, IndicatorStyle},
@@ -41,28 +44,27 @@ pub use embedded_menu_macros::{Menu, SelectValue};
 /// Marker trait necessary to avoid a "conflicting implementations" error.
 pub trait Marker {}
 
-pub trait MenuItem<D>: Marker + View {
-    fn interact(&mut self) -> D;
-    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P>)
+pub trait MenuItem<R>: Marker + View {
+    fn interact(&mut self) -> R;
+    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, R>)
     where
         C: PixelColor,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController;
     fn title(&self) -> &str;
     fn details(&self) -> &str;
     fn value(&self) -> &str;
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<C, S, IT, P>,
+        style: &MenuStyle<C, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapter,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-
         DIS: DrawTarget<Color = C>;
 }
 
@@ -96,11 +98,11 @@ pub enum DisplayScrollbar {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct MenuStyle<C, S, IT, P>
+pub struct MenuStyle<C, S, IT, P, R>
 where
     C: PixelColor,
     S: IndicatorStyle,
-    IT: InputAdapter,
+    IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
 {
     pub(crate) color: C,
@@ -110,15 +112,16 @@ where
     pub(crate) details_delay: Option<u16>,
     pub(crate) input_adapter: IT,
     pub(crate) indicator: Indicator<P, S>,
+    _marker: PhantomData<R>,
 }
 
-impl Default for MenuStyle<BinaryColor, LineIndicator, Programmed, StaticPosition> {
+impl<R> Default for MenuStyle<BinaryColor, LineIndicator, Programmed, StaticPosition, R> {
     fn default() -> Self {
         Self::new(BinaryColor::On)
     }
 }
 
-impl<C> MenuStyle<C, LineIndicator, Programmed, StaticPosition>
+impl<C, R> MenuStyle<C, LineIndicator, Programmed, StaticPosition, R>
 where
     C: PixelColor,
 {
@@ -134,15 +137,16 @@ where
                 style: LineIndicator,
                 controller: StaticPosition,
             },
+            _marker: PhantomData,
         }
     }
 }
 
-impl<C, S, IT, P> MenuStyle<C, S, IT, P>
+impl<C, S, IT, P, R> MenuStyle<C, S, IT, P, R>
 where
     C: PixelColor,
     S: IndicatorStyle,
-    IT: InputAdapter,
+    IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
 {
     pub const fn with_font(self, font: &'static MonoFont<'static>) -> Self {
@@ -164,7 +168,10 @@ where
         }
     }
 
-    pub const fn with_selection_indicator<S2>(self, indicator_style: S2) -> MenuStyle<C, S2, IT, P>
+    pub const fn with_selection_indicator<S2>(
+        self,
+        indicator_style: S2,
+    ) -> MenuStyle<C, S2, IT, P, R>
     where
         S2: IndicatorStyle,
     {
@@ -179,12 +186,13 @@ where
                 style: indicator_style,
                 controller: self.indicator.controller,
             },
+            _marker: PhantomData,
         }
     }
 
-    pub const fn with_input_adapter<IT2>(self, input_adapter: IT2) -> MenuStyle<C, S, IT2, P>
+    pub const fn with_input_adapter<IT2>(self, input_adapter: IT2) -> MenuStyle<C, S, IT2, P, R>
     where
-        IT2: InputAdapter,
+        IT2: InputAdapterSource<R>,
     {
         MenuStyle {
             input_adapter,
@@ -194,13 +202,14 @@ where
             title_font: self.title_font,
             details_delay: self.details_delay,
             indicator: self.indicator,
+            _marker: PhantomData,
         }
     }
 
     pub const fn with_animated_selection_indicator(
-        &self,
+        self,
         frames: i32,
-    ) -> MenuStyle<C, S, IT, AnimatedPosition> {
+    ) -> MenuStyle<C, S, IT, AnimatedPosition, R> {
         MenuStyle {
             input_adapter: self.input_adapter,
             color: self.color,
@@ -212,6 +221,7 @@ where
                 style: self.indicator.style,
                 controller: AnimatedPosition::new(frames),
             },
+            _marker: PhantomData,
         }
     }
 
@@ -300,7 +310,7 @@ where
 pub struct Menu<T, IT, VG, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InputAdapter,
+    IT: InputAdapterSource<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -308,8 +318,8 @@ where
     _return_type: PhantomData<R>,
     title: T,
     items: VG,
-    style: MenuStyle<C, S, IT, P>,
-    state: MenuState<IT, P, S>,
+    style: MenuStyle<C, S, IT, P, R>,
+    state: MenuState<IT::InputAdapter, P, S>,
 }
 
 impl<T, R, C, S> Menu<T, Programmed, NoItems, R, C, StaticPosition, S>
@@ -320,7 +330,7 @@ where
 {
     pub fn new(title: T) -> MenuBuilder<T, Programmed, NoItems, R, C, StaticPosition, S>
     where
-        MenuStyle<C, S, Programmed, StaticPosition>: Default,
+        MenuStyle<C, S, Programmed, StaticPosition, R>: Default,
     {
         Self::with_style(title, MenuStyle::default())
     }
@@ -331,12 +341,12 @@ where
     T: AsRef<str>,
     C: PixelColor,
     S: IndicatorStyle,
-    IT: InputAdapter,
+    IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
 {
     pub fn with_style(
         title: T,
-        style: MenuStyle<C, S, IT, P>,
+        style: MenuStyle<C, S, IT, P, R>,
     ) -> MenuBuilder<T, IT, NoItems, R, C, P, S> {
         MenuBuilder::new(title, style)
     }
@@ -345,7 +355,7 @@ where
 impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InputAdapter,
+    IT: InputAdapterSource<R>,
     VG: MenuItemCollection<R>,
     C: PixelColor,
     P: SelectionIndicatorController,
@@ -355,7 +365,7 @@ where
         !self.items.details_of(self.state.selected).is_empty()
     }
 
-    pub fn interact(&mut self, input: IT::Input) -> Option<R> {
+    pub fn interact(&mut self, input: <IT::InputAdapter as InputAdapter>::Input) -> Option<R> {
         if let Some(threshold) = self.style.details_delay {
             self.state.display_mode = MenuDisplayMode::List(threshold);
         }
@@ -365,26 +375,35 @@ where
         let input = self
             .style
             .input_adapter
+            .adapter()
             .handle_input(&mut self.state.interaction_state, input);
 
-        if let InputState::Active(interaction) = input {
-            // We don't store Active because we don't assume interact is called periodically.
-            // This means that we have to not expect the Active state during rendering, either.
-            self.state.last_input_state = InputState::Idle;
-            if interaction == InteractionType::Select {
-                return Some(self.items.interact_with(self.state.selected));
+        match input {
+            InputResult::Interaction(interaction) => {
+                // We don't store interactions because we don't assume interact is called periodically.
+                // This means that we have to not expect the Active state during rendering, either.
+                self.state.last_input_state = InputState::Idle;
+                match interaction {
+                    Interaction::Navigation(navigation) => {
+                        let selected = navigation.calculate_selection(self.state.selected, count);
+                        self.state.change_selected_item(selected);
+                    }
+                    Interaction::Action(action) => {
+                        let value = match action {
+                            Action::Select => self.items.interact_with(self.state.selected),
+                            Action::Return(value) => value,
+                        };
+                        return Some(value);
+                    }
+                }
             }
-
-            let selected = interaction.calculate_selection(self.state.selected, count);
-            self.state.change_selected_item(selected);
-        } else {
-            self.state.last_input_state = input;
+            InputResult::StateUpdate(state) => self.state.last_input_state = state,
         }
 
         None
     }
 
-    pub fn state(&self) -> MenuState<IT, P, S> {
+    pub fn state(&self) -> MenuState<IT::InputAdapter, P, S> {
         self.state
     }
 }
@@ -392,7 +411,7 @@ where
 impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
 where
     T: AsRef<str>,
-    IT: InputAdapter,
+    IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
     C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
@@ -537,7 +556,7 @@ where
 impl<T, IT, VG, R, P, S> Menu<T, IT, VG, R, BinaryColor, P, S>
 where
     T: AsRef<str>,
-    IT: InputAdapter,
+    IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
@@ -611,7 +630,7 @@ where
 impl<T, IT, VG, R, P, S> Drawable for Menu<T, IT, VG, R, BinaryColor, P, S>
 where
     T: AsRef<str>,
-    IT: InputAdapter,
+    IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
