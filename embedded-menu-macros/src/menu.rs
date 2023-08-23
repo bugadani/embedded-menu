@@ -612,6 +612,6 @@ pub fn expand_menu(input: DeriveInput) -> syn::Result<TokenStream> {
             }
         }
 
-        pub use #module::{#wrapper, DemoMenuMenuEvents};
+        pub use #module::{#wrapper, #events};
     })
 }
