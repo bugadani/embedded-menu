@@ -1,5 +1,5 @@
-Unreleased (??)
-===============
+0.4.0 (2023-08-23)
+==================
 
  - `View` is now a supertrait of `MenuItem`
  - Fixed issues with displaying a slice of menuitems
