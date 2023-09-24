@@ -365,11 +365,13 @@ where
         !self.items.details_of(self.state.selected).is_empty()
     }
 
-    pub fn interact(&mut self, input: <IT::InputAdapter as InputAdapter>::Input) -> Option<R> {
+    fn reset_display_state(&mut self) {
         if let Some(threshold) = self.style.details_delay {
             self.state.display_mode = MenuDisplayMode::List(threshold);
         }
+    }
 
+    pub fn interact(&mut self, input: <IT::InputAdapter as InputAdapter>::Input) -> Option<R> {
         let count = self.items.count();
 
         let input = self
@@ -380,6 +382,8 @@ where
 
         match input {
             InputResult::Interaction(interaction) => {
+                self.reset_display_state();
+
                 // We don't store interactions because we don't assume interact is called periodically.
                 // This means that we have to not expect the Active state during rendering, either.
                 self.state.last_input_state = InputState::Idle;
@@ -397,7 +401,12 @@ where
                     }
                 }
             }
-            InputResult::StateUpdate(state) => self.state.last_input_state = state,
+            InputResult::StateUpdate(state) => {
+                if state != InputState::Idle {
+                    self.reset_display_state();
+                }
+                self.state.last_input_state = state;
+            }
         }
 
         None
