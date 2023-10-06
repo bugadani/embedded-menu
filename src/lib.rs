@@ -295,13 +295,6 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    fn change_selected_item(&mut self, new_selected: usize) {
-        if new_selected != self.selected {
-            self.selected = new_selected;
-            self.recompute_targets = true;
-        }
-    }
-
     pub fn reset_interaction(&mut self) {
         self.interaction_state = Default::default();
     }
@@ -392,8 +385,18 @@ where
             InputResult::Interaction(interaction) => match interaction {
                 Interaction::Navigation(navigation) => {
                     let count = self.items.count();
-                    let selected = navigation.calculate_selection(self.state.selected, count);
-                    self.state.change_selected_item(selected);
+                    let new_selected = navigation.calculate_selection(self.state.selected, count);
+                    if new_selected != self.state.selected {
+                        self.state.selected = new_selected;
+
+                        let top_offset = self.items.bounds_of(0).top_left.y;
+                        let selected_offset = self.items.bounds_of(self.state.selected).top_left.y;
+
+                        self.style.indicator.change_selected_item(
+                            selected_offset - top_offset,
+                            &mut self.state.indicator_state,
+                        );
+                    }
                     None
                 }
                 Interaction::Action(Action::Select) => {
@@ -475,55 +478,44 @@ where
             return;
         }
 
-        let display_area = display.bounding_box();
-
-        // Reset positions
-        self.items
-            .align_to_mut(&display_area, horizontal::Left, vertical::Top);
-
-        // Height of the selection indicator
-        let selected_item_bounds = self.items.bounds_of(self.state.selected);
-
         // animations
-        if self.state.recompute_targets {
-            self.state.recompute_targets = false;
-            self.style.indicator.change_selected_item(
-                selected_item_bounds.top_left.y,
-                &mut self.state.indicator_state,
-            );
-        }
-
         self.style
             .indicator
             .update(self.state.last_input_state, &mut self.state.indicator_state);
 
-        // Ensure selection indicator is always visible
+        // Ensure selection indicator is always visible by moving the menu list.
         let top_distance = self.top_offset();
 
-        self.state.list_offset += if top_distance > 0 {
-            let display_height = display_area.size().height as i32;
-            let menu_height = if let Some(header) = self.header(self.title.as_ref(), display) {
-                display_height - header.size().height as i32
+        let list_offset_change = if top_distance > 0 {
+            let display_height = display.bounding_box().size().height as i32;
+
+            let header_height = if let Some(header) = self.header(self.title.as_ref(), display) {
+                header.size().height as i32
             } else {
-                display_height
+                0
             };
 
-            let selected_item_bounds = self.items.bounds_of(self.state.selected);
-            let indicator_height = self.style.indicator.item_height(
-                selected_item_bounds.size().height as i32,
-                &self.state.indicator_state,
-            );
+            let selected_height = self.items.bounds_of(self.state.selected).size().height as i32;
+            let indicator_height = self
+                .style
+                .indicator
+                .item_height(selected_height, &self.state.indicator_state);
 
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
-            (top_distance + indicator_height - menu_height).max(0)
+            (top_distance + indicator_height + header_height - display_height).max(0)
         } else {
             // We need to move up
             top_distance
         };
 
-        self.items
-            .translate_mut(Point::new(0, -self.state.list_offset));
+        // Move menu list.
+        if list_offset_change != 0 {
+            self.state.list_offset += list_offset_change;
+            let top_offset = self.items.bounds_of(0).top_left.y;
+            self.items
+                .translate_mut(Point::new(0, -top_offset - self.state.list_offset));
+        }
     }
 
     fn display_details<D>(&self, display: &mut D) -> Result<(), D::Error>
