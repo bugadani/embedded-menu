@@ -372,44 +372,38 @@ where
     }
 
     pub fn interact(&mut self, input: <IT::InputAdapter as InputAdapter>::Input) -> Option<R> {
-        let count = self.items.count();
-
         let input = self
             .style
             .input_adapter
             .adapter()
             .handle_input(&mut self.state.interaction_state, input);
 
-        match input {
-            InputResult::Interaction(interaction) => {
-                self.reset_display_state();
-
-                // We don't store interactions because we don't assume interact is called periodically.
-                // This means that we have to not expect the Active state during rendering, either.
-                self.state.last_input_state = InputState::Idle;
-                match interaction {
-                    Interaction::Navigation(navigation) => {
-                        let selected = navigation.calculate_selection(self.state.selected, count);
-                        self.state.change_selected_item(selected);
-                    }
-                    Interaction::Action(action) => {
-                        let value = match action {
-                            Action::Select => self.items.interact_with(self.state.selected),
-                            Action::Return(value) => value,
-                        };
-                        return Some(value);
-                    }
-                }
-            }
-            InputResult::StateUpdate(state) => {
-                if state != InputState::Idle {
-                    self.reset_display_state();
-                }
-                self.state.last_input_state = state;
-            }
+        if !matches!(input, InputResult::StateUpdate(InputState::Idle)) {
+            // If anything happens, exit Details view
+            self.reset_display_state();
         }
 
-        None
+        self.state.last_input_state = match input {
+            InputResult::Interaction(_) => InputState::Idle,
+            InputResult::StateUpdate(state) => state,
+        };
+
+        match input {
+            InputResult::Interaction(interaction) => match interaction {
+                Interaction::Navigation(navigation) => {
+                    let count = self.items.count();
+                    let selected = navigation.calculate_selection(self.state.selected, count);
+                    self.state.change_selected_item(selected);
+                    None
+                }
+                Interaction::Action(Action::Select) => {
+                    let value = self.items.interact_with(self.state.selected);
+                    Some(value)
+                }
+                Interaction::Action(Action::Return(value)) => Some(value),
+            },
+            _ => None,
+        }
     }
 
     pub fn state(&self) -> MenuState<IT::InputAdapter, P, S> {
