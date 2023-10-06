@@ -162,7 +162,7 @@ where
 
     pub fn item_height(&self, menuitem_height: i32, state: &State<P, S>) -> i32 {
         let indicator_insets = self.style.padding(&state.state, menuitem_height);
-        menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom
+        menuitem_height + indicator_insets.top + indicator_insets.bottom
     }
 
     pub fn draw<R, D, IT>(

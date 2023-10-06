@@ -528,23 +528,20 @@ where
         let details = self.items.details_of(self.state.selected);
         let header = self.header(title, display);
 
-        let content_area = if let Some(ref header) = header {
-            let display_size = display_area.size();
-            display_area.resized_height(display_size.height - header.size().height, AnchorY::Bottom)
+        let content_area = if let Some(header) = header {
+            header.draw(display)?;
+            display_area.resized_height(
+                display_area.size().height - header.size().height,
+                AnchorY::Bottom,
+            )
         } else {
             display_area
         };
 
         let character_style = self.style.text_style();
-        let details = TextBox::new(details, content_area, character_style).with_margin(0, 0, 0, 1);
-
-        if let Some(header) = header {
-            LinearLayout::vertical(Chain::new(header).append(details))
-                .arrange()
-                .draw(display)?;
-        } else {
-            details.draw(display)?;
-        }
+        TextBox::new(details, content_area, character_style)
+            .with_margin(0, 0, 0, 1)
+            .draw(display)?;
 
         Ok(())
     }
