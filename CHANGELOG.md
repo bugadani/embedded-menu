@@ -1,3 +1,8 @@
+0.4.3 (2023-10-06)
+==================
+
+ - Fix incorrect selection indicator positioning when restoring menu state
+
 0.4.2 (2023-10-06)
 ==================
 

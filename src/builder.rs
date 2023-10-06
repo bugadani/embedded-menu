@@ -5,7 +5,7 @@ use crate::{
     Menu, MenuDisplayMode, MenuItem, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
-use embedded_graphics::pixelcolor::PixelColor;
+use embedded_graphics::{pixelcolor::PixelColor, prelude::Point};
 use embedded_layout::{
     layout::linear::LinearLayout, object_chain::ChainElement, prelude::*, view_group::ViewGroup,
 };
@@ -180,7 +180,6 @@ where
 
         self.build_with_state(MenuState {
             selected: 0,
-            recompute_targets: true,
             list_offset: 0,
             display_mode: MenuDisplayMode::List(default_timeout),
             interaction_state: Default::default(),
@@ -196,20 +195,21 @@ where
         // We have less menu items than before. Avoid crashing.
         let max_idx = self.items.count().saturating_sub(1);
 
-        let items = LinearLayout::vertical(self.items).arrange().into_inner();
+        let mut items = LinearLayout::vertical(self.items).arrange().into_inner();
 
         if max_idx < state.selected {
             state.selected = max_idx;
 
             let max_indicator_pos = items.bounds_of(max_idx).top_left.y;
 
-            state.recompute_targets = false;
             self.style
                 .indicator
                 .change_selected_item(max_indicator_pos, &mut state.indicator_state);
             self.style
                 .indicator
                 .jump_to_target(&mut state.indicator_state);
+        } else {
+            items.translate_mut(Point::new(0, -state.list_offset));
         }
 
         Menu {

@@ -243,7 +243,6 @@ where
     S: IndicatorStyle,
 {
     selected: usize,
-    recompute_targets: bool,
     list_offset: i32,
     display_mode: MenuDisplayMode,
     interaction_state: IT::State,
@@ -260,7 +259,6 @@ where
     fn default() -> Self {
         Self {
             selected: 0,
-            recompute_targets: Default::default(),
             list_offset: Default::default(),
             display_mode: Default::default(),
             interaction_state: Default::default(),
