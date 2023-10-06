@@ -476,13 +476,6 @@ where
         }
 
         let display_area = display.bounding_box();
-        let display_size = display_area.size();
-
-        let content_area = if let Some(header) = self.header(self.title.as_ref(), display) {
-            display_area.resized_height(display_size.height - header.size().height, AnchorY::Bottom)
-        } else {
-            display_area
-        };
 
         // Reset positions
         self.items
@@ -508,12 +501,18 @@ where
         let top_distance = self.top_offset();
 
         self.state.list_offset += if top_distance > 0 {
+            let display_height = display_area.size().height as i32;
+            let menu_height = if let Some(header) = self.header(self.title.as_ref(), display) {
+                display_height - header.size().height as i32
+            } else {
+                display_height
+            };
+
+            let selected_item_bounds = self.items.bounds_of(self.state.selected);
             let indicator_height = self.style.indicator.item_height(
                 selected_item_bounds.size().height as i32,
                 &self.state.indicator_state,
             );
-
-            let menu_height = content_area.size().height as i32;
 
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
