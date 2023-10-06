@@ -512,9 +512,7 @@ where
         // Move menu list.
         if list_offset_change != 0 {
             self.state.list_offset += list_offset_change;
-            let top_offset = self.items.bounds_of(0).top_left.y;
-            self.items
-                .translate_mut(Point::new(0, -top_offset - self.state.list_offset));
+            self.items.translate_mut(Point::new(0, -list_offset_change));
         }
     }
 
