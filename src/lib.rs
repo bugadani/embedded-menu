@@ -463,6 +463,10 @@ where
         Some(header)
     }
 
+    fn top_offset(&self) -> i32 {
+        self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset
+    }
+
     pub fn update(&mut self, display: &impl Dimensions) {
         if self.style.details_delay.is_some() && self.selected_has_details() {
             if let MenuDisplayMode::List(ref mut timeout) = self.state.display_mode {
@@ -502,24 +506,24 @@ where
             );
         }
 
-        let menu_height = content_area.size().height;
-
         self.style
             .indicator
             .update(self.state.last_input_state, &mut self.state.indicator_state);
 
         // Ensure selection indicator is always visible
-        let top_distance =
-            self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset;
+        let top_distance = self.top_offset();
+
         self.state.list_offset += if top_distance > 0 {
             let indicator_height = self.style.indicator.item_height(
-                selected_item_bounds.size().height,
+                selected_item_bounds.size().height as i32,
                 &self.state.indicator_state,
-            ) as i32;
+            );
+
+            let menu_height = content_area.size().height as i32;
 
             // Indicator is below display top. We only have to
             // move if indicator bottom is below display bottom.
-            (top_distance + indicator_height - menu_height as i32).max(0)
+            (top_distance + indicator_height - menu_height).max(0)
         } else {
             // We need to move up
             top_distance
@@ -534,21 +538,20 @@ where
         D: DrawTarget<Color = C>,
     {
         let display_area = display.bounding_box();
-        let display_size = display_area.size();
 
-        let header = self.header(self.items.title_of(self.state.selected), display);
+        let title = self.items.title_of(self.state.selected);
+        let details = self.items.details_of(self.state.selected);
+        let header = self.header(title, display);
+
         let content_area = if let Some(ref header) = header {
+            let display_size = display_area.size();
             display_area.resized_height(display_size.height - header.size().height, AnchorY::Bottom)
         } else {
             display_area
         };
 
-        let details = TextBox::new(
-            self.items.details_of(self.state.selected),
-            content_area,
-            self.style.text_style(),
-        )
-        .with_margin(0, 0, 0, 1);
+        let character_style = self.style.text_style();
+        let details = TextBox::new(details, content_area, character_style).with_margin(0, 0, 0, 1);
 
         if let Some(header) = header {
             LinearLayout::vertical(Chain::new(header).append(details))
@@ -587,9 +590,9 @@ where
             display_area
         };
 
-        let menu_height = content_area.size().height;
+        let menu_height = content_area.size().height as i32;
+        let list_height = self.items.bounds().size().height as i32;
 
-        let list_height = self.items.bounds().size().height;
         let draw_scrollbar = match self.style.scrollbar {
             DisplayScrollbar::Display => true,
             DisplayScrollbar::Hide => false,
@@ -600,7 +603,7 @@ where
             let scrollbar_area = content_area.resized_width(2, AnchorX::Right);
             let thin_stroke = PrimitiveStyle::with_stroke(self.style.color, 1);
 
-            let scale = |value| (value * menu_height / list_height) as i32;
+            let scale = |value| value * menu_height / list_height;
 
             let scrollbar_height = scale(menu_height).max(1);
             let mut scrollbar_display = display.cropped(&scrollbar_area);
@@ -608,7 +611,7 @@ where
             // Start scrollbar from y=1, so we have a margin on top instead of bottom
             Line::new(Point::new(0, 1), Point::new(0, scrollbar_height))
                 .into_styled(thin_stroke)
-                .translate(Point::new(1, scale(self.state.list_offset as u32)))
+                .translate(Point::new(1, scale(self.state.list_offset)))
                 .draw(&mut scrollbar_display)?;
 
             content_area.resized_width(
@@ -619,10 +622,12 @@ where
             content_area
         };
 
-        let selected_menuitem_height = self.items.bounds_of(self.state.selected).size().height;
+        let selected_menuitem_height =
+            self.items.bounds_of(self.state.selected).size().height as i32;
+
         self.style.indicator.draw(
             selected_menuitem_height,
-            self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset,
+            self.top_offset(),
             self.state.last_input_state,
             &mut display
                 .clipped(&menu_display_area)

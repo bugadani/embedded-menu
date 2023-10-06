@@ -46,9 +46,9 @@ impl IndicatorStyle for AnimatedTriangle {
         };
     }
 
-    fn padding(&self, _state: &Self::State, height: u32) -> Insets {
+    fn padding(&self, _state: &Self::State, height: i32) -> Insets {
         Insets {
-            left: height as i32 / 2 + 1,
+            left: height / 2 + 1,
             top: 0,
             right: 0,
             bottom: 0,

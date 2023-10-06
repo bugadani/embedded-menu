@@ -160,14 +160,14 @@ where
         self.style.update(&mut state.state, input_state);
     }
 
-    pub fn item_height(&self, menuitem_height: u32, state: &State<P, S>) -> u32 {
+    pub fn item_height(&self, menuitem_height: i32, state: &State<P, S>) -> i32 {
         let indicator_insets = self.style.padding(&state.state, menuitem_height);
-        (menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom) as u32
+        menuitem_height as i32 + indicator_insets.top + indicator_insets.bottom
     }
 
     pub fn draw<R, D, IT>(
         &self,
-        selected_height: u32,
+        selected_height: i32,
         selected_offset: i32,
         input_state: InputState,
         display: &mut D,
@@ -191,7 +191,7 @@ where
         } = self.style.padding(&state.state, selected_height);
 
         // Draw the selection indicator
-        let selected_item_height = (selected_height as i32 + padding_top + padding_bottom) as u32;
+        let selected_item_height = (selected_height + padding_top + padding_bottom) as u32;
         let selected_item_area = Rectangle::new(
             Point::new(0, selected_offset),
             Size::new(display_size.width, selected_item_height),

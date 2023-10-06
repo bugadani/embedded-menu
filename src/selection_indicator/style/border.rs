@@ -20,7 +20,7 @@ impl IndicatorStyle for Border {
     type Shape = Rectangle;
     type State = ();
 
-    fn padding(&self, _state: &Self::State, _height: u32) -> Insets {
+    fn padding(&self, _state: &Self::State, _height: i32) -> Insets {
         Insets {
             left: 2,
             top: 1,

@@ -40,7 +40,7 @@ pub trait IndicatorStyle: Clone + Copy {
 
     fn on_target_changed(&self, _state: &mut Self::State) {}
     fn update(&self, _state: &mut Self::State, _input_state: InputState) {}
-    fn padding(&self, state: &Self::State, height: u32) -> Insets;
+    fn padding(&self, state: &Self::State, height: i32) -> Insets;
     fn shape(&self, state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape;
     fn draw<D>(
         &self,
