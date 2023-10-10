@@ -387,13 +387,10 @@ where
                     if new_selected != self.state.selected {
                         self.state.selected = new_selected;
 
-                        let top_offset = self.items.bounds_of(0).top_left.y;
                         let selected_offset = self.items.bounds_of(self.state.selected).top_left.y;
-
-                        self.style.indicator.change_selected_item(
-                            selected_offset - top_offset,
-                            &mut self.state.indicator_state,
-                        );
+                        self.style
+                            .indicator
+                            .change_selected_item(selected_offset, &mut self.state.indicator_state);
                     }
                     None
                 }
@@ -510,7 +507,6 @@ where
         // Move menu list.
         if list_offset_change != 0 {
             self.state.list_offset += list_offset_change;
-            self.items.translate_mut(Point::new(0, -list_offset_change));
         }
     }
 
@@ -612,7 +608,7 @@ where
                 .cropped(&menu_display_area),
             &self.items,
             &self.style,
-            &self.state.indicator_state,
+            &self.state,
         )?;
 
         Ok(())
