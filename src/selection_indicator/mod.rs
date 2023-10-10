@@ -4,7 +4,7 @@ use crate::{
     interaction::{InputAdapterSource, InputState},
     margin::Insets,
     selection_indicator::style::IndicatorStyle,
-    MenuStyle,
+    MenuState, MenuStyle,
 };
 use embedded_graphics::{
     pixelcolor::BinaryColor,
@@ -173,11 +173,12 @@ where
         display: &mut D,
         items: &impl MenuItemCollection<R>,
         style: &MenuStyle<BinaryColor, S, IT, P, R>,
-        state: &State<P, S>,
+        menu_state: &MenuState<IT::InputAdapter, P, S>,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
         IT: InputAdapterSource<R>,
+        P: SelectionIndicatorController,
     {
         let display_size = display.bounding_box().size;
 
@@ -188,7 +189,9 @@ where
             top: padding_top,
             right: padding_right,
             bottom: padding_bottom,
-        } = self.style.padding(&state.state, selected_height);
+        } = self
+            .style
+            .padding(&menu_state.indicator_state.state, selected_height);
 
         // Draw the selection indicator
         let selected_item_height = (selected_height + padding_top + padding_bottom) as u32;
@@ -198,7 +201,7 @@ where
         );
 
         let invert_area = self.style.draw(
-            &state.state,
+            &menu_state.indicator_state.state,
             input_state,
             &mut display.cropped(&selected_item_area),
         )?;
@@ -214,6 +217,11 @@ where
             Size::new(content_width, display_size.height),
         );
 
-        items.draw_styled(style, &mut inverting.cropped(&content_area))
+        items.draw_styled(
+            style,
+            &mut inverting
+                .cropped(&content_area)
+                .translated(Point::new(0, -menu_state.list_offset)),
+        )
     }
 }

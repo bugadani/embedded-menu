@@ -5,7 +5,7 @@ use crate::{
     Menu, MenuDisplayMode, MenuItem, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
-use embedded_graphics::{pixelcolor::PixelColor, prelude::Point};
+use embedded_graphics::pixelcolor::PixelColor;
 use embedded_layout::{
     layout::linear::LinearLayout, object_chain::ChainElement, prelude::*, view_group::ViewGroup,
 };
@@ -195,7 +195,7 @@ where
         // We have less menu items than before. Avoid crashing.
         let max_idx = self.items.count().saturating_sub(1);
 
-        let mut items = LinearLayout::vertical(self.items).arrange().into_inner();
+        let items = LinearLayout::vertical(self.items).arrange().into_inner();
 
         if max_idx < state.selected {
             state.selected = max_idx;
@@ -208,8 +208,6 @@ where
             self.style
                 .indicator
                 .jump_to_target(&mut state.indicator_state);
-        } else {
-            items.translate_mut(Point::new(0, -state.list_offset));
         }
 
         Menu {
