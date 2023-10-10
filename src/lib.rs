@@ -490,7 +490,9 @@ where
                 0
             };
 
-            let selected_height = self.items.bounds_of(self.state.selected).size().height as i32;
+            let selected_height = MenuItemCollection::bounds_of(&self.items, self.state.selected)
+                .size()
+                .height as i32;
             let indicator_height = self
                 .style
                 .indicator
@@ -597,7 +599,9 @@ where
         };
 
         let selected_menuitem_height =
-            self.items.bounds_of(self.state.selected).size().height as i32;
+            MenuItemCollection::bounds_of(&self.items, self.state.selected)
+                .size()
+                .height as i32;
 
         self.style.indicator.draw(
             selected_menuitem_height,

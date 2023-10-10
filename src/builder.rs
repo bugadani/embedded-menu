@@ -7,7 +7,10 @@ use crate::{
 use core::marker::PhantomData;
 use embedded_graphics::pixelcolor::PixelColor;
 use embedded_layout::{
-    layout::linear::LinearLayout, object_chain::ChainElement, prelude::*, view_group::ViewGroup,
+    layout::linear::LinearLayout,
+    object_chain::ChainElement,
+    prelude::*,
+    view_group::{EmptyViewGroup, ViewGroup},
 };
 
 pub struct MenuBuilder<T, IT, LL, R, C, P, S>
@@ -189,18 +192,20 @@ where
     }
 
     pub fn build_with_state(
-        self,
+        mut self,
         mut state: MenuState<IT::InputAdapter, P, S>,
     ) -> Menu<T, IT, VG, R, C, P, S> {
         // We have less menu items than before. Avoid crashing.
         let max_idx = self.items.count().saturating_sub(1);
 
-        let items = LinearLayout::vertical(self.items).arrange().into_inner();
+        LinearLayout::vertical(EmptyViewGroup).arrange_view_group(&mut self.items);
 
         if max_idx < state.selected {
             state.selected = max_idx;
 
-            let max_indicator_pos = items.bounds_of(max_idx).top_left.y;
+            let max_indicator_pos = MenuItemCollection::bounds_of(&self.items, max_idx)
+                .top_left
+                .y;
 
             self.style
                 .indicator
@@ -214,7 +219,7 @@ where
             state,
             _return_type: PhantomData,
             title: self.title,
-            items,
+            items: self.items,
             style: self.style,
         }
     }
