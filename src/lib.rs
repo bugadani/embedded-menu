@@ -296,6 +296,24 @@ where
     pub fn reset_interaction(&mut self) {
         self.interaction_state = Default::default();
     }
+
+    fn set_selected_item<ITS, R, C>(
+        &mut self,
+        selected: usize,
+        items: &impl MenuItemCollection<R>,
+        style: &MenuStyle<C, S, ITS, P, R>,
+    ) where
+        ITS: InputAdapterSource<R, InputAdapter = IT>,
+        C: PixelColor,
+    {
+        self.selected = selected;
+
+        let selected_offset = items.bounds_of(selected).top_left.y;
+
+        style
+            .indicator
+            .change_selected_item(selected_offset, &mut self.indicator_state);
+    }
 }
 
 pub struct Menu<T, IT, VG, R, C, P, S>
@@ -385,12 +403,8 @@ where
                     let count = self.items.count();
                     let new_selected = navigation.calculate_selection(self.state.selected, count);
                     if new_selected != self.state.selected {
-                        self.state.selected = new_selected;
-
-                        let selected_offset = self.items.bounds_of(self.state.selected).top_left.y;
-                        self.style
-                            .indicator
-                            .change_selected_item(selected_offset, &mut self.state.indicator_state);
+                        self.state
+                            .set_selected_item(new_selected, &self.items, &self.style);
                     }
                     None
                 }

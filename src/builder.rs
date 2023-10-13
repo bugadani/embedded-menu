@@ -201,15 +201,7 @@ where
         LinearLayout::vertical(EmptyViewGroup).arrange_view_group(&mut self.items);
 
         if max_idx < state.selected {
-            state.selected = max_idx;
-
-            let max_indicator_pos = MenuItemCollection::bounds_of(&self.items, max_idx)
-                .top_left
-                .y;
-
-            self.style
-                .indicator
-                .change_selected_item(max_indicator_pos, &mut state.indicator_state);
+            state.set_selected_item(max_idx, &self.items, &self.style);
             self.style
                 .indicator
                 .jump_to_target(&mut state.indicator_state);
