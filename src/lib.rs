@@ -16,7 +16,6 @@ use crate::{
         programmed::Programmed, Action, InputAdapter, InputAdapterSource, InputResult, InputState,
         Interaction,
     },
-    margin::MarginExt,
     selection_indicator::{
         style::{line::Line as LineIndicator, IndicatorStyle},
         AnimatedPosition, Indicator, SelectionIndicatorController, State as IndicatorState,
@@ -521,9 +520,7 @@ where
         };
 
         // Move menu list.
-        if list_offset_change != 0 {
-            self.state.list_offset += list_offset_change;
-        }
+        self.state.list_offset += list_offset_change;
     }
 
     fn display_details<D>(&self, display: &mut D) -> Result<(), D::Error>
@@ -547,9 +544,7 @@ where
         };
 
         let character_style = self.style.text_style();
-        TextBox::new(details, content_area, character_style)
-            .with_margin(0, 0, 0, 1)
-            .draw(display)?;
+        TextBox::new(details, content_area, character_style).draw(display)?;
 
         Ok(())
     }
