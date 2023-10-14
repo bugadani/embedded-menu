@@ -76,7 +76,7 @@ impl MenuLine {
         let text_bounds = self.bounds.bounds();
         let display_area = display.bounding_box();
 
-        if text_bounds.intersection(&display_area).is_zero_sized() {
+        if text_bounds.intersection(&display_area).size.height == 0 {
             return Ok(());
         }
 
