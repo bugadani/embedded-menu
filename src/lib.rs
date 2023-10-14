@@ -520,9 +520,7 @@ where
         };
 
         // Move menu list.
-        if list_offset_change != 0 {
-            self.state.list_offset += list_offset_change;
-        }
+        self.state.list_offset += list_offset_change;
     }
 
     fn display_details<D>(&self, display: &mut D) -> Result<(), D::Error>
