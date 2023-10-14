@@ -6,7 +6,6 @@ pub use select::Select;
 
 use crate::{
     interaction::InputAdapterSource,
-    margin::{Margin, MarginExt},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     MenuStyle,
 };
@@ -22,7 +21,7 @@ use embedded_layout::prelude::*;
 use embedded_text::{alignment::HorizontalAlignment, style::TextBoxStyleBuilder, TextBox};
 
 pub struct MenuLine {
-    bounds: Margin<Rectangle>,
+    bounds: Rectangle,
     value_width: u32,
 }
 
@@ -43,18 +42,17 @@ impl MenuLine {
             .width;
 
         MenuLine {
-            value_width,
             bounds: Rectangle::new(
                 Point::zero(),
-                Size::new(1, style.font.character_size.height),
-            )
-            .with_margin(0, 0, -1, 0),
+                Size::new(1, style.font.character_size.height - 1),
+            ),
+            value_width,
         }
     }
 
     pub fn empty() -> Self {
         MenuLine {
-            bounds: Rectangle::new(Point::zero(), Size::new(1, 1)).with_margin(0, 0, -1, 0),
+            bounds: Rectangle::new(Point::zero(), Size::new(1, 0)),
             value_width: 0,
         }
     }
@@ -73,20 +71,22 @@ impl MenuLine {
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
     {
-        let text_bounds = self.bounds.bounds();
         let display_area = display.bounding_box();
 
-        if text_bounds.intersection(&display_area).size.height == 0 {
+        if self.bounds.intersection(&display_area).size.height == 0 {
             return Ok(());
         }
 
+        let mut text_bounds = Rectangle::new(
+            self.bounds.top_left,
+            Size::new(display_area.size.width, self.bounds.size.height + 1),
+        );
+
         let text_style = style.text_style();
 
-        let mut inner_bounds = self.bounds.inner.bounds();
-        inner_bounds.size.width = display_area.size.width - self.bounds.insets.left as u32;
         TextBox::with_textbox_style(
             value_text,
-            inner_bounds,
+            text_bounds,
             text_style,
             TextBoxStyleBuilder::new()
                 .alignment(HorizontalAlignment::Right)
@@ -94,8 +94,8 @@ impl MenuLine {
         )
         .draw(display)?;
 
-        inner_bounds.size.width -= self.value_width;
-        TextBox::new(title, inner_bounds, text_style).draw(display)?;
+        text_bounds.size.width -= self.value_width;
+        TextBox::new(title, text_bounds, text_style).draw(display)?;
 
         Ok(())
     }
@@ -107,6 +107,6 @@ impl View for MenuLine {
     }
 
     fn bounds(&self) -> Rectangle {
-        self.bounds.bounds()
+        self.bounds
     }
 }
