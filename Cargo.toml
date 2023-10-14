@@ -1,6 +1,6 @@
 [package]
 name = "embedded-menu"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["Dániel Buga <bugadani@gmail.com>"]
 edition = "2021"
 description = "Simple interactive menu for embedded devices"
