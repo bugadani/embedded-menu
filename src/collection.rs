@@ -168,13 +168,17 @@ where
     }
 
     fn bounds(&self) -> Rectangle {
-        let mut rect = Rectangle::new(self.position, Size::zero());
+        let mut size = Size::zero();
 
         for view in self.items.as_ref().iter() {
-            rect = rect.enveloping(&view.bounds());
+            let view_size = view.bounds().size;
+            size = Size::new(
+                size.width.max(view_size.width),
+                size.height + view_size.height,
+            );
         }
 
-        rect
+        Rectangle::new(self.position, size)
     }
 }
 
