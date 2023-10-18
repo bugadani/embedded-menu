@@ -200,8 +200,8 @@ where
 
         LinearLayout::vertical(EmptyViewGroup).arrange_view_group(&mut self.items);
 
+        state.set_selected_item(state.selected, &self.items, &self.style);
         if max_idx < state.selected {
-            state.set_selected_item(max_idx, &self.items, &self.style);
             self.style
                 .indicator
                 .jump_to_target(&mut state.indicator_state);

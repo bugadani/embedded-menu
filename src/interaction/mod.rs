@@ -51,6 +51,7 @@ impl Navigation {
         count: usize,
         selectable: impl Fn(usize) -> bool,
     ) -> usize {
+        let original = selected;
         // The lazy evaluation is necessary to prevent overflows.
         #[allow(clippy::unnecessary_lazy_evaluations)]
         match self {
@@ -59,11 +60,19 @@ impl Navigation {
                 if selectable(selected) {
                     break selected;
                 }
+                // Prevent infinite loop if nothing is selectable.
+                else if selected == original {
+                    return 0;
+                }
             },
             Self::Previous => loop {
                 selected = selected.checked_sub(1).unwrap_or(count - 1);
                 if selectable(selected) {
                     break selected;
+                }
+                // Prevent infinite loop if nothing is selectable.
+                else if selected == original {
+                    return 0;
                 }
             },
             Self::ForwardWrapping(n) => {

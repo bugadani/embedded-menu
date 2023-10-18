@@ -12,21 +12,25 @@ use crate::{
     Marker, MenuItem, MenuStyle,
 };
 
-pub struct SectionTitle<T>
+pub struct SectionTitle<T, R>
 where
     T: AsRef<str>,
 {
     title_text: T,
     line: MenuLine,
+    _r: core::marker::PhantomData<R>,
 }
 
-impl<T> Marker for SectionTitle<T> where T: AsRef<str> {}
+impl<T, R> Marker for SectionTitle<T, R> where T: AsRef<str> {}
 
-impl<T> MenuItem<()> for SectionTitle<T>
+impl<T, R> MenuItem<R> for SectionTitle<T, R>
 where
     T: AsRef<str>,
+    R: Default,
 {
-    fn interact(&mut self) {}
+    fn interact(&mut self) -> R {
+        R::default()
+    }
 
     fn title(&self) -> &str {
         self.title_text.as_ref()
@@ -44,11 +48,11 @@ where
         false
     }
 
-    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, ()>)
+    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, R>)
     where
         C: PixelColor,
         S: IndicatorStyle,
-        IT: InputAdapterSource<()>,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
     {
         self.line = MenuLine::new("", style);
@@ -56,13 +60,13 @@ where
 
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<C, S, IT, P, ()>,
+        style: &MenuStyle<C, S, IT, P, R>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
         C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
-        IT: InputAdapterSource<()>,
+        IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>,
     {
@@ -71,7 +75,7 @@ where
     }
 }
 
-impl<T> SectionTitle<T>
+impl<T, R> SectionTitle<T, R>
 where
     T: AsRef<str>,
 {
@@ -79,11 +83,12 @@ where
         Self {
             title_text: title,
             line: MenuLine::empty(),
+            _r: core::marker::PhantomData,
         }
     }
 }
 
-impl<T> View for SectionTitle<T>
+impl<T, R> View for SectionTitle<T, R>
 where
     T: AsRef<str>,
 {

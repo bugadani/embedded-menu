@@ -38,6 +38,7 @@ use embedded_text::{
     TextBox,
 };
 
+use crate::interaction::Navigation;
 pub use embedded_menu_macros::{Menu, SelectValue};
 
 /// Marker trait necessary to avoid a "conflicting implementations" error.
@@ -308,6 +309,9 @@ where
         ITS: InputAdapterSource<R, InputAdapter = IT>,
         C: PixelColor,
     {
+        let selected =
+            Navigation::JumpTo(selected)
+                .calculate_selection(self.selected, items.count(), |i| items.selectable(i));
         self.selected = selected;
 
         let selected_offset = items.bounds_of(selected).top_left.y;

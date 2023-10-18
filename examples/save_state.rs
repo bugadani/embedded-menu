@@ -4,6 +4,7 @@ use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, Window,
 };
+use embedded_menu::items::SectionTitle;
 use embedded_menu::{
     interaction::simulator::Simulator,
     items::{select::SelectValue, NavigationItem, Select},
@@ -42,10 +43,11 @@ struct MenuData {
     select: TestEnum,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Default, Clone, Copy)]
 enum MenuEvent {
     SliceCheckbox(usize, bool),
     Select(TestEnum),
+    #[default]
     Nothing,
     Quit,
 }
@@ -88,7 +90,9 @@ fn do_loop(
                     .with_marker(">")
                     .with_detail_text("Some longer description text"),
             )
+            .add_item(SectionTitle::new("  Dynamic items"))
             .add_items(&mut items)
+            .add_item(SectionTitle::new("  Non-Dynamic"))
             .add_item(
                 Select::new("Check this too", data.select)
                     .with_detail_text("Description")
