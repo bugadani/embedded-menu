@@ -45,21 +45,83 @@ pub enum Navigation {
 impl Navigation {
     /// Internal function to change the selection based on interaction.
     /// Separated to allow for easier testing.
-    pub(crate) fn calculate_selection(self, selected: usize, count: usize) -> usize {
+    pub(crate) fn calculate_selection(
+        self,
+        mut selected: usize,
+        count: usize,
+        selectable: impl Fn(usize) -> bool,
+    ) -> usize {
         // The lazy evaluation is necessary to prevent overflows.
         #[allow(clippy::unnecessary_lazy_evaluations)]
         match self {
-            Self::Next => (selected + 1) % count,
-            Self::Previous => selected.checked_sub(1).unwrap_or(count - 1),
-            Self::ForwardWrapping(n) => (selected + n) % count,
-            Self::Forward(n) => selected.saturating_add(n).min(count - 1),
-            Self::BackwardWrapping(n) => selected
-                .checked_sub(n)
-                .unwrap_or_else(|| count - (n - selected) % count),
-            Self::Backward(n) => selected.saturating_sub(n),
-            Self::Beginning => 0,
-            Self::End => count - 1,
-            Self::JumpTo(n) => n.min(count - 1),
+            Self::Next => loop {
+                selected = (selected + 1) % count;
+                if selectable(selected) {
+                    break selected;
+                }
+            },
+            Self::Previous => loop {
+                selected = selected.checked_sub(1).unwrap_or(count - 1);
+                if selectable(selected) {
+                    break selected;
+                }
+            },
+            Self::ForwardWrapping(n) => {
+                selected = (selected + n) % count;
+                if !selectable(selected) {
+                    Self::Next.calculate_selection(selected, count, selectable)
+                } else {
+                    selected
+                }
+            }
+            Self::Forward(n) => {
+                selected = selected.saturating_add(n).min(count - 1);
+                if !selectable(selected) {
+                    Self::Next.calculate_selection(selected, count, selectable)
+                } else {
+                    selected
+                }
+            }
+            Self::BackwardWrapping(n) => {
+                selected = selected
+                    .checked_sub(n)
+                    .unwrap_or_else(|| count - (n - selected) % count);
+                if !selectable(selected) {
+                    Self::Previous.calculate_selection(selected, count, selectable)
+                } else {
+                    selected
+                }
+            }
+            Self::Backward(n) => {
+                selected = selected.saturating_sub(n);
+                if !selectable(selected) {
+                    Self::Previous.calculate_selection(selected, count, selectable)
+                } else {
+                    selected
+                }
+            }
+            Self::Beginning => {
+                if !selectable(0) {
+                    Self::Next.calculate_selection(0, count, selectable)
+                } else {
+                    0
+                }
+            }
+            Self::End => {
+                if !selectable(count - 1) {
+                    Self::Previous.calculate_selection(count - 1, count, selectable)
+                } else {
+                    count - 1
+                }
+            }
+            Self::JumpTo(n) => {
+                selected = n.min(count - 1);
+                if !selectable(selected) {
+                    Self::Next.calculate_selection(selected, count, selectable)
+                } else {
+                    selected
+                }
+            }
         }
     }
 }

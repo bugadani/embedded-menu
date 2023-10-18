@@ -19,6 +19,8 @@ pub trait MenuItemCollection<R> {
     fn title_of(&self, nth: usize) -> &str;
     fn details_of(&self, nth: usize) -> &str;
     fn interact_with(&mut self, nth: usize) -> R;
+    /// Whether an item is selectable. If not, the item will be skipped.
+    fn selectable(&self, nth: usize) -> bool;
     fn count(&self) -> usize;
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
@@ -46,6 +48,11 @@ where
     fn interact_with(&mut self, nth: usize) -> R {
         debug_assert!(nth == 0);
         self.interact()
+    }
+
+    fn selectable(&self, nth: usize) -> bool {
+        debug_assert!(nth == 0);
+        self.selectable()
     }
 
     fn title_of(&self, nth: usize) -> &str {
@@ -129,6 +136,10 @@ where
 
     fn details_of(&self, nth: usize) -> &str {
         self.items.as_ref()[nth].details()
+    }
+
+    fn selectable(&self, nth: usize) -> bool {
+        self.items.as_ref()[nth].selectable()
     }
 
     fn count(&self) -> usize {
@@ -220,6 +231,10 @@ where
         self.object.details_of(nth)
     }
 
+    fn selectable(&self, nth: usize) -> bool {
+        self.object.selectable(nth)
+    }
+
     fn count(&self) -> usize {
         self.object.count()
     }
@@ -279,6 +294,15 @@ where
             self.parent.details_of(nth)
         } else {
             self.object.details_of(nth - count)
+        }
+    }
+
+    fn selectable(&self, nth: usize) -> bool {
+        let count = self.parent.count();
+        if nth < count {
+            self.parent.selectable(nth)
+        } else {
+            self.object.selectable(nth - count)
         }
     }
 

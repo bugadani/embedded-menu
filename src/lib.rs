@@ -54,6 +54,9 @@ pub trait MenuItem<R>: Marker + View {
     fn title(&self) -> &str;
     fn details(&self) -> &str;
     fn value(&self) -> &str;
+    fn selectable(&self) -> bool {
+        true
+    }
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
         style: &MenuStyle<C, S, IT, P, R>,
@@ -400,7 +403,10 @@ where
             InputResult::Interaction(interaction) => match interaction {
                 Interaction::Navigation(navigation) => {
                     let count = self.items.count();
-                    let new_selected = navigation.calculate_selection(self.state.selected, count);
+                    let new_selected =
+                        navigation.calculate_selection(self.state.selected, count, |i| {
+                            self.items.selectable(i)
+                        });
                     if new_selected != self.state.selected {
                         self.state
                             .set_selected_item(new_selected, &self.items, &self.style);

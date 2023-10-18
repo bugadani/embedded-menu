@@ -1,7 +1,9 @@
 mod navigation_item;
+mod section_title;
 pub mod select;
 
 pub use navigation_item::NavigationItem;
+pub use section_title::SectionTitle;
 pub use select::Select;
 
 use crate::{
