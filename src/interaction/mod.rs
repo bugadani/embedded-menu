@@ -21,6 +21,7 @@ pub enum Action<R> {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[must_use]
 pub enum Navigation {
     /// Equivalent to `BackwardWrapping(1)`, kept for backward compatibility.
     Previous,
@@ -51,7 +52,10 @@ impl Navigation {
         count: usize,
         selectable: impl Fn(usize) -> bool,
     ) -> usize {
+        // Clamp the selection to the range of selectable items.
+        selected = selected.clamp(0, count - 1);
         let original = selected;
+
         // The lazy evaluation is necessary to prevent overflows.
         #[allow(clippy::unnecessary_lazy_evaluations)]
         match self {
@@ -186,41 +190,43 @@ mod test {
         let count = 30;
         let mut selected = 3;
         for _ in 0..5 {
-            selected = Navigation::Previous.calculate_selection(selected, count);
+            selected = Navigation::Previous.calculate_selection(selected, count, |_| true);
         }
         assert_eq!(selected, 28);
 
         for _ in 0..5 {
-            selected = Navigation::Next.calculate_selection(selected, count);
+            selected = Navigation::Next.calculate_selection(selected, count, |_| true);
         }
         assert_eq!(selected, 3);
 
         for _ in 0..5 {
-            selected = Navigation::BackwardWrapping(5).calculate_selection(selected, count);
+            selected =
+                Navigation::BackwardWrapping(5).calculate_selection(selected, count, |_| true);
         }
         assert_eq!(selected, 8);
 
         for _ in 0..5 {
-            selected = Navigation::ForwardWrapping(5).calculate_selection(selected, count);
+            selected =
+                Navigation::ForwardWrapping(5).calculate_selection(selected, count, |_| true);
         }
         assert_eq!(selected, 3);
 
-        selected = Navigation::JumpTo(20).calculate_selection(selected, count);
+        selected = Navigation::JumpTo(20).calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 20);
 
-        selected = Navigation::Beginning.calculate_selection(selected, count);
+        selected = Navigation::Beginning.calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 0);
 
-        selected = Navigation::End.calculate_selection(selected, count);
+        selected = Navigation::End.calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 29);
 
         for _ in 0..5 {
-            selected = Navigation::Backward(5).calculate_selection(selected, count);
+            selected = Navigation::Backward(5).calculate_selection(selected, count, |_| true);
         }
         assert_eq!(selected, 4);
 
         for _ in 0..5 {
-            selected = Navigation::Forward(5).calculate_selection(selected, count);
+            selected = Navigation::Forward(5).calculate_selection(selected, count, |_| true);
         }
         assert_eq!(selected, 29);
     }
@@ -230,28 +236,58 @@ mod test {
         let count = 30;
         let mut selected = 3;
 
-        selected = Navigation::BackwardWrapping(75).calculate_selection(selected, count);
+        selected = Navigation::BackwardWrapping(75).calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 18);
 
-        selected = Navigation::ForwardWrapping(75).calculate_selection(selected, count);
+        selected = Navigation::ForwardWrapping(75).calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 3);
 
-        selected = Navigation::BackwardWrapping(100000).calculate_selection(selected, count);
+        selected =
+            Navigation::BackwardWrapping(100000).calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 23);
 
-        selected = Navigation::ForwardWrapping(100000).calculate_selection(selected, count);
+        selected =
+            Navigation::ForwardWrapping(100000).calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 3);
 
-        selected = Navigation::JumpTo(100).calculate_selection(selected, count);
+        selected = Navigation::JumpTo(100).calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 29);
 
-        selected = Navigation::JumpTo(0).calculate_selection(selected, count);
+        selected = Navigation::JumpTo(0).calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 0);
 
-        selected = Navigation::Forward(100000).calculate_selection(selected, count);
+        selected = Navigation::Forward(100000).calculate_selection(selected, count, |_| true);
         assert_eq!(selected, 29);
 
-        selected = Navigation::Backward(100000).calculate_selection(selected, count);
+        selected = Navigation::Backward(100000).calculate_selection(selected, count, |_| true);
+        assert_eq!(selected, 0);
+    }
+
+    #[test]
+    fn unselectable_selection_infinite_loop() {
+        let selected = Navigation::BackwardWrapping(75).calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::ForwardWrapping(75).calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::BackwardWrapping(75).calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::ForwardWrapping(75).calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::JumpTo(75).calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::JumpTo(75).calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::Forward(75).calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::Backward(75).calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::Next.calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::Previous.calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::Beginning.calculate_selection(5, 10, |_| false);
+        assert_eq!(selected, 0);
+        let selected = Navigation::End.calculate_selection(5, 10, |_| false);
         assert_eq!(selected, 0);
     }
 }
