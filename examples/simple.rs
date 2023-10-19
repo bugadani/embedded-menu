@@ -7,6 +7,7 @@ use embedded_graphics_simulator::{
     sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
     Window,
 };
+use embedded_menu::items::SectionTitle;
 use embedded_menu::{
     interaction::{Action, Interaction, Navigation},
     items::{select::SelectValue, NavigationItem, Select},
@@ -42,6 +43,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::new("Menu")
         .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
         .add_item(Select::new("Check this 1", false))
+        .add_item(SectionTitle::new("===== Section ====="))
         .add_item(Select::new("Check this 2", false))
         .add_item(Select::new("Check this 3", TestEnum::A))
         .build();

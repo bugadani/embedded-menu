@@ -38,6 +38,7 @@ use embedded_text::{
     TextBox,
 };
 
+use crate::interaction::Navigation;
 pub use embedded_menu_macros::{Menu, SelectValue};
 
 /// Marker trait necessary to avoid a "conflicting implementations" error.
@@ -54,6 +55,9 @@ pub trait MenuItem<R>: Marker + View {
     fn title(&self) -> &str;
     fn details(&self) -> &str;
     fn value(&self) -> &str;
+    fn selectable(&self) -> bool {
+        true
+    }
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
         style: &MenuStyle<C, S, IT, P, R>,
@@ -305,6 +309,9 @@ where
         ITS: InputAdapterSource<R, InputAdapter = IT>,
         C: PixelColor,
     {
+        let selected =
+            Navigation::JumpTo(selected)
+                .calculate_selection(self.selected, items.count(), |i| items.selectable(i));
         self.selected = selected;
 
         let selected_offset = items.bounds_of(selected).top_left.y;
@@ -400,7 +407,10 @@ where
             InputResult::Interaction(interaction) => match interaction {
                 Interaction::Navigation(navigation) => {
                     let count = self.items.count();
-                    let new_selected = navigation.calculate_selection(self.state.selected, count);
+                    let new_selected =
+                        navigation.calculate_selection(self.state.selected, count, |i| {
+                            self.items.selectable(i)
+                        });
                     if new_selected != self.state.selected {
                         self.state
                             .set_selected_item(new_selected, &self.items, &self.style);
