@@ -41,17 +41,19 @@ impl SelectValue for TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::new("Menu")
-        .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
-        .add_item(Select::new("Check this 1", false))
+        .add_item(NavigationItem::new("Foo", 1).with_marker(">"))
+        .add_item(Select::new("Check this 1", false).with_value_converter(|b| 20 + b as i32))
         .add_item(SectionTitle::new("===== Section ====="))
-        .add_item(Select::new("Check this 2", false))
-        .add_item(Select::new("Check this 3", TestEnum::A))
+        .add_item(Select::new("Check this 2", false).with_value_converter(|b| 30 + b as i32))
+        .add_item(Select::new("Check this 3", TestEnum::A).with_value_converter(|b| 40 + b as i32))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()
         .theme(BinaryColorTheme::OledBlue)
         .build();
     let mut window = Window::new("Menu demonstration", &output_settings);
+
+    let mut selected_value: i32 = 0;
 
     'running: loop {
         let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
@@ -74,6 +76,12 @@ fn main() -> Result<(), core::convert::Infallible> {
                 SimulatorEvent::Quit => break 'running,
                 _ => None,
             };
+        }
+
+        let selected = menu.selected_value();
+        if selected != selected_value {
+            println!("Selected value: {}", selected);
+            selected_value = selected;
         }
     }
 

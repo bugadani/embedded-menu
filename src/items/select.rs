@@ -102,6 +102,10 @@ where
     D: AsRef<str>,
     S: SelectValue,
 {
+    fn value_of(&self) -> R {
+        (self.convert)(self.value)
+    }
+
     fn interact(&mut self) -> R {
         self.value = self.value.next();
         (self.convert)(self.value)

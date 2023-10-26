@@ -40,6 +40,10 @@ where
     M: AsRef<str>,
     R: Copy,
 {
+    fn value_of(&self) -> R {
+        self.return_value
+    }
+
     fn interact(&mut self) -> R {
         self.return_value
     }
