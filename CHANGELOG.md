@@ -1,6 +1,7 @@
-Unreleased
+0.5.4 (2023-10-27)
 ==================
- - New: allow `Menu` to return the selected item's R value without interacting with it.
+
+ - New: allow `Menu` to return the selected item's value without interacting with it.
 
 0.5.3 (2023-10-19)
 ==================
