@@ -41,33 +41,24 @@ fn main() -> Result<(), core::convert::Infallible> {
             page_size: 5,
             esc_value: (),
         })
-        .with_animated_selection_indicator(10)
-        .with_details_delay(100);
+        .with_animated_selection_indicator(10);
 
     let mut selects1 = [
-        Select::new("Check this 1", false).with_detail_text("Description"),
-        Select::new("Check this 2", false).with_detail_text("Description"),
+        Select::new("Check this 1", false),
+        Select::new("Check this 2", false),
     ];
     let mut selects2 = [
-        Select::new("Check this 3", true).with_detail_text("Description"),
-        Select::new("Check this 4", true).with_detail_text("Description"),
+        Select::new("Check this 3", true),
+        Select::new("Check this 4", true),
     ];
 
     let mut menu = Menu::with_style("Menu", style)
-        .add_item(
-            NavigationItem::new("Foo", ())
-                .with_marker(">")
-                .with_detail_text("Some longer description text that will need to be word wrapped"),
-        )
+        .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
         .add_items(&mut selects1)
         .add_items(&mut selects2)
-        .add_item(
-            NavigationItem::new("Foo", ())
-                .with_marker(">")
-                .with_detail_text("Some longer description text that will need to be word wrapped"),
-        )
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
+        .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
+        .add_item(Select::new("Check this", false))
+        .add_item(Select::new("Check this too", TestEnum::A))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

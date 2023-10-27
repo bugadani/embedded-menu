@@ -70,33 +70,25 @@ fn do_loop(
     for _ in 0..60 {
         let mut items = (0..item_count)
             .map(|i| {
-                Select::new("Changing", data.slice_data[i])
-                    .with_value_converter(match i {
-                        0 => |data| MenuEvent::SliceCheckbox(0, data),
-                        1 => |data| MenuEvent::SliceCheckbox(1, data),
-                        2 => |data| MenuEvent::SliceCheckbox(2, data),
-                        3 => |data| MenuEvent::SliceCheckbox(3, data),
-                        4 => |data| MenuEvent::SliceCheckbox(4, data),
-                        _ => panic!(),
-                    })
-                    .with_detail_text("Description")
+                Select::new("Changing", data.slice_data[i]).with_value_converter(match i {
+                    0 => |data| MenuEvent::SliceCheckbox(0, data),
+                    1 => |data| MenuEvent::SliceCheckbox(1, data),
+                    2 => |data| MenuEvent::SliceCheckbox(2, data),
+                    3 => |data| MenuEvent::SliceCheckbox(3, data),
+                    4 => |data| MenuEvent::SliceCheckbox(4, data),
+                    _ => panic!(),
+                })
             })
             .take(item_count)
             .collect::<Vec<_>>();
 
         let mut menu = Menu::with_style(&title, style)
-            .add_item(
-                NavigationItem::new("Foo", MenuEvent::Nothing)
-                    .with_marker(">")
-                    .with_detail_text("Some longer description text"),
-            )
+            .add_item(NavigationItem::new("Foo", MenuEvent::Nothing).with_marker(">"))
             .add_item(SectionTitle::new("  Dynamic items"))
             .add_items(&mut items)
             .add_item(SectionTitle::new("  Non-Dynamic"))
             .add_item(
-                Select::new("Check this too", data.select)
-                    .with_detail_text("Description")
-                    .with_value_converter(MenuEvent::Select),
+                Select::new("Check this too", data.select).with_value_converter(MenuEvent::Select),
             )
             .build_with_state(*state);
 

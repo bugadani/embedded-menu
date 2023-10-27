@@ -54,9 +54,6 @@ pub trait MenuItem<R>: Marker + View {
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController;
-    fn title(&self) -> &str;
-    fn details(&self) -> &str;
-    fn value(&self) -> &str;
     fn selectable(&self) -> bool {
         true
     }
@@ -71,28 +68,6 @@ pub trait MenuItem<R>: Marker + View {
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>;
-}
-
-#[derive(Clone, Copy)]
-enum MenuDisplayMode {
-    List(u16),
-    Details,
-}
-
-impl Default for MenuDisplayMode {
-    fn default() -> Self {
-        Self::List(0)
-    }
-}
-
-impl MenuDisplayMode {
-    fn is_list(&self) -> bool {
-        matches!(self, Self::List(_))
-    }
-
-    fn is_details(&self) -> bool {
-        matches!(self, Self::Details)
-    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -114,7 +89,6 @@ where
     pub(crate) scrollbar: DisplayScrollbar,
     pub(crate) font: &'static MonoFont<'static>,
     pub(crate) title_font: &'static MonoFont<'static>,
-    pub(crate) details_delay: Option<u16>,
     pub(crate) input_adapter: IT,
     pub(crate) indicator: Indicator<P, S>,
     _marker: PhantomData<R>,
@@ -136,7 +110,6 @@ where
             scrollbar: DisplayScrollbar::Auto,
             font: &FONT_6X10,
             title_font: &FONT_6X10,
-            details_delay: None,
             input_adapter: Programmed,
             indicator: Indicator {
                 style: LineIndicator,
@@ -166,13 +139,6 @@ where
         Self { scrollbar, ..self }
     }
 
-    pub const fn with_details_delay(self, frames: u16) -> Self {
-        Self {
-            details_delay: Some(frames),
-            ..self
-        }
-    }
-
     pub const fn with_selection_indicator<S2>(
         self,
         indicator_style: S2,
@@ -185,7 +151,6 @@ where
             scrollbar: self.scrollbar,
             font: self.font,
             title_font: self.title_font,
-            details_delay: self.details_delay,
             input_adapter: self.input_adapter,
             indicator: Indicator {
                 style: indicator_style,
@@ -205,7 +170,6 @@ where
             scrollbar: self.scrollbar,
             font: self.font,
             title_font: self.title_font,
-            details_delay: self.details_delay,
             indicator: self.indicator,
             _marker: PhantomData,
         }
@@ -221,7 +185,6 @@ where
             scrollbar: self.scrollbar,
             font: self.font,
             title_font: self.title_font,
-            details_delay: self.details_delay,
             indicator: Indicator {
                 style: self.indicator.style,
                 controller: AnimatedPosition::new(frames),
@@ -249,7 +212,6 @@ where
 {
     selected: usize,
     list_offset: i32,
-    display_mode: MenuDisplayMode,
     interaction_state: IT::State,
     indicator_state: IndicatorState<P, S>,
     last_input_state: InputState,
@@ -265,7 +227,6 @@ where
         Self {
             selected: 0,
             list_offset: Default::default(),
-            display_mode: Default::default(),
             interaction_state: Default::default(),
             indicator_state: Default::default(),
             last_input_state: InputState::Idle,
@@ -378,27 +339,12 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    fn selected_has_details(&self) -> bool {
-        !self.items.details_of(self.state.selected).is_empty()
-    }
-
-    fn reset_display_state(&mut self) {
-        if let Some(threshold) = self.style.details_delay {
-            self.state.display_mode = MenuDisplayMode::List(threshold);
-        }
-    }
-
     pub fn interact(&mut self, input: <IT::InputAdapter as InputAdapter>::Input) -> Option<R> {
         let input = self
             .style
             .input_adapter
             .adapter()
             .handle_input(&mut self.state.interaction_state, input);
-
-        if !matches!(input, InputResult::StateUpdate(InputState::Idle)) {
-            // If anything happens, exit Details view
-            self.reset_display_state();
-        }
 
         self.state.last_input_state = match input {
             InputResult::Interaction(_) => InputState::Idle,
@@ -500,19 +446,6 @@ where
     }
 
     pub fn update(&mut self, display: &impl Dimensions) {
-        if self.style.details_delay.is_some() && self.selected_has_details() {
-            if let MenuDisplayMode::List(ref mut timeout) = self.state.display_mode {
-                *timeout = timeout.saturating_sub(1);
-                if *timeout == 0 {
-                    self.state.display_mode = MenuDisplayMode::Details;
-                }
-            }
-        }
-
-        if !self.state.display_mode.is_list() {
-            return;
-        }
-
         // animations
         self.style
             .indicator
@@ -549,35 +482,9 @@ where
         // Move menu list.
         self.state.list_offset += list_offset_change;
     }
-
-    fn display_details<D>(&self, display: &mut D) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = C>,
-    {
-        let display_area = display.bounding_box();
-
-        let title = self.items.title_of(self.state.selected);
-        let details = self.items.details_of(self.state.selected);
-        let header = self.header(title, display);
-
-        let content_area = if let Some(header) = header {
-            header.draw(display)?;
-            display_area.resized_height(
-                display_area.size().height - header.size().height,
-                AnchorY::Bottom,
-            )
-        } else {
-            display_area
-        };
-
-        let character_style = self.style.text_style();
-        TextBox::new(details, content_area, character_style).draw(display)?;
-
-        Ok(())
-    }
 }
 
-impl<T, IT, VG, R, P, S> Menu<T, IT, VG, R, BinaryColor, P, S>
+impl<T, IT, VG, R, P, S> Drawable for Menu<T, IT, VG, R, BinaryColor, P, S>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
@@ -585,7 +492,10 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
-    fn display_list<D>(&self, display: &mut D) -> Result<(), D::Error>
+    type Color = BinaryColor;
+    type Output = ();
+
+    fn draw<D>(&self, display: &mut D) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
     {
@@ -652,28 +562,5 @@ where
         )?;
 
         Ok(())
-    }
-}
-
-impl<T, IT, VG, R, P, S> Drawable for Menu<T, IT, VG, R, BinaryColor, P, S>
-where
-    T: AsRef<str>,
-    IT: InputAdapterSource<R>,
-    VG: ViewGroup + MenuItemCollection<R>,
-    P: SelectionIndicatorController,
-    S: IndicatorStyle,
-{
-    type Color = BinaryColor;
-    type Output = ();
-
-    fn draw<D>(&self, display: &mut D) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = BinaryColor>,
-    {
-        if self.state.display_mode.is_details() && self.selected_has_details() {
-            self.display_details(display)
-        } else {
-            self.display_list(display)
-        }
     }
 }

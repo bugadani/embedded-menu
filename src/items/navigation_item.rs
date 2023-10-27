@@ -12,31 +12,27 @@ use crate::{
     Marker, MenuItem, MenuStyle,
 };
 
-pub struct NavigationItem<T, D, M, R>
+pub struct NavigationItem<T, M, R>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     M: AsRef<str>,
 {
     title_text: T,
-    details: D,
     return_value: R,
     marker: M,
     line: MenuLine,
 }
 
-impl<T, D, M, R> Marker for NavigationItem<T, D, M, R>
+impl<T, M, R> Marker for NavigationItem<T, M, R>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     M: AsRef<str>,
 {
 }
 
-impl<T, D, M, R> MenuItem<R> for NavigationItem<T, D, M, R>
+impl<T, M, R> MenuItem<R> for NavigationItem<T, M, R>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     M: AsRef<str>,
     R: Copy,
 {
@@ -46,18 +42,6 @@ where
 
     fn interact(&mut self) -> R {
         self.return_value
-    }
-
-    fn title(&self) -> &str {
-        self.title_text.as_ref()
-    }
-
-    fn details(&self) -> &str {
-        self.details.as_ref()
-    }
-
-    fn value(&self) -> &str {
-        self.marker.as_ref()
     }
 
     fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, R>)
@@ -91,7 +75,7 @@ where
     }
 }
 
-impl<T, R> NavigationItem<T, &'static str, &'static str, R>
+impl<T, R> NavigationItem<T, &'static str, R>
 where
     T: AsRef<str>,
 {
@@ -99,44 +83,30 @@ where
         NavigationItem {
             title_text: title,
             return_value: value,
-            details: "",
             marker: "",
             line: MenuLine::empty(),
         }
     }
 }
 
-impl<T, D, M, R> NavigationItem<T, D, M, R>
+impl<T, M, R> NavigationItem<T, M, R>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     M: AsRef<str>,
 {
-    pub fn with_marker<M2: AsRef<str>>(self, marker: M2) -> NavigationItem<T, D, M2, R> {
+    pub fn with_marker<M2: AsRef<str>>(self, marker: M2) -> NavigationItem<T, M2, R> {
         NavigationItem {
             marker,
             title_text: self.title_text,
             return_value: self.return_value,
-            details: self.details,
-            line: self.line,
-        }
-    }
-
-    pub fn with_detail_text<D2: AsRef<str>>(self, details: D2) -> NavigationItem<T, D2, M, R> {
-        NavigationItem {
-            details,
-            title_text: self.title_text,
-            return_value: self.return_value,
-            marker: self.marker,
             line: self.line,
         }
     }
 }
 
-impl<T, D, M, R> View for NavigationItem<T, D, M, R>
+impl<T, M, R> View for NavigationItem<T, M, R>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     M: AsRef<str>,
 {
     fn translate_impl(&mut self, by: Point) {

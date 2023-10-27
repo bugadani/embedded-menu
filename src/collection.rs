@@ -16,8 +16,6 @@ use crate::{
 /// Menu-related extensions for object chain elements
 pub trait MenuItemCollection<R> {
     fn bounds_of(&self, nth: usize) -> Rectangle;
-    fn title_of(&self, nth: usize) -> &str;
-    fn details_of(&self, nth: usize) -> &str;
     fn value_of(&self, nth: usize) -> R;
     fn interact_with(&mut self, nth: usize) -> R;
     /// Whether an item is selectable. If not, the item will be skipped.
@@ -59,16 +57,6 @@ where
     fn selectable(&self, nth: usize) -> bool {
         debug_assert!(nth == 0);
         self.selectable()
-    }
-
-    fn title_of(&self, nth: usize) -> &str {
-        debug_assert!(nth == 0);
-        self.title()
-    }
-
-    fn details_of(&self, nth: usize) -> &str {
-        debug_assert!(nth == 0);
-        self.details()
     }
 
     fn count(&self) -> usize {
@@ -138,14 +126,6 @@ where
 
     fn interact_with(&mut self, nth: usize) -> R {
         self.items.as_mut()[nth].interact()
-    }
-
-    fn title_of(&self, nth: usize) -> &str {
-        self.items.as_ref()[nth].title()
-    }
-
-    fn details_of(&self, nth: usize) -> &str {
-        self.items.as_ref()[nth].details()
     }
 
     fn selectable(&self, nth: usize) -> bool {
@@ -237,14 +217,6 @@ where
         self.object.interact_with(nth)
     }
 
-    fn title_of(&self, nth: usize) -> &str {
-        self.object.title_of(nth)
-    }
-
-    fn details_of(&self, nth: usize) -> &str {
-        self.object.details_of(nth)
-    }
-
     fn selectable(&self, nth: usize) -> bool {
         self.object.selectable(nth)
     }
@@ -299,24 +271,6 @@ where
             self.parent.interact_with(nth)
         } else {
             self.object.interact_with(nth - count)
-        }
-    }
-
-    fn title_of(&self, nth: usize) -> &str {
-        let count = self.parent.count();
-        if nth < count {
-            self.parent.title_of(nth)
-        } else {
-            self.object.title_of(nth - count)
-        }
-    }
-
-    fn details_of(&self, nth: usize) -> &str {
-        let count = self.parent.count();
-        if nth < count {
-            self.parent.details_of(nth)
-        } else {
-            self.object.details_of(nth - count)
         }
     }
 

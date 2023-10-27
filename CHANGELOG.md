@@ -1,3 +1,17 @@
+Unreleased
+==========
+
+ - Removed the concept of menu item descriptions. This change removes the following APIs:
+   - `MenuItemCollection::details_of`
+   - `MenuItem::details`
+   - `NavigationItem::with_detail_text`
+   - `Select::with_detail_text`
+   - `MenuStyle::with_details_delay`
+   - `Select` and `NavigationItem` now have one fewer type parameters
+ - Removed `MenuItem::title`
+ - Removed `MenuItem::value`
+ - Removed `MenuItemCollection::title_of`
+
 0.5.4 (2023-10-27)
 ==================
 
