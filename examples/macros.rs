@@ -30,9 +30,9 @@ pub enum NavEvents {
     title = "Menu title",
     navigation(events = NavEvents, marker = ">"),
     items = [
-        data(label = "Multiple select", field = test_field, details = "Some description"),
+        data(label = "Multiple select", field = test_field),
         data(label = "Checkbox", field = checkbox),
-        navigation(label = "Quit", details = "Exits the demo", event = NavEvents::Quit)
+        navigation(label = "Quit", event = NavEvents::Quit)
     ]
 )]
 pub struct DemoMenu {
@@ -47,7 +47,6 @@ fn main() -> Result<(), core::convert::Infallible> {
     }
     .create_menu_with_style(
         MenuStyle::new(BinaryColor::On)
-            .with_details_delay(250)
             .with_animated_selection_indicator(10)
             .with_selection_indicator(AnimatedTriangle::new(200))
             .with_input_adapter(Simulator {

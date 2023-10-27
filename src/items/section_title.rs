@@ -40,10 +40,6 @@ where
         self.title_text.as_ref()
     }
 
-    fn details(&self) -> &str {
-        ""
-    }
-
     fn value(&self) -> &str {
         ""
     }

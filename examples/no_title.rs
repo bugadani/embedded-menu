@@ -40,17 +40,15 @@ impl SelectValue for TestEnum {
 fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::with_style(
         "",
-        MenuStyle::default()
-            .with_input_adapter(Simulator {
-                page_size: 5,
-                esc_value: (),
-            })
-            .with_details_delay(100),
+        MenuStyle::default().with_input_adapter(Simulator {
+            page_size: 5,
+            esc_value: (),
+        }),
     )
     .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
-    .add_item(Select::new("Check this 1", false).with_detail_text("Description"))
-    .add_item(Select::new("Check this 2", false).with_detail_text("Description"))
-    .add_item(Select::new("Check this 3", TestEnum::A).with_detail_text("Description"))
+    .add_item(Select::new("Check this 1", false))
+    .add_item(Select::new("Check this 2", false))
+    .add_item(Select::new("Check this 3", TestEnum::A))
     .build();
 
     let output_settings = OutputSettingsBuilder::new()

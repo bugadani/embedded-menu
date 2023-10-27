@@ -8,14 +8,12 @@ use syn::{
 
 struct DataItem {
     label: String,
-    details: Option<String>,
     field: Ident,
 }
 
 impl Parse for DataItem {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut label = None;
-        let mut details = None;
         let mut field = None;
 
         while !input.is_empty() {
@@ -24,8 +22,6 @@ impl Parse for DataItem {
 
             if option == "label" {
                 label = Some(input.parse::<LitStr>()?.value());
-            } else if option == "details" {
-                details = Some(input.parse::<LitStr>()?.value());
             } else if option == "field" {
                 field = Some(input.parse::<Ident>()?);
             } else {
@@ -43,21 +39,18 @@ impl Parse for DataItem {
         Ok(Self {
             label: label.unwrap(),
             field: field.unwrap(),
-            details,
         })
     }
 }
 
 struct NavItem {
     label: String,
-    details: Option<String>,
     event: Path,
 }
 
 impl Parse for NavItem {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut label = None;
-        let mut details = None;
         let mut event = None;
 
         while !input.is_empty() {
@@ -66,8 +59,6 @@ impl Parse for NavItem {
 
             if option == "label" {
                 label = Some(input.parse::<LitStr>()?.value());
-            } else if option == "details" {
-                details = Some(input.parse::<LitStr>()?.value());
             } else if option == "event" {
                 event = Some(input.parse::<Path>()?);
             } else {
@@ -85,7 +76,6 @@ impl Parse for NavItem {
         Ok(Self {
             label: label.unwrap(),
             event: event.unwrap(),
-            details,
         })
     }
 }
@@ -128,7 +118,6 @@ impl TryFrom<&Field> for MenuItemOption {
 
         Ok(Self::Data(DataItem {
             label: ident.to_string(),
-            details: None,
             field: ident,
         }))
     }
@@ -142,9 +131,9 @@ impl MenuItem {
     fn menu_item_in_ty(&self, events: &Ident) -> TokenStream {
         match self {
             MenuItem::Nav { .. } => {
-                quote!(NavigationItem<&'static str, &'static str, &'static str, #events>)
+                quote!(NavigationItem<&'static str, &'static str, #events>)
             }
-            MenuItem::Data { ty, .. } => quote!(Select<&'static str, &'static str, #events, #ty>),
+            MenuItem::Data { ty, .. } => quote!(Select<&'static str, #events, #ty>),
         }
     }
 
@@ -162,45 +151,15 @@ impl MenuItem {
 
     fn menu_item(&self, events: &Ident) -> TokenStream {
         match self {
-            MenuItem::Nav(NavItem {
-                label,
-                event,
-                details: None,
-            }) => quote! {
+            MenuItem::Nav(NavItem { label, event }) => quote! {
                 NavigationItem::new(#label, #events::NavigationEvent(#event))
             },
-            MenuItem::Nav(NavItem {
-                label,
-                event,
-                details: Some(details),
-            }) => quote! {
-                NavigationItem::new(#label, #events::NavigationEvent(#event)).with_detail_text(#details)
-            },
             MenuItem::Data {
-                data:
-                    DataItem {
-                        field,
-                        label,
-                        details: None,
-                    },
+                data: DataItem { field, label },
                 ..
             } => quote! {
                 Select::new(#label, self.#field)
                     .with_value_converter(#events::#field),
-            },
-
-            MenuItem::Data {
-                data:
-                    DataItem {
-                        field,
-                        label,
-                        details: Some(details),
-                    },
-                ..
-            } => quote! {
-                Select::new(#label, self.#field)
-                    .with_value_converter(#events::#field)
-                    .with_detail_text(#details),
             },
         }
     }

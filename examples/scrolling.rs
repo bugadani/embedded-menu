@@ -41,31 +41,22 @@ fn main() -> Result<(), core::convert::Infallible> {
             page_size: 5,
             esc_value: (),
         })
-        .with_animated_selection_indicator(10)
-        .with_details_delay(100);
+        .with_animated_selection_indicator(10);
 
     let mut menu = Menu::with_style("Menu", style)
-        .add_item(
-            NavigationItem::new("Foo", ())
-                .with_marker(">")
-                .with_detail_text("Some longer description text that will need to be word wrapped"),
-        )
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
-        .add_item(Select::new("Check this", true).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", true).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", true).with_detail_text("Description"))
-        .add_item(
-            NavigationItem::new("Foo", ())
-                .with_marker(">")
-                .with_detail_text("Some longer description text"),
-        )
-        .add_item(Select::new("Check this", false).with_detail_text("Description"))
-        .add_item(Select::new("Check this too", TestEnum::A).with_detail_text("Description"))
+        .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
+        .add_item(Select::new("Check this", false))
+        .add_item(Select::new("Check this", false))
+        .add_item(Select::new("Check this too", TestEnum::A))
+        .add_item(Select::new("Check this too", TestEnum::A))
+        .add_item(Select::new("Check this", true))
+        .add_item(Select::new("Check this too", true))
+        .add_item(Select::new("Check this too", TestEnum::A))
+        .add_item(Select::new("Check this", false))
+        .add_item(Select::new("Check this too", true))
+        .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
+        .add_item(Select::new("Check this", false))
+        .add_item(Select::new("Check this too", TestEnum::A))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

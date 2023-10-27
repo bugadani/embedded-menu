@@ -39,7 +39,7 @@ impl SelectValue for TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     // Use a generator to create owned strings that we give to the menu.
-    let items: Vec<Select<_, _, _, _>> = (1..10)
+    let items: Vec<Select<_, _, _>> = (1..10)
         .map(|i| format!("Item {}", i))
         .map(|i| Select::new(i, false))
         .collect();

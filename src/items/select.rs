@@ -32,20 +32,18 @@ impl SelectValue for bool {
     }
 }
 
-pub struct Select<T, D, R, S>
+pub struct Select<T, R, S>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     S: SelectValue,
 {
     title_text: T,
-    details: D,
     convert: fn(S) -> R,
     value: S,
     line: MenuLine,
 }
 
-impl<T, S> Select<T, &'static str, (), S>
+impl<T, S> Select<T, (), S>
 where
     T: AsRef<str>,
     S: SelectValue,
@@ -55,51 +53,36 @@ where
             title_text: title,
             value,
             convert: |_| (),
-            details: "",
             line: MenuLine::empty(),
         }
     }
 }
 
-impl<T, D, R, S> Select<T, D, R, S>
+impl<T, R, S> Select<T, R, S>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     S: SelectValue,
 {
-    pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> Select<T, D, R2, S> {
+    pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> Select<T, R2, S> {
         Select {
             convert,
             title_text: self.title_text,
             value: self.value,
-            details: self.details,
-            line: self.line,
-        }
-    }
-
-    pub fn with_detail_text<D2: AsRef<str>>(self, details: D2) -> Select<T, D2, R, S> {
-        Select {
-            details,
-            title_text: self.title_text,
-            value: self.value,
-            convert: self.convert,
             line: self.line,
         }
     }
 }
 
-impl<T, D, R, S> Marker for Select<T, D, R, S>
+impl<T, R, S> Marker for Select<T, R, S>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     S: SelectValue,
 {
 }
 
-impl<T, D, R, S> MenuItem<R> for Select<T, D, R, S>
+impl<T, R, S> MenuItem<R> for Select<T, R, S>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     S: SelectValue,
 {
     fn value_of(&self) -> R {
@@ -113,10 +96,6 @@ where
 
     fn title(&self) -> &str {
         self.title_text.as_ref()
-    }
-
-    fn details(&self) -> &str {
-        self.details.as_ref()
     }
 
     fn value(&self) -> &str {
@@ -161,10 +140,9 @@ where
     }
 }
 
-impl<T, D, R, S> View for Select<T, D, R, S>
+impl<T, R, S> View for Select<T, R, S>
 where
     T: AsRef<str>,
-    D: AsRef<str>,
     S: SelectValue,
 {
     fn translate_impl(&mut self, by: Point) {

@@ -2,7 +2,7 @@ use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::{InputAdapterSource, InputState},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
-    Menu, MenuDisplayMode, MenuItem, MenuState, MenuStyle, NoItems,
+    Menu, MenuItem, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
 use embedded_graphics::pixelcolor::PixelColor;
@@ -179,12 +179,9 @@ where
     S: IndicatorStyle,
 {
     pub fn build(self) -> Menu<T, IT, VG, R, C, P, S> {
-        let default_timeout = self.style.details_delay.unwrap_or_default();
-
         self.build_with_state(MenuState {
             selected: 0,
             list_offset: 0,
-            display_mode: MenuDisplayMode::List(default_timeout),
             interaction_state: Default::default(),
             indicator_state: Default::default(),
             last_input_state: InputState::Idle,

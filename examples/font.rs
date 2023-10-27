@@ -51,17 +51,14 @@ fn main() -> Result<(), core::convert::Infallible> {
             .with_input_adapter(Simulator {
                 page_size: 5,
                 esc_value: (),
-            })
-            .with_details_delay(100),
+            }),
     )
     .add_item(
-        NavigationItem::new("Nav item", ())
-            .with_marker("»") // not part of the ASCII font
-            .with_detail_text("Lorem ipsum dolor sit amet."),
+        NavigationItem::new("Nav item", ()).with_marker("»"), // not part of the ASCII font
     )
-    .add_item(Select::new("Checkbox", true).with_detail_text("Description"))
-    .add_item(Select::new("Other checkbox", false).with_detail_text("Description"))
-    .add_item(Select::new("Multiple options long", TestEnum::A).with_detail_text("Description"))
+    .add_item(Select::new("Checkbox", true))
+    .add_item(Select::new("Other checkbox", false))
+    .add_item(Select::new("Multiple options long", TestEnum::A))
     .build();
 
     let output_settings = OutputSettingsBuilder::new()
