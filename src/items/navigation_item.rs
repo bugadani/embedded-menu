@@ -44,14 +44,6 @@ where
         self.return_value
     }
 
-    fn title(&self) -> &str {
-        self.title_text.as_ref()
-    }
-
-    fn value(&self) -> &str {
-        self.marker.as_ref()
-    }
-
     fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, R>)
     where
         C: PixelColor,

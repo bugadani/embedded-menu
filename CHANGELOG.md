@@ -8,6 +8,9 @@ Unreleased
    - `Select::with_detail_text`
    - `MenuStyle::with_details_delay`
    - `Select` and `NavigationItem` now have one fewer type parameters
+ - Removed `MenuItem::title`
+ - Removed `MenuItem::value`
+ - Removed `MenuItemCollection::title_of`
 
 0.5.4 (2023-10-27)
 ==================

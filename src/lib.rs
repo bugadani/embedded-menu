@@ -54,8 +54,6 @@ pub trait MenuItem<R>: Marker + View {
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController;
-    fn title(&self) -> &str;
-    fn value(&self) -> &str;
     fn selectable(&self) -> bool {
         true
     }

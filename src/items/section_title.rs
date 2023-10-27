@@ -36,14 +36,6 @@ where
         R::default()
     }
 
-    fn title(&self) -> &str {
-        self.title_text.as_ref()
-    }
-
-    fn value(&self) -> &str {
-        ""
-    }
-
     fn selectable(&self) -> bool {
         false
     }
