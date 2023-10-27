@@ -18,6 +18,7 @@ pub trait MenuItemCollection<R> {
     fn bounds_of(&self, nth: usize) -> Rectangle;
     fn title_of(&self, nth: usize) -> &str;
     fn details_of(&self, nth: usize) -> &str;
+    fn value_of(&self, nth: usize) -> R;
     fn interact_with(&mut self, nth: usize) -> R;
     /// Whether an item is selectable. If not, the item will be skipped.
     fn selectable(&self, nth: usize) -> bool;
@@ -43,6 +44,11 @@ where
     fn bounds_of(&self, nth: usize) -> Rectangle {
         debug_assert!(nth == 0);
         self.bounds()
+    }
+
+    fn value_of(&self, nth: usize) -> R {
+        debug_assert!(nth == 0);
+        self.value_of()
     }
 
     fn interact_with(&mut self, nth: usize) -> R {
@@ -124,6 +130,10 @@ where
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.items.as_ref()[nth].bounds()
+    }
+
+    fn value_of(&self, nth: usize) -> R {
+        self.items.as_ref()[nth].value_of()
     }
 
     fn interact_with(&mut self, nth: usize) -> R {
@@ -219,6 +229,10 @@ where
         self.object.bounds_of(nth)
     }
 
+    fn value_of(&self, nth: usize) -> R {
+        self.object.value_of(nth)
+    }
+
     fn interact_with(&mut self, nth: usize) -> R {
         self.object.interact_with(nth)
     }
@@ -267,6 +281,15 @@ where
             self.parent.bounds_of(nth)
         } else {
             self.object.bounds_of(nth - count)
+        }
+    }
+
+    fn value_of(&self, nth: usize) -> R {
+        let count = self.parent.count();
+        if nth < count {
+            self.parent.value_of(nth)
+        } else {
+            self.object.value_of(nth - count)
         }
     }
 

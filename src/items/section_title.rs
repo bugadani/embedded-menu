@@ -28,6 +28,10 @@ where
     T: AsRef<str>,
     R: Default,
 {
+    fn value_of(&self) -> R {
+        R::default()
+    }
+
     fn interact(&mut self) -> R {
         R::default()
     }

@@ -45,6 +45,8 @@ pub use embedded_menu_macros::{Menu, SelectValue};
 pub trait Marker {}
 
 pub trait MenuItem<R>: Marker + View {
+    /// Returns the value of the selected item, without interacting with it.
+    fn value_of(&self) -> R;
     fn interact(&mut self) -> R;
     fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, R>)
     where
@@ -429,6 +431,21 @@ where
 
     pub fn state(&self) -> MenuState<IT::InputAdapter, P, S> {
         self.state
+    }
+}
+
+impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
+where
+    T: AsRef<str>,
+    R: Copy,
+    IT: InputAdapterSource<R>,
+    VG: MenuItemCollection<R>,
+    C: PixelColor,
+    P: SelectionIndicatorController,
+    S: IndicatorStyle,
+{
+    pub fn selected_value(&self) -> R {
+        self.items.value_of(self.state.selected)
     }
 }
 
