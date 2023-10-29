@@ -12,28 +12,26 @@ use crate::{
     Marker, MenuItem, MenuStyle,
 };
 
-pub struct SectionTitle<T, R>
+pub struct SectionTitle<T>
 where
     T: AsRef<str>,
 {
     title_text: T,
     line: MenuLine,
-    _r: core::marker::PhantomData<R>,
 }
 
-impl<T, R> Marker for SectionTitle<T, R> where T: AsRef<str> {}
+impl<T> Marker for SectionTitle<T> where T: AsRef<str> {}
 
-impl<T, R> MenuItem<R> for SectionTitle<T, R>
+impl<T, R> MenuItem<R> for SectionTitle<T>
 where
     T: AsRef<str>,
-    R: Default,
 {
     fn value_of(&self) -> R {
-        R::default()
+        unreachable!("Selected a non-selectable menu item")
     }
 
     fn interact(&mut self) -> R {
-        R::default()
+        unreachable!("Selected a non-selectable menu item")
     }
 
     fn selectable(&self) -> bool {
@@ -67,7 +65,7 @@ where
     }
 }
 
-impl<T, R> SectionTitle<T, R>
+impl<T> SectionTitle<T>
 where
     T: AsRef<str>,
 {
@@ -75,12 +73,11 @@ where
         Self {
             title_text: title,
             line: MenuLine::empty(),
-            _r: core::marker::PhantomData,
         }
     }
 }
 
-impl<T, R> View for SectionTitle<T, R>
+impl<T> View for SectionTitle<T>
 where
     T: AsRef<str>,
 {
