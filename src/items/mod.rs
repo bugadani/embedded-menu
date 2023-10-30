@@ -13,7 +13,6 @@ use crate::{
 };
 use embedded_graphics::{
     draw_target::DrawTarget,
-    pixelcolor::Rgb888,
     prelude::{PixelColor, Point, Size},
     primitives::Rectangle,
     text::{renderer::TextRenderer, Baseline},
@@ -28,12 +27,12 @@ pub struct MenuLine {
 }
 
 impl MenuLine {
-    pub fn new<C, S, IT, P, R>(longest_value: &str, style: &MenuStyle<C, S, IT, P, R>) -> Self
+    pub fn new<C, S, IT, P, R>(longest_value: &str, style: &MenuStyle<S, IT, P, R, C>) -> Self
     where
-        C: PixelColor,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
+        C: PixelColor,
     {
         let style = style.text_style();
 
@@ -59,19 +58,19 @@ impl MenuLine {
         }
     }
 
-    pub fn draw_styled<D, C, S, IT, P, R>(
+    pub fn draw_styled<C, D, S, IT, P, R>(
         &self,
         title: &str,
         value_text: &str,
-        style: &MenuStyle<C, S, IT, P, R>,
+        style: &MenuStyle<S, IT, P, R, C>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = C>,
-        C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
+        C: PixelColor + Default + 'static,
     {
         let display_area = display.bounding_box();
 

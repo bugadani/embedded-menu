@@ -42,7 +42,7 @@ impl SelectValue for TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     let style = MenuStyle::default()
-        .with_selection_indicator(AnimatedTriangle::new(160))
+        .with_selection_indicator(AnimatedTriangle::new(160, BinaryColor::On))
         .with_input_adapter(SingleTouch {
             ignore_time: 10,
             debounce_time: 1,

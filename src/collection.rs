@@ -1,7 +1,6 @@
 use core::marker::PhantomData;
 
 use embedded_graphics::{
-    pixelcolor::Rgb888,
     prelude::{DrawTarget, PixelColor, Point, Size},
     primitives::Rectangle,
 };
@@ -21,17 +20,17 @@ pub trait MenuItemCollection<R> {
     /// Whether an item is selectable. If not, the item will be skipped.
     fn selectable(&self, nth: usize) -> bool;
     fn count(&self) -> usize;
-    fn draw_styled<C, S, IT, P, DIS>(
+    fn draw_styled<C, S, IT, P, D>(
         &self,
-        style: &MenuStyle<C, S, IT, P, R>,
-        display: &mut DIS,
-    ) -> Result<(), DIS::Error>
+        style: &MenuStyle<S, IT, P, R, C>,
+        display: &mut D,
+    ) -> Result<(), D::Error>
     where
-        C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = C>;
+        D: DrawTarget<Color = C>,
+        C: PixelColor + Default + 'static;
 }
 
 // Treat any MenuItem impl as a 1-element collection
@@ -65,15 +64,15 @@ where
 
     fn draw_styled<C, S, IT, P, DIS>(
         &self,
-        style: &MenuStyle<C, S, IT, P, R>,
+        style: &MenuStyle<S, IT, P, R, C>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
-        C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>,
+        C: PixelColor + Default + 'static,
     {
         MenuItem::draw_styled(self, style, display)
     }
@@ -136,17 +135,17 @@ where
         self.items.as_ref().len()
     }
 
-    fn draw_styled<PC, S, IT, P, DIS>(
+    fn draw_styled<MSC, S, IT, P, D>(
         &self,
-        style: &MenuStyle<PC, S, IT, P, R>,
-        display: &mut DIS,
-    ) -> Result<(), DIS::Error>
+        style: &MenuStyle<S, IT, P, R, MSC>,
+        display: &mut D,
+    ) -> Result<(), D::Error>
     where
-        PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = PC>,
+        D: DrawTarget<Color = MSC>,
+        MSC: PixelColor + Default + 'static,
     {
         for item in self.items.as_ref() {
             item.draw_styled(style, display)?;
@@ -225,18 +224,17 @@ where
         self.object.count()
     }
 
-    fn draw_styled<PC, S, IT, P, DIS>(
+    fn draw_styled<C, S, IT, P, D>(
         &self,
-        style: &MenuStyle<PC, S, IT, P, R>,
-        display: &mut DIS,
-    ) -> Result<(), DIS::Error>
+        style: &MenuStyle<S, IT, P, R, C>,
+        display: &mut D,
+    ) -> Result<(), D::Error>
     where
-        PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-
-        DIS: DrawTarget<Color = PC>,
+        D: DrawTarget<Color = C>,
+        C: PixelColor + Default + 'static,
     {
         self.object.draw_styled(style, display)
     }
@@ -287,18 +285,17 @@ where
         self.object.count() + self.parent.count()
     }
 
-    fn draw_styled<PC, S, IT, P, DIS>(
+    fn draw_styled<C, S, IT, P, D>(
         &self,
-        style: &MenuStyle<PC, S, IT, P, R>,
-        display: &mut DIS,
-    ) -> Result<(), DIS::Error>
+        style: &MenuStyle<S, IT, P, R, C>,
+        display: &mut D,
+    ) -> Result<(), D::Error>
     where
-        PC: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-
-        DIS: DrawTarget<Color = PC>,
+        D: DrawTarget<Color = C>,
+        C: PixelColor + Default + 'static,
     {
         self.parent.draw_styled(style, display)?;
         self.object.draw_styled(style, display)?;

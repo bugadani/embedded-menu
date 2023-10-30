@@ -1,6 +1,6 @@
 use embedded_graphics::{
     pixelcolor::BinaryColor,
-    prelude::{DrawTarget, Point},
+    prelude::{DrawTarget, PixelColor, Point},
     primitives::Rectangle,
     transform::Transform,
     Drawable,
@@ -15,13 +15,14 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct AnimatedTriangle {
+pub struct AnimatedTriangle<C = BinaryColor> {
     period: i32,
+    color: C,
 }
 
-impl AnimatedTriangle {
-    pub const fn new(period: i32) -> Self {
-        Self { period }
+impl<C> AnimatedTriangle<C> {
+    pub const fn new(period: i32, color: C) -> Self {
+        Self { period, color }
     }
 }
 
@@ -30,9 +31,13 @@ pub struct State {
     current: i32,
 }
 
-impl IndicatorStyle for AnimatedTriangle {
-    type Shape = Arrow;
+impl<C> IndicatorStyle for AnimatedTriangle<C>
+where
+    C: Copy + PixelColor,
+{
+    type Shape = Arrow<C>;
     type State = State;
+    type Color = C;
 
     fn on_target_changed(&self, state: &mut Self::State) {
         state.current = 0;
@@ -56,7 +61,7 @@ impl IndicatorStyle for AnimatedTriangle {
     }
 
     fn shape(&self, state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape {
-        let max_offset = Arrow::tip_width(bounds);
+        let max_offset = Arrow::<C>::tip_width(bounds);
 
         let half_move = self.period / 5;
         let rest = 3 * half_move;
@@ -71,7 +76,11 @@ impl IndicatorStyle for AnimatedTriangle {
 
         let offset = offset * max_offset / half_move;
 
-        Arrow::new(bounds, fill_width).translate(Point::new(-offset, 0))
+        Arrow::new(bounds, fill_width, self.color(state)).translate(Point::new(-offset, 0))
+    }
+
+    fn color(&self, _state: &Self::State) -> Self::Color {
+        self.color
     }
 
     fn draw<D>(
@@ -81,7 +90,7 @@ impl IndicatorStyle for AnimatedTriangle {
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = BinaryColor>,
+        D: DrawTarget<Color = C>,
     {
         let display_area = display.bounding_box();
 

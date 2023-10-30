@@ -56,3 +56,10 @@ required-features = ["simulator"]
 [[example]]
 name = "small"
 required-features = ["simulator"]
+
+[[example]]
+name = "color"
+required-features = ["simulator"]
+
+[patch.crates-io]
+embedded-text = {path = "../embedded-text"}

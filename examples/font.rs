@@ -45,7 +45,7 @@ impl SelectValue for TestEnum {
 fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::with_style(
         "Menu",
-        MenuStyle::new(BinaryColor::On)
+        MenuStyle::default()
             .with_font(&FONT_6X10)
             .with_title_font(&FONT_8X13_BOLD)
             .with_input_adapter(Simulator {

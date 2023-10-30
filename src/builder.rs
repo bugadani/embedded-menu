@@ -5,7 +5,7 @@ use crate::{
     Menu, MenuItem, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
-use embedded_graphics::pixelcolor::PixelColor;
+use embedded_graphics::prelude::PixelColor;
 use embedded_layout::{
     layout::linear::LinearLayout,
     object_chain::ChainElement,
@@ -13,28 +13,28 @@ use embedded_layout::{
     view_group::{EmptyViewGroup, ViewGroup},
 };
 
-pub struct MenuBuilder<T, IT, LL, R, C, P, S>
+pub struct MenuBuilder<T, IT, LL, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
-    C: PixelColor,
     S: IndicatorStyle,
     P: SelectionIndicatorController,
+    C: PixelColor,
 {
     title: T,
     items: LL,
-    style: MenuStyle<C, S, IT, P, R>,
+    style: MenuStyle<S, IT, P, R, C>,
 }
 
-impl<T, R, C, S, IT, P> MenuBuilder<T, IT, NoItems, R, C, P, S>
+impl<T, R, S, IT, P, C> MenuBuilder<T, IT, NoItems, R, P, S, C>
 where
     T: AsRef<str>,
-    C: PixelColor,
     S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
+    C: PixelColor,
 {
-    pub const fn new(title: T, style: MenuStyle<C, S, IT, P, R>) -> Self {
+    pub const fn new(title: T, style: MenuStyle<S, IT, P, R, C>) -> Self {
         Self {
             title,
             items: NoItems,
@@ -43,15 +43,15 @@ where
     }
 }
 
-impl<T, IT, R, C, P, S> MenuBuilder<T, IT, NoItems, R, C, P, S>
+impl<T, IT, R, P, S, C> MenuBuilder<T, IT, NoItems, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
-    C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
+    C: PixelColor + Default + 'static,
 {
-    pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<T, IT, Chain<I>, R, C, P, S> {
+    pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
         item.set_style(&self.style);
 
         MenuBuilder {
@@ -64,7 +64,7 @@ where
     pub fn add_items<I, IC>(
         self,
         mut items: IC,
-    ) -> MenuBuilder<T, IT, Chain<MenuItems<IC, I, R>>, R, C, P, S>
+    ) -> MenuBuilder<T, IT, Chain<MenuItems<IC, I, R>>, R, P, S, C>
     where
         I: MenuItem<R>,
         IC: AsRef<[I]> + AsMut<[I]>,
@@ -82,19 +82,19 @@ where
     }
 }
 
-impl<T, IT, CE, R, C, P, S> MenuBuilder<T, IT, Chain<CE>, R, C, P, S>
+impl<T, IT, CE, R, P, S, C> MenuBuilder<T, IT, Chain<CE>, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
     Chain<CE>: MenuItemCollection<R>,
-    C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
+    C: PixelColor + Default + 'static,
 {
     pub fn add_item<I: MenuItem<R>>(
         self,
         mut item: I,
-    ) -> MenuBuilder<T, IT, Link<I, Chain<CE>>, R, C, P, S> {
+    ) -> MenuBuilder<T, IT, Link<I, Chain<CE>>, R, P, S, C> {
         item.set_style(&self.style);
 
         MenuBuilder {
@@ -107,7 +107,7 @@ where
     pub fn add_items<I, IC>(
         self,
         mut items: IC,
-    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I, R>, Chain<CE>>, R, C, P, S>
+    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I, R>, Chain<CE>>, R, P, S, C>
     where
         I: MenuItem<R>,
         IC: AsRef<[I]> + AsMut<[I]>,
@@ -125,20 +125,20 @@ where
     }
 }
 
-impl<T, IT, I, CE, R, C, P, S> MenuBuilder<T, IT, Link<I, CE>, R, C, P, S>
+impl<T, IT, I, CE, R, P, S, C> MenuBuilder<T, IT, Link<I, CE>, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
     Link<I, CE>: MenuItemCollection<R> + ChainElement,
     CE: MenuItemCollection<R> + ChainElement,
-    C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
+    C: PixelColor + Default + 'static,
 {
     pub fn add_item<I2: MenuItem<R>>(
         self,
         mut item: I2,
-    ) -> MenuBuilder<T, IT, Link<I2, Link<I, CE>>, R, C, P, S> {
+    ) -> MenuBuilder<T, IT, Link<I2, Link<I, CE>>, R, P, S, C> {
         item.set_style(&self.style);
 
         MenuBuilder {
@@ -151,7 +151,7 @@ where
     pub fn add_items<I2, IC>(
         self,
         mut items: IC,
-    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I2, R>, Link<I, CE>>, R, C, P, S>
+    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I2, R>, Link<I, CE>>, R, P, S, C>
     where
         I2: MenuItem<R>,
         IC: AsRef<[I2]> + AsMut<[I2]>,
@@ -169,14 +169,14 @@ where
     }
 }
 
-impl<T, IT, VG, R, C, P, S> MenuBuilder<T, IT, VG, R, C, P, S>
+impl<T, IT, VG, R, P, S, C> MenuBuilder<T, IT, VG, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
-    C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
+    C: PixelColor,
 {
     pub fn build(self) -> Menu<T, IT, VG, R, C, P, S> {
         self.build_with_state(MenuState {
@@ -191,7 +191,7 @@ where
     pub fn build_with_state(
         mut self,
         mut state: MenuState<IT::InputAdapter, P, S>,
-    ) -> Menu<T, IT, VG, R, C, P, S> {
+    ) -> Menu<T, IT, VG, R, P, S, C> {
         // We have less menu items than before. Avoid crashing.
         let max_idx = self.items.count().saturating_sub(1);
 

@@ -1,5 +1,4 @@
 use crate::{
-    adapters::invert::BinaryColorDrawTargetExt,
     collection::MenuItemCollection,
     interaction::{InputAdapterSource, InputState},
     margin::Insets,
@@ -7,10 +6,8 @@ use crate::{
     MenuState, MenuStyle,
 };
 use embedded_graphics::{
-    pixelcolor::BinaryColor,
-    prelude::{DrawTarget, DrawTargetExt, Point, Size},
+    prelude::{DrawTarget, DrawTargetExt, PixelColor, Point, Size},
     primitives::Rectangle,
-    transform::Transform,
 };
 
 pub mod style;
@@ -165,20 +162,22 @@ where
         menuitem_height + indicator_insets.top + indicator_insets.bottom
     }
 
-    pub fn draw<R, D, IT>(
+    pub fn draw<R, D, IT, C>(
         &self,
         selected_height: i32,
         selected_offset: i32,
         input_state: InputState,
         display: &mut D,
         items: &impl MenuItemCollection<R>,
-        style: &MenuStyle<BinaryColor, S, IT, P, R>,
+        style: &MenuStyle<S, IT, P, R, C>,
         menu_state: &MenuState<IT::InputAdapter, P, S>,
     ) -> Result<(), D::Error>
     where
-        D: DrawTarget<Color = BinaryColor>,
+        D: DrawTarget<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
+        <S as IndicatorStyle>::Color: Into<C>,
+        C: PixelColor + Default + 'static,
     {
         let display_size = display.bounding_box().size;
 
@@ -200,15 +199,16 @@ where
             Size::new(display_size.width, selected_item_height),
         );
 
-        let invert_area = self.style.draw(
+        let _invert_area = self.style.draw(
             &menu_state.indicator_state.state,
             input_state,
-            &mut display.cropped(&selected_item_area),
+            &mut display.cropped(&selected_item_area).color_converted(),
         )?;
 
-        // Translate inverting area to its position
-        let invert_area = invert_area.translate(selected_item_area.top_left);
-        let mut inverting = display.invert_area(&invert_area);
+        // // TODO: Figure out how to handle inversion
+        // // Translate inverting area to its position
+        // let invert_area = invert_area.translate(selected_item_area.top_left);
+        // let mut inverting = display.invert_area(&invert_area);
 
         // Draw the menu content
         let content_width = (display_size.width as i32 - padding_left - padding_right) as u32;
@@ -219,7 +219,7 @@ where
 
         items.draw_styled(
             style,
-            &mut inverting
+            &mut display
                 .cropped(&content_area)
                 .translated(Point::new(0, -menu_state.list_offset)),
         )

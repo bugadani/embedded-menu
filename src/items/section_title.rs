@@ -1,5 +1,4 @@
 use embedded_graphics::{
-    pixelcolor::Rgb888,
     prelude::{DrawTarget, PixelColor, Point},
     primitives::Rectangle,
 };
@@ -40,27 +39,27 @@ where
         false
     }
 
-    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, R>)
+    fn set_style<S, IT, P, C>(&mut self, style: &MenuStyle<S, IT, P, R, C>)
     where
-        C: PixelColor,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
+        C: PixelColor,
     {
         self.line = MenuLine::new("", style);
     }
 
-    fn draw_styled<C, S, IT, P, DIS>(
+    fn draw_styled<S, IT, P, D, C>(
         &self,
-        style: &MenuStyle<C, S, IT, P, R>,
-        display: &mut DIS,
-    ) -> Result<(), DIS::Error>
+        style: &MenuStyle<S, IT, P, R, C>,
+        display: &mut D,
+    ) -> Result<(), D::Error>
     where
-        C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = C>,
+        D: DrawTarget<Color = C>,
+        C: PixelColor + Default + 'static,
     {
         self.line
             .draw_styled(self.title_text.as_ref(), "", style, display)
