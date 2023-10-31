@@ -39,7 +39,7 @@ use embedded_text::{
 };
 
 use crate::interaction::Navigation;
-pub use embedded_menu_macros::{Menu, SelectValue};
+pub use embedded_menu_macros::SelectValue;
 
 /// Marker trait necessary to avoid a "conflicting implementations" error.
 pub trait Marker {}

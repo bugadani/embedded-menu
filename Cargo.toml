@@ -34,10 +34,6 @@ name = "font"
 required-features = ["simulator"]
 
 [[example]]
-name = "macros"
-required-features = ["simulator"]
-
-[[example]]
 name = "no_title"
 required-features = ["simulator"]
 

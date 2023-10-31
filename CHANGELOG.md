@@ -11,6 +11,7 @@ Unreleased
  - Removed `MenuItem::title`
  - Removed `MenuItem::value`
  - Removed `MenuItemCollection::title_of`
+ - Removed `derive(Menu)`
 
 0.5.4 (2023-10-27)
 ==================
