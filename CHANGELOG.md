@@ -13,6 +13,7 @@ Unreleased
  - Removed `MenuItemCollection::title_of`
  - Removed `derive(Menu)`
  - Removed the `R` type parameter from `SectionTitle`
+ - Added initial color support
 
 0.5.4 (2023-10-27)
 ==================
