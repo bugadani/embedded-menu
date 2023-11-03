@@ -58,7 +58,7 @@ fn do_loop(
     data: &mut MenuData,
     item_count: usize,
 ) -> bool {
-    let style = MenuStyle::new(BinaryColor::On, BinaryColor::On)
+    let style = MenuStyle::new(BinaryColor::On)
         .with_input_adapter(Simulator {
             page_size: 5,
             esc_value: MenuEvent::Quit,
