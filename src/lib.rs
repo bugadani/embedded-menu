@@ -98,24 +98,23 @@ impl<R> Default
     for MenuStyle<LineIndicator<BinaryColor>, Programmed, StaticPosition, R, BinaryColor>
 {
     fn default() -> Self {
-        Self::new(BinaryColor::On, BinaryColor::On)
+        Self::new(BinaryColor::On)
     }
 }
 
-impl<IC, MC, R> MenuStyle<LineIndicator<IC>, Programmed, StaticPosition, R, MC>
+impl<C, R> MenuStyle<LineIndicator<C>, Programmed, StaticPosition, R, C>
 where
-    IC: PixelColor,
-    MC: PixelColor,
+    C: PixelColor,
 {
-    pub const fn new(menu_color: MC, indicator_color: IC) -> Self {
+    pub const fn new(color: C) -> Self {
         Self {
-            color: menu_color,
+            color,
             scrollbar: DisplayScrollbar::Auto,
             font: &FONT_6X10,
             title_font: &FONT_6X10,
             input_adapter: Programmed,
             indicator: Indicator {
-                style: LineIndicator::new(indicator_color),
+                style: LineIndicator::new(color),
                 controller: StaticPosition,
             },
             _marker: PhantomData,
