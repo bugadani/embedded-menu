@@ -12,6 +12,7 @@ Unreleased
  - Removed `MenuItem::value`
  - Removed `MenuItemCollection::title_of`
  - Removed `derive(Menu)`
+ - Removed the `R` type parameter from `SectionTitle`
 
 0.5.4 (2023-10-27)
 ==================
