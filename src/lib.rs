@@ -27,7 +27,7 @@ use embedded_graphics::{
     draw_target::DrawTarget,
     geometry::{AnchorPoint, AnchorX, AnchorY},
     mono_font::{ascii::FONT_6X10, MonoFont, MonoTextStyle},
-    pixelcolor::{BinaryColor, PixelColor, Rgb888},
+    pixelcolor::{BinaryColor, PixelColor},
     prelude::{Dimensions, DrawTargetExt, Point},
     primitives::{Line, Primitive, PrimitiveStyle},
     Drawable,
@@ -48,26 +48,26 @@ pub trait MenuItem<R>: Marker + View {
     /// Returns the value of the selected item, without interacting with it.
     fn value_of(&self) -> R;
     fn interact(&mut self) -> R;
-    fn set_style<C, S, IT, P>(&mut self, style: &MenuStyle<C, S, IT, P, R>)
+    fn set_style<S, IT, P, C>(&mut self, style: &MenuStyle<S, IT, P, R, C>)
     where
-        C: PixelColor,
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController;
-    fn selectable(&self) -> bool {
-        true
-    }
-    fn draw_styled<C, S, IT, P, DIS>(
-        &self,
-        style: &MenuStyle<C, S, IT, P, R>,
-        display: &mut DIS,
-    ) -> Result<(), DIS::Error>
-    where
-        C: PixelColor + From<Rgb888>,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = C>;
+        C: PixelColor + Default + 'static;
+    fn selectable(&self) -> bool {
+        true
+    }
+    fn draw_styled<S, IT, P, D, C>(
+        &self,
+        style: &MenuStyle<S, IT, P, R, C>,
+        display: &mut D,
+    ) -> Result<(), D::Error>
+    where
+        S: IndicatorStyle,
+        IT: InputAdapterSource<R>,
+        P: SelectionIndicatorController,
+        D: DrawTarget<Color = C>,
+        C: PixelColor + Default + 'static;
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -78,12 +78,12 @@ pub enum DisplayScrollbar {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct MenuStyle<C, S, IT, P, R>
+pub struct MenuStyle<S, IT, P, R, C>
 where
-    C: PixelColor,
     S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
+    C: PixelColor,
 {
     pub(crate) color: C,
     pub(crate) scrollbar: DisplayScrollbar,
@@ -94,13 +94,15 @@ where
     _marker: PhantomData<R>,
 }
 
-impl<R> Default for MenuStyle<BinaryColor, LineIndicator, Programmed, StaticPosition, R> {
+impl<R> Default
+    for MenuStyle<LineIndicator<BinaryColor>, Programmed, StaticPosition, R, BinaryColor>
+{
     fn default() -> Self {
         Self::new(BinaryColor::On)
     }
 }
 
-impl<C, R> MenuStyle<C, LineIndicator, Programmed, StaticPosition, R>
+impl<C, R> MenuStyle<LineIndicator<C>, Programmed, StaticPosition, R, C>
 where
     C: PixelColor,
 {
@@ -112,7 +114,7 @@ where
             title_font: &FONT_6X10,
             input_adapter: Programmed,
             indicator: Indicator {
-                style: LineIndicator,
+                style: LineIndicator::new(color),
                 controller: StaticPosition,
             },
             _marker: PhantomData,
@@ -120,12 +122,12 @@ where
     }
 }
 
-impl<C, S, IT, P, R> MenuStyle<C, S, IT, P, R>
+impl<S, IT, P, R, C> MenuStyle<S, IT, P, R, C>
 where
-    C: PixelColor,
     S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
+    C: PixelColor,
 {
     pub const fn with_font(self, font: &'static MonoFont<'static>) -> Self {
         Self { font, ..self }
@@ -142,7 +144,7 @@ where
     pub const fn with_selection_indicator<S2>(
         self,
         indicator_style: S2,
-    ) -> MenuStyle<C, S2, IT, P, R>
+    ) -> MenuStyle<S2, IT, P, R, C>
     where
         S2: IndicatorStyle,
     {
@@ -160,13 +162,13 @@ where
         }
     }
 
-    pub const fn with_input_adapter<IT2>(self, input_adapter: IT2) -> MenuStyle<C, S, IT2, P, R>
+    pub const fn with_input_adapter<IT2>(self, input_adapter: IT2) -> MenuStyle<S, IT2, P, R, C>
     where
         IT2: InputAdapterSource<R>,
     {
         MenuStyle {
-            input_adapter,
             color: self.color,
+            input_adapter,
             scrollbar: self.scrollbar,
             font: self.font,
             title_font: self.title_font,
@@ -178,10 +180,10 @@ where
     pub const fn with_animated_selection_indicator(
         self,
         frames: i32,
-    ) -> MenuStyle<C, S, IT, AnimatedPosition, R> {
+    ) -> MenuStyle<S, IT, AnimatedPosition, R, C> {
         MenuStyle {
-            input_adapter: self.input_adapter,
             color: self.color,
+            input_adapter: self.input_adapter,
             scrollbar: self.scrollbar,
             font: self.font,
             title_font: self.title_font,
@@ -267,7 +269,7 @@ where
         &mut self,
         selected: usize,
         items: &impl MenuItemCollection<R>,
-        style: &MenuStyle<C, S, ITS, P, R>,
+        style: &MenuStyle<S, ITS, P, R, C>,
     ) where
         ITS: InputAdapterSource<R, InputAdapter = IT>,
         C: PixelColor,
@@ -285,59 +287,59 @@ where
     }
 }
 
-pub struct Menu<T, IT, VG, R, C, P, S>
+pub struct Menu<T, IT, VG, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
-    C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
+    C: PixelColor,
 {
     _return_type: PhantomData<R>,
     title: T,
     items: VG,
-    style: MenuStyle<C, S, IT, P, R>,
+    style: MenuStyle<S, IT, P, R, C>,
     state: MenuState<IT::InputAdapter, P, S>,
 }
 
-impl<T, R, C, S> Menu<T, Programmed, NoItems, R, C, StaticPosition, S>
+impl<T, R, S, C> Menu<T, Programmed, NoItems, R, StaticPosition, S, C>
 where
     T: AsRef<str>,
-    C: PixelColor,
     S: IndicatorStyle,
+    C: PixelColor,
 {
-    pub fn new(title: T) -> MenuBuilder<T, Programmed, NoItems, R, C, StaticPosition, S>
+    pub fn new(title: T) -> MenuBuilder<T, Programmed, NoItems, R, StaticPosition, S, C>
     where
-        MenuStyle<C, S, Programmed, StaticPosition, R>: Default,
+        MenuStyle<S, Programmed, StaticPosition, R, C>: Default,
     {
         Self::with_style(title, MenuStyle::default())
     }
 }
 
-impl<T, IT, R, C, P, S> Menu<T, IT, NoItems, R, C, P, S>
+impl<T, IT, R, P, S, C> Menu<T, IT, NoItems, R, P, S, C>
 where
     T: AsRef<str>,
-    C: PixelColor,
     S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
+    C: PixelColor,
 {
     pub fn with_style(
         title: T,
-        style: MenuStyle<C, S, IT, P, R>,
-    ) -> MenuBuilder<T, IT, NoItems, R, C, P, S> {
+        style: MenuStyle<S, IT, P, R, C>,
+    ) -> MenuBuilder<T, IT, NoItems, R, P, S, C> {
         MenuBuilder::new(title, style)
     }
 }
 
-impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
+impl<T, IT, VG, R, P, S, C> Menu<T, IT, VG, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
     VG: MenuItemCollection<R>,
-    C: PixelColor,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
+    C: PixelColor,
 {
     pub fn interact(&mut self, input: <IT::InputAdapter as InputAdapter>::Input) -> Option<R> {
         let input = self
@@ -380,7 +382,7 @@ where
     }
 }
 
-impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
+impl<T, IT, VG, R, P, S, C> Menu<T, IT, VG, R, P, S, C>
 where
     T: AsRef<str>,
     R: Copy,
@@ -395,14 +397,15 @@ where
     }
 }
 
-impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, C, P, S>
+impl<T, IT, VG, R, C, P, S> Menu<T, IT, VG, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
-    C: PixelColor + From<Rgb888>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
+    C: PixelColor + Default + 'static,
+    <S as IndicatorStyle>::Color: Into<C>,
 {
     fn header<'t>(
         &self,
@@ -410,7 +413,8 @@ where
         display: &impl Dimensions,
     ) -> Option<impl View + 't + Drawable<Color = C>>
     where
-        C: 't,
+        <S as IndicatorStyle>::Color: PixelColor,
+        C: PixelColor + Default + 'static,
     {
         if title.is_empty() {
             return None;
@@ -484,20 +488,23 @@ where
     }
 }
 
-impl<T, IT, VG, R, P, S> Drawable for Menu<T, IT, VG, R, BinaryColor, P, S>
+impl<T, IT, VG, R, C, P, S> Drawable for Menu<T, IT, VG, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
+    <S as IndicatorStyle>::Color: Into<C>,
+    C: PixelColor + Default + 'static,
 {
-    type Color = BinaryColor;
+    type Color = C;
     type Output = ();
 
     fn draw<D>(&self, display: &mut D) -> Result<(), D::Error>
     where
-        D: DrawTarget<Color = BinaryColor>,
+        D: DrawTarget<Color = C>,
+        <S as IndicatorStyle>::Color: Into<C>,
     {
         let display_area = display.bounding_box();
 

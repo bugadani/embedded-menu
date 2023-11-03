@@ -1,5 +1,4 @@
 use embedded_graphics::{
-    pixelcolor::Rgb888,
     prelude::{DrawTarget, PixelColor, Point},
     primitives::Rectangle,
 };
@@ -94,12 +93,12 @@ where
         (self.convert)(self.value)
     }
 
-    fn set_style<C, ST, IT, P>(&mut self, style: &MenuStyle<C, ST, IT, P, R>)
+    fn set_style<ST, IT, P, C>(&mut self, style: &MenuStyle<ST, IT, P, R, C>)
     where
-        C: PixelColor,
         ST: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
+        C: PixelColor,
     {
         let initial = self.value;
         let mut longest_str = initial.name();
@@ -115,17 +114,17 @@ where
         self.line = MenuLine::new(longest_str, style);
     }
 
-    fn draw_styled<C, ST, IT, P, DIS>(
+    fn draw_styled<IS, IT, P, DIS, C>(
         &self,
-        style: &MenuStyle<C, ST, IT, P, R>,
+        style: &MenuStyle<IS, IT, P, R, C>,
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
-        C: PixelColor + From<Rgb888>,
-        ST: IndicatorStyle,
+        IS: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = C>,
+        C: PixelColor + Default + 'static,
     {
         self.line
             .draw_styled(self.title_text.as_ref(), self.value.name(), style, display)
