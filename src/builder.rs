@@ -178,7 +178,7 @@ where
     S: IndicatorStyle,
     C: PixelColor,
 {
-    pub fn build(self) -> Menu<T, IT, VG, R, C, P, S> {
+    pub fn build(self) -> Menu<T, IT, VG, R, P, S, C> {
         self.build_with_state(MenuState {
             selected: 0,
             list_offset: 0,

@@ -498,7 +498,7 @@ where
     <S as IndicatorStyle>::Color: Into<C>,
     C: PixelColor + Default + 'static,
 {
-    type Color = BinaryColor;
+    type Color = C;
     type Output = ();
 
     fn draw<D>(&self, display: &mut D) -> Result<(), D::Error>
