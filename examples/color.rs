@@ -4,7 +4,7 @@
 
 use embedded_graphics::{
     pixelcolor::Rgb888,
-    prelude::{DrawTargetExt, Point, Size},
+    prelude::{DrawTargetExt, Point, RgbColor, Size},
     primitives::Rectangle,
     Drawable,
 };
@@ -14,6 +14,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::simulator::Simulator,
     items::{select::SelectValue, NavigationItem, Select},
+    theme::Theme,
     Menu, MenuStyle,
 };
 
@@ -42,10 +43,29 @@ impl SelectValue for TestEnum {
     }
 }
 
+#[derive(Clone, Copy)]
+struct ExampleTheme;
+
+impl Theme for ExampleTheme {
+    type Color = Rgb888;
+
+    fn text_color(&self) -> Self::Color {
+        Rgb888::WHITE
+    }
+
+    fn selected_text_color(&self) -> Self::Color {
+        Rgb888::WHITE
+    }
+
+    fn selection_color(&self) -> Self::Color {
+        Rgb888::new(51, 255, 51)
+    }
+}
+
 fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::with_style(
         "Color Menu",
-        MenuStyle::new(Rgb888::new(51, 255, 51)).with_input_adapter(Simulator {
+        MenuStyle::new(ExampleTheme).with_input_adapter(Simulator {
             page_size: 5,
             esc_value: (),
         }),
