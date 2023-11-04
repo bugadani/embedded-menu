@@ -8,7 +8,6 @@ use crate::{interaction::InputState, selection_indicator::Insets, theme::Theme};
 
 pub mod animated_triangle;
 pub mod border;
-// pub mod invert;
 pub mod line;
 // pub mod rectangle;
 pub mod triangle;
@@ -16,7 +15,6 @@ pub mod triangle;
 // Re-export the styles themselves to make them easier to use.
 pub use animated_triangle::AnimatedTriangle;
 pub use border::Border;
-// pub use invert::Invert;
 pub use line::Line;
 pub use triangle::Triangle;
 
