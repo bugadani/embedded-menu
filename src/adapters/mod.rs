@@ -1,1 +1,1 @@
-pub mod invert;
+pub mod color_map;

@@ -9,12 +9,12 @@ use embedded_graphics::{
     Drawable,
 };
 use embedded_graphics_simulator::{
-    OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+    sdl2::Keycode, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::simulator::Simulator,
+    interaction::single_touch::SingleTouch,
     items::{select::SelectValue, NavigationItem, Select},
-    selection_indicator::style::rectangle::Rectangle as RectangleIndicator,
+    selection_indicator::style::AnimatedTriangle,
     theme::Theme,
     Menu, MenuStyle,
 };
@@ -67,10 +67,11 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::with_style(
         "Color Menu",
         MenuStyle::new(ExampleTheme)
-            .with_selection_indicator(RectangleIndicator)
-            .with_input_adapter(Simulator {
-                page_size: 5,
-                esc_value: (),
+            .with_selection_indicator(AnimatedTriangle::new(160))
+            .with_input_adapter(SingleTouch {
+                ignore_time: 10,
+                debounce_time: 1,
+                max_time: 100,
             }),
     )
     .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
@@ -82,6 +83,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let output_settings = OutputSettingsBuilder::new().scale(4).build();
     let mut window = Window::new("Menu demonstration w/color", &output_settings);
 
+    let mut space_pressed = false;
     'running: loop {
         let mut display: SimulatorDisplay<Rgb888> = SimulatorDisplay::new(Size::new(128, 64));
         let mut sub = display.cropped(&Rectangle::new(Point::new(16, 16), Size::new(96, 34)));
@@ -90,13 +92,20 @@ fn main() -> Result<(), core::convert::Infallible> {
         window.update(&display);
 
         for event in window.events() {
-            menu.interact(event);
-
             match event {
+                SimulatorEvent::KeyDown {
+                    keycode: Keycode::Space,
+                    ..
+                } => space_pressed = true,
+                SimulatorEvent::KeyUp {
+                    keycode: Keycode::Space,
+                    ..
+                } => space_pressed = false,
                 SimulatorEvent::Quit => break 'running,
-                _ => continue,
+                _ => {}
             }
         }
+        menu.interact(space_pressed);
     }
 
     Ok(())

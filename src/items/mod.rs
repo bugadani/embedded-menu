@@ -9,11 +9,13 @@ pub use select::Select;
 use crate::{
     interaction::InputAdapterSource,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    theme::Theme,
     MenuStyle,
 };
 use embedded_graphics::{
     draw_target::DrawTarget,
-    prelude::{PixelColor, Point, Size},
+    pixelcolor::BinaryColor,
+    prelude::{Point, Size},
     primitives::Rectangle,
     text::{renderer::TextRenderer, Baseline},
     Drawable,
@@ -27,12 +29,12 @@ pub struct MenuLine {
 }
 
 impl MenuLine {
-    pub fn new<C, S, IT, P, R>(longest_value: &str, style: &MenuStyle<S, IT, P, R, C>) -> Self
+    pub fn new<T, S, IT, P, R>(longest_value: &str, style: &MenuStyle<S, IT, P, R, T>) -> Self
     where
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        C: PixelColor,
+        T: Theme,
     {
         let style = style.text_style();
 
@@ -58,19 +60,19 @@ impl MenuLine {
         }
     }
 
-    pub fn draw_styled<C, D, S, IT, P, R>(
+    pub fn draw_styled<T, D, S, IT, P, R>(
         &self,
         title: &str,
         value_text: &str,
-        style: &MenuStyle<S, IT, P, R, C>,
+        style: &MenuStyle<S, IT, P, R, T>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        D: DrawTarget<Color = C>,
+        D: DrawTarget<Color = BinaryColor>,
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        C: PixelColor + Default + 'static,
+        T: Theme,
     {
         let display_area = display.bounding_box();
 

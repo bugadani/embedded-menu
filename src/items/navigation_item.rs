@@ -1,5 +1,6 @@
 use embedded_graphics::{
-    prelude::{DrawTarget, PixelColor, Point},
+    pixelcolor::BinaryColor,
+    prelude::{DrawTarget, Point},
     primitives::Rectangle,
 };
 use embedded_layout::View;
@@ -8,6 +9,7 @@ use crate::{
     interaction::InputAdapterSource,
     items::MenuLine,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    theme::Theme,
     Marker, MenuItem, MenuStyle,
 };
 
@@ -48,7 +50,7 @@ where
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        C: PixelColor + Default + 'static,
+        C: Theme,
     {
         self.line = MenuLine::new(self.marker.as_ref(), style);
     }
@@ -62,8 +64,8 @@ where
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = C>,
-        C: PixelColor + Default + 'static,
+        DIS: DrawTarget<Color = BinaryColor>,
+        C: Theme,
     {
         self.line.draw_styled(
             self.title_text.as_ref(),

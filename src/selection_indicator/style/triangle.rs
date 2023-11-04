@@ -1,5 +1,4 @@
 use embedded_graphics::{
-    pixelcolor::BinaryColor,
     prelude::{DrawTarget, PixelColor, Point, Size},
     primitives::{ContainsPoint, Primitive, PrimitiveStyle, Rectangle, Triangle as TriangleShape},
     transform::Transform,
@@ -13,20 +12,15 @@ use crate::{
         style::{interpolate, IndicatorStyle},
         Insets,
     },
+    theme::Theme,
 };
 
 #[derive(Clone, Copy)]
-pub struct Triangle<C = BinaryColor> {
-    color: C,
-}
+pub struct Triangle;
 
-impl<C> IndicatorStyle for Triangle<C>
-where
-    C: Copy + PixelColor,
-{
-    type Shape = Arrow<C>;
+impl IndicatorStyle for Triangle {
+    type Shape = Arrow;
     type State = ();
-    type Color = C;
 
     fn padding(&self, _state: &Self::State, height: i32) -> Insets {
         Insets {
@@ -37,23 +31,20 @@ where
         }
     }
 
-    fn shape(&self, state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape {
-        Arrow::new(bounds, fill_width, self.color(state))
+    fn shape(&self, _state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape {
+        Arrow::new(bounds, fill_width)
     }
 
-    fn color(&self, _state: &Self::State) -> Self::Color {
-        self.color
-    }
-
-    fn draw<D>(
+    fn draw<T, D>(
         &self,
         state: &Self::State,
         input_state: InputState,
+        theme: &T,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget,
-        Self::Color: Into<<D as DrawTarget>::Color>,
+        T: Theme,
+        D: DrawTarget<Color = T::Color>,
     {
         let display_area = display.bounding_box();
 
@@ -65,29 +56,22 @@ where
 
         let shape = self.shape(state, display_area, fill_width);
 
-        // todo: Can't seem to get the `Into`/`From` trait to work nicely here
-        let draw_shape: Arrow<<D as DrawTarget>::Color> = Arrow {
-            body: shape.body,
-            tip: shape.tip,
-            color: shape.color.into(),
-        };
+        shape.draw(theme.selection_color(), display)?;
 
-        draw_shape.draw(display)?;
         Ok(shape)
     }
 }
 
 #[derive(Clone, Copy)]
-pub struct Arrow<C = BinaryColor> {
+pub struct Arrow {
     body: Rectangle,
     tip: TriangleShape,
-    color: C,
 }
 
 const SHRINK: i32 = 1;
 
-impl<C> Arrow<C> {
-    pub fn new(bounds: Rectangle, fill_width: u32, color: C) -> Self {
+impl Arrow {
+    pub fn new(bounds: Rectangle, fill_width: u32) -> Self {
         let body = Rectangle::new(bounds.top_left, Size::new(fill_width, bounds.size.height));
 
         let tip = TriangleShape::new(
@@ -102,29 +86,38 @@ impl<C> Arrow<C> {
         // e-layout doesn't align well to 0 area rectangles
         .translate(Point::new(if body.is_zero_sized() { -1 } else { 0 }, 0));
 
-        Self { body, tip, color }
+        Self { body, tip }
     }
 
     pub fn tip_width(bounds: Rectangle) -> i32 {
         bounds.size.height as i32 - 1 - SHRINK
     }
+
+    pub fn draw<D, C>(&self, color: C, target: &mut D) -> Result<(), D::Error>
+    where
+        C: PixelColor,
+        D: DrawTarget<Color = C>,
+    {
+        let style = PrimitiveStyle::with_fill(color);
+
+        self.body.into_styled(style).draw(target)?;
+        self.tip.into_styled(style).draw(target)?;
+
+        Ok(())
+    }
 }
 
-impl<C> ContainsPoint for Arrow<C> {
+impl ContainsPoint for Arrow {
     fn contains(&self, point: Point) -> bool {
         self.body.contains(point) || self.tip.contains(point)
     }
 }
 
-impl<C> Transform for Arrow<C>
-where
-    C: Copy,
-{
+impl Transform for Arrow {
     fn translate(&self, by: Point) -> Self {
         Self {
             body: self.body.translate(by),
             tip: self.tip.translate(by),
-            color: self.color,
         }
     }
 
@@ -132,25 +125,5 @@ where
         self.body.translate_mut(by);
         self.tip.translate_mut(by);
         self
-    }
-}
-
-impl<C> Drawable for Arrow<C>
-where
-    C: PixelColor,
-{
-    type Color = C;
-    type Output = ();
-
-    fn draw<D>(&self, target: &mut D) -> Result<Self::Output, D::Error>
-    where
-        D: DrawTarget<Color = Self::Color>,
-    {
-        let style = PrimitiveStyle::with_fill(self.color);
-
-        self.body.into_styled(style).draw(target)?;
-        self.tip.into_styled(style).draw(target)?;
-
-        Ok(())
     }
 }

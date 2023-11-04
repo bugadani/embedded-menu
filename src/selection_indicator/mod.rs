@@ -1,13 +1,16 @@
 use crate::{
+    adapters::color_map::BinaryColorDrawTargetExt,
     collection::MenuItemCollection,
     interaction::{InputAdapterSource, InputState},
     margin::Insets,
     selection_indicator::style::IndicatorStyle,
+    theme::Theme,
     MenuState, MenuStyle,
 };
 use embedded_graphics::{
-    prelude::{DrawTarget, DrawTargetExt, PixelColor, Point, Size},
+    prelude::{DrawTarget, DrawTargetExt, Point, Size},
     primitives::Rectangle,
+    transform::Transform,
 };
 
 pub mod style;
@@ -173,11 +176,11 @@ where
         menu_state: &MenuState<IT::InputAdapter, P, S>,
     ) -> Result<(), D::Error>
     where
-        D: DrawTarget<Color = C>,
+        D: DrawTarget<Color = C::Color>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        <S as IndicatorStyle>::Color: Into<C>,
-        C: PixelColor + Default + 'static,
+        C: Theme,
+        S: IndicatorStyle,
     {
         let display_size = display.bounding_box().size;
 
@@ -199,16 +202,20 @@ where
             Size::new(display_size.width, selected_item_height),
         );
 
-        let _invert_area = self.style.draw(
+        let selection_area = self.style.draw(
             &menu_state.indicator_state.state,
             input_state,
-            &mut display.cropped(&selected_item_area).color_converted(),
+            &style.theme,
+            &mut display.cropped(&selected_item_area),
         )?;
 
-        // // TODO: Figure out how to handle inversion
-        // // Translate inverting area to its position
-        // let invert_area = invert_area.translate(selected_item_area.top_left);
-        // let mut inverting = display.invert_area(&invert_area);
+        // Translate inverting area to its position
+        let mapping_area = selection_area.translate(selected_item_area.top_left);
+        let mut inverting = display.map_colors(
+            &mapping_area,
+            style.theme.text_color(),
+            style.theme.selected_text_color(),
+        );
 
         // Draw the menu content
         let content_width = (display_size.width as i32 - padding_left - padding_right) as u32;
@@ -219,7 +226,7 @@ where
 
         items.draw_styled(
             style,
-            &mut display
+            &mut inverting
                 .cropped(&content_area)
                 .translated(Point::new(0, -menu_state.list_offset)),
         )

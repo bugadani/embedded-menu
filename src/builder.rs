@@ -2,10 +2,10 @@ use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::{InputAdapterSource, InputState},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    theme::Theme,
     Menu, MenuItem, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
-use embedded_graphics::prelude::PixelColor;
 use embedded_layout::{
     layout::linear::LinearLayout,
     object_chain::ChainElement,
@@ -19,7 +19,7 @@ where
     IT: InputAdapterSource<R>,
     S: IndicatorStyle,
     P: SelectionIndicatorController,
-    C: PixelColor,
+    C: Theme,
 {
     title: T,
     items: LL,
@@ -32,7 +32,7 @@ where
     S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
-    C: PixelColor,
+    C: Theme,
 {
     pub const fn new(title: T, style: MenuStyle<S, IT, P, R, C>) -> Self {
         Self {
@@ -49,7 +49,7 @@ where
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    C: PixelColor + Default + 'static,
+    C: Theme,
 {
     pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
         item.set_style(&self.style);
@@ -89,7 +89,7 @@ where
     Chain<CE>: MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    C: PixelColor + Default + 'static,
+    C: Theme,
 {
     pub fn add_item<I: MenuItem<R>>(
         self,
@@ -133,7 +133,7 @@ where
     CE: MenuItemCollection<R> + ChainElement,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    C: PixelColor + Default + 'static,
+    C: Theme,
 {
     pub fn add_item<I2: MenuItem<R>>(
         self,
@@ -176,7 +176,7 @@ where
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
-    C: PixelColor,
+    C: Theme,
 {
     pub fn build(self) -> Menu<T, IT, VG, R, P, S, C> {
         self.build_with_state(MenuState {

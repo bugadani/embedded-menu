@@ -1,6 +1,5 @@
 use embedded_graphics::{
-    pixelcolor::BinaryColor,
-    prelude::{DrawTarget, PixelColor, Size},
+    prelude::{DrawTarget, Size},
     primitives::{Primitive, PrimitiveStyle, Rectangle},
     Drawable,
 };
@@ -11,26 +10,15 @@ use crate::{
         style::{interpolate, IndicatorStyle},
         Insets,
     },
+    theme::Theme,
 };
 
 #[derive(Clone, Copy)]
-pub struct Line<C = BinaryColor> {
-    color: C,
-}
+pub struct Line;
 
-impl<C> Line<C> {
-    pub const fn new(color: C) -> Self {
-        Self { color }
-    }
-}
-
-impl<C> IndicatorStyle for Line<C>
-where
-    C: Copy + PixelColor,
-{
+impl IndicatorStyle for Line {
     type Shape = Rectangle;
     type State = ();
-    type Color = C;
 
     fn padding(&self, _state: &Self::State, _height: i32) -> Insets {
         Insets {
@@ -48,18 +36,16 @@ where
         )
     }
 
-    fn color(&self, _state: &Self::State) -> Self::Color {
-        self.color
-    }
-
-    fn draw<D>(
+    fn draw<T, D>(
         &self,
         state: &Self::State,
         input_state: InputState,
+        theme: &T,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = Self::Color>,
+        T: Theme,
+        D: DrawTarget<Color = T::Color>,
     {
         let display_area = display.bounding_box();
 
@@ -72,7 +58,7 @@ where
         let shape = self.shape(state, display_area, fill_width);
 
         shape
-            .into_styled(PrimitiveStyle::with_fill(self.color(state)))
+            .into_styled(PrimitiveStyle::with_fill(theme.selection_color()))
             .draw(display)?;
 
         Ok(shape)
