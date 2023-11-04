@@ -15,7 +15,7 @@ Unreleased
  - Removed the `R` type parameter from `SectionTitle`
  - Added initial color support
  - Style a menu by using a `Theme` object
- - Removed the `Invert` selection indicator
+ - Replaced the `Invert` selection indicator with `Rectangle`
 
 0.5.4 (2023-10-27)
 ==================

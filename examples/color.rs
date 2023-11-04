@@ -14,6 +14,7 @@ use embedded_graphics_simulator::{
 use embedded_menu::{
     interaction::simulator::Simulator,
     items::{select::SelectValue, NavigationItem, Select},
+    selection_indicator::style::rectangle::Rectangle as RectangleIndicator,
     theme::Theme,
     Menu, MenuStyle,
 };
@@ -54,7 +55,7 @@ impl Theme for ExampleTheme {
     }
 
     fn selected_text_color(&self) -> Self::Color {
-        Rgb888::WHITE
+        Rgb888::BLACK
     }
 
     fn selection_color(&self) -> Self::Color {
@@ -65,10 +66,12 @@ impl Theme for ExampleTheme {
 fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::with_style(
         "Color Menu",
-        MenuStyle::new(ExampleTheme).with_input_adapter(Simulator {
-            page_size: 5,
-            esc_value: (),
-        }),
+        MenuStyle::new(ExampleTheme)
+            .with_selection_indicator(RectangleIndicator::new(ExampleTheme))
+            .with_input_adapter(Simulator {
+                page_size: 5,
+                esc_value: (),
+            }),
     )
     .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
     .add_item(Select::new("Check this", false))
