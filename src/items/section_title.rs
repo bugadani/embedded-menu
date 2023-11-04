@@ -41,7 +41,7 @@ where
 
     fn set_style<S, IT, P, C>(&mut self, style: &MenuStyle<S, IT, P, R, C>)
     where
-        S: IndicatorStyle<Theme = C>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         C: Theme,
@@ -55,7 +55,7 @@ where
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle<Theme = C>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,

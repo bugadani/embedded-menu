@@ -180,7 +180,7 @@ where
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         C: Theme,
-        S: IndicatorStyle<Theme = C>,
+        S: IndicatorStyle,
     {
         let display_size = display.bounding_box().size;
 
@@ -205,6 +205,7 @@ where
         let selection_area = self.style.draw(
             &menu_state.indicator_state.state,
             input_state,
+            &style.theme,
             &mut display.cropped(&selected_item_area),
         )?;
 

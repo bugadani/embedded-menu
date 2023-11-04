@@ -1,9 +1,7 @@
 use embedded_graphics::{
-    pixelcolor::BinaryColor,
     prelude::{DrawTarget, Point},
     primitives::Rectangle,
     transform::Transform,
-    Drawable,
 };
 
 use crate::{
@@ -16,14 +14,13 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct AnimatedTriangle<T = BinaryColor> {
+pub struct AnimatedTriangle {
     period: i32,
-    theme: T,
 }
 
-impl<T> AnimatedTriangle<T> {
-    pub const fn new(period: i32, theme: T) -> Self {
-        Self { period, theme }
+impl AnimatedTriangle {
+    pub const fn new(period: i32) -> Self {
+        Self { period }
     }
 }
 
@@ -32,13 +29,9 @@ pub struct State {
     current: i32,
 }
 
-impl<T> IndicatorStyle for AnimatedTriangle<T>
-where
-    T: Theme,
-{
-    type Shape = Arrow<T::Color>;
+impl IndicatorStyle for AnimatedTriangle {
+    type Shape = Arrow;
     type State = State;
-    type Theme = T;
 
     fn on_target_changed(&self, state: &mut Self::State) {
         state.current = 0;
@@ -77,21 +70,19 @@ where
 
         let offset = offset * max_offset / half_move;
 
-        Self::Shape::new(bounds, fill_width, self.color(state)).translate(Point::new(-offset, 0))
+        Arrow::new(bounds, fill_width).translate(Point::new(-offset, 0))
     }
 
-    fn color(&self, _state: &Self::State) -> <Self::Theme as Theme>::Color {
-        self.theme.selection_color()
-    }
-
-    fn draw<D>(
+    fn draw<T, D>(
         &self,
         state: &Self::State,
         input_state: InputState,
+        theme: &T,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = <Self::Theme as Theme>::Color>,
+        T: Theme,
+        D: DrawTarget<Color = T::Color>,
     {
         let display_area = display.bounding_box();
 
@@ -103,7 +94,7 @@ where
 
         let shape = self.shape(state, display_area, fill_width);
 
-        shape.draw(display)?;
+        shape.draw(theme.selection_color(), display)?;
 
         Ok(shape)
     }

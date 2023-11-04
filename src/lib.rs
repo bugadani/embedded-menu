@@ -52,7 +52,7 @@ pub trait MenuItem<R>: Marker + View {
     fn interact(&mut self) -> R;
     fn set_style<S, IT, P, C>(&mut self, style: &MenuStyle<S, IT, P, R, C>)
     where
-        S: IndicatorStyle<Theme = C>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         C: Theme;
@@ -65,7 +65,7 @@ pub trait MenuItem<R>: Marker + View {
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle<Theme = C>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,
@@ -90,15 +90,13 @@ pub struct MenuStyle<S, IT, P, R, T> {
     _marker: PhantomData<R>,
 }
 
-impl<R> Default
-    for MenuStyle<LineIndicator<BinaryColor>, Programmed, StaticPosition, R, BinaryColor>
-{
+impl<R> Default for MenuStyle<LineIndicator, Programmed, StaticPosition, R, BinaryColor> {
     fn default() -> Self {
         Self::new(BinaryColor::On)
     }
 }
 
-impl<T, R> MenuStyle<LineIndicator<T>, Programmed, StaticPosition, R, T>
+impl<T, R> MenuStyle<LineIndicator, Programmed, StaticPosition, R, T>
 where
     T: Theme,
 {
@@ -110,7 +108,7 @@ where
             title_font: &FONT_6X10,
             input_adapter: Programmed,
             indicator: Indicator {
-                style: LineIndicator::new(theme),
+                style: LineIndicator,
                 controller: StaticPosition,
             },
             _marker: PhantomData,
@@ -120,7 +118,7 @@ where
 
 impl<S, IT, P, R, T> MenuStyle<S, IT, P, R, T>
 where
-    S: IndicatorStyle<Theme = T>,
+    S: IndicatorStyle,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
     T: Theme,
@@ -142,7 +140,7 @@ where
         indicator_style: S2,
     ) -> MenuStyle<S2, IT, P, R, T>
     where
-        S2: IndicatorStyle<Theme = T>,
+        S2: IndicatorStyle,
     {
         MenuStyle {
             theme: self.theme,
@@ -399,7 +397,7 @@ where
     IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
-    S: IndicatorStyle<Theme = C>,
+    S: IndicatorStyle,
     C: Theme,
 {
     fn header<'t>(
@@ -488,7 +486,7 @@ where
     IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
-    S: IndicatorStyle<Theme = C>,
+    S: IndicatorStyle,
     C: Theme,
 {
     type Color = C::Color;

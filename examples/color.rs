@@ -67,7 +67,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::with_style(
         "Color Menu",
         MenuStyle::new(ExampleTheme)
-            .with_selection_indicator(RectangleIndicator::new(ExampleTheme))
+            .with_selection_indicator(RectangleIndicator)
             .with_input_adapter(Simulator {
                 page_size: 5,
                 esc_value: (),

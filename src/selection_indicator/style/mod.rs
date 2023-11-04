@@ -35,21 +35,21 @@ pub fn interpolate(value: u32, x_min: u32, x_max: u32, y_min: u32, y_max: u32) -
 pub trait IndicatorStyle: Copy {
     type Shape: ContainsPoint + Transform + Clone;
     type State: Default + Copy;
-    type Theme: Theme;
 
     fn on_target_changed(&self, _state: &mut Self::State) {}
     fn update(&self, _state: &mut Self::State, _input_state: InputState) {}
     fn padding(&self, state: &Self::State, height: i32) -> Insets;
     fn shape(&self, state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape;
-    fn color(&self, state: &Self::State) -> <Self::Theme as Theme>::Color;
-    fn draw<D>(
+    fn draw<T, D>(
         &self,
         state: &Self::State,
         input_state: InputState,
+        theme: &T,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = <Self::Theme as Theme>::Color>;
+        T: Theme,
+        D: DrawTarget<Color = T::Color>;
 }
 
 #[test]

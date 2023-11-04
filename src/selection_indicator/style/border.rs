@@ -1,5 +1,4 @@
 use embedded_graphics::{
-    pixelcolor::BinaryColor,
     prelude::{DrawTarget, Size},
     primitives::{Primitive, PrimitiveStyle, Rectangle},
     Drawable,
@@ -15,17 +14,11 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct Border<T = BinaryColor> {
-    theme: T,
-}
+pub struct Border;
 
-impl<T> IndicatorStyle for Border<T>
-where
-    T: Theme,
-{
+impl IndicatorStyle for Border {
     type Shape = Rectangle;
     type State = ();
-    type Theme = T;
 
     fn padding(&self, _state: &Self::State, _height: i32) -> Insets {
         Insets {
@@ -40,18 +33,16 @@ where
         bounds
     }
 
-    fn color(&self, _state: &Self::State) -> <Self::Theme as Theme>::Color {
-        self.theme.selection_color()
-    }
-
-    fn draw<D>(
+    fn draw<T, D>(
         &self,
-        state: &Self::State,
+        _state: &Self::State,
         input_state: InputState,
+        theme: &T,
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = <Self::Theme as Theme>::Color>,
+        T: Theme,
+        D: DrawTarget<Color = T::Color>,
     {
         let display_area = display.bounding_box();
 
@@ -62,14 +53,14 @@ where
         };
 
         display_area
-            .into_styled(PrimitiveStyle::with_stroke(self.color(state), 1))
+            .into_styled(PrimitiveStyle::with_stroke(theme.selection_color(), 1))
             .draw(display)?;
 
         Rectangle::new(
             display_area.top_left,
             Size::new(fill_width, display_area.size.height),
         )
-        .into_styled(PrimitiveStyle::with_fill(self.color(state)))
+        .into_styled(PrimitiveStyle::with_fill(theme.selection_color()))
         .draw(display)?;
 
         Ok(Rectangle::new(

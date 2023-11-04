@@ -31,7 +31,7 @@ pub struct MenuLine {
 impl MenuLine {
     pub fn new<T, S, IT, P, R>(longest_value: &str, style: &MenuStyle<S, IT, P, R, T>) -> Self
     where
-        S: IndicatorStyle<Theme = T>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         T: Theme,
@@ -69,7 +69,7 @@ impl MenuLine {
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
-        S: IndicatorStyle<Theme = T>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         T: Theme,

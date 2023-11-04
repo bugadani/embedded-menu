@@ -28,7 +28,7 @@ pub trait MenuItemCollection<R> {
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle<Theme = C>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,
@@ -70,7 +70,7 @@ where
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
-        S: IndicatorStyle<Theme = C>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         DIS: DrawTarget<Color = BinaryColor>,
@@ -143,7 +143,7 @@ where
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle<Theme = T>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,
@@ -232,7 +232,7 @@ where
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle<Theme = C>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,
@@ -293,7 +293,7 @@ where
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle<Theme = C>,
+        S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,
