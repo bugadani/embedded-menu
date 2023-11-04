@@ -15,23 +15,23 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct Line<C = BinaryColor> {
-    color: C,
+pub struct Line<T = BinaryColor> {
+    theme: T,
 }
 
-impl<C> Line<C> {
-    pub const fn new(color: C) -> Self {
-        Self { color }
+impl<T> Line<T> {
+    pub const fn new(theme: T) -> Self {
+        Self { theme }
     }
 }
 
-impl<C> IndicatorStyle for Line<C>
+impl<T> IndicatorStyle for Line<T>
 where
-    C: Theme,
+    T: Theme,
 {
     type Shape = Rectangle;
     type State = ();
-    type Color = C;
+    type Theme = T;
 
     fn padding(&self, _state: &Self::State, _height: i32) -> Insets {
         Insets {
@@ -49,8 +49,8 @@ where
         )
     }
 
-    fn color(&self, _state: &Self::State) -> <Self::Color as Theme>::Color {
-        self.color.selection_color()
+    fn color(&self, _state: &Self::State) -> <Self::Theme as Theme>::Color {
+        self.theme.selection_color()
     }
 
     fn draw<D>(
@@ -60,7 +60,7 @@ where
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = <Self::Color as Theme>::Color>,
+        D: DrawTarget<Color = <Self::Theme as Theme>::Color>,
     {
         let display_area = display.bounding_box();
 

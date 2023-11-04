@@ -52,7 +52,7 @@ pub trait MenuItem<R>: Marker + View {
     fn interact(&mut self) -> R;
     fn set_style<S, IT, P, C>(&mut self, style: &MenuStyle<S, IT, P, R, C>)
     where
-        S: IndicatorStyle<Color = C>,
+        S: IndicatorStyle<Theme = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         C: Theme;
@@ -65,7 +65,7 @@ pub trait MenuItem<R>: Marker + View {
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle<Color = C>,
+        S: IndicatorStyle<Theme = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,
@@ -120,7 +120,7 @@ where
 
 impl<S, IT, P, R, T> MenuStyle<S, IT, P, R, T>
 where
-    S: IndicatorStyle<Color = T>,
+    S: IndicatorStyle<Theme = T>,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
     T: Theme,
@@ -142,7 +142,7 @@ where
         indicator_style: S2,
     ) -> MenuStyle<S2, IT, P, R, T>
     where
-        S2: IndicatorStyle<Color = T>,
+        S2: IndicatorStyle<Theme = T>,
     {
         MenuStyle {
             theme: self.theme,
@@ -399,7 +399,7 @@ where
     IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
-    S: IndicatorStyle<Color = C>,
+    S: IndicatorStyle<Theme = C>,
     C: Theme,
 {
     fn header<'t>(
@@ -488,7 +488,7 @@ where
     IT: InputAdapterSource<R>,
     VG: ViewGroup + MenuItemCollection<R>,
     P: SelectionIndicatorController,
-    S: IndicatorStyle<Color = C>,
+    S: IndicatorStyle<Theme = C>,
     C: Theme,
 {
     type Color = C::Color;

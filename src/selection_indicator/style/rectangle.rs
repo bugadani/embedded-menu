@@ -15,21 +15,21 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct Rectangle<C = BinaryColor> {
-    color: C,
+pub struct Rectangle<T = BinaryColor> {
+    theme: T,
 }
 
-impl<C> Rectangle<C> {
-    pub fn new(color: C) -> Self {
-        Self { color }
+impl<T> Rectangle<T> {
+    pub fn new(theme: T) -> Self {
+        Self { theme }
     }
 }
 
-impl<C> IndicatorStyle for Rectangle<C>
+impl<T> IndicatorStyle for Rectangle<T>
 where
-    C: Theme,
+    T: Theme,
 {
-    type Color = C;
+    type Theme = T;
     type Shape = RectangleShape;
     type State = ();
 
@@ -46,8 +46,8 @@ where
         bounds
     }
 
-    fn color(&self, _state: &Self::State) -> <Self::Color as Theme>::Color {
-        self.color.selection_color()
+    fn color(&self, _state: &Self::State) -> <Self::Theme as Theme>::Color {
+        self.theme.selection_color()
     }
 
     fn draw<D>(
@@ -57,7 +57,7 @@ where
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = <Self::Color as Theme>::Color>,
+        D: DrawTarget<Color = <Self::Theme as Theme>::Color>,
     {
         let display_area = display.bounding_box();
 
@@ -70,7 +70,7 @@ where
         let shape = self.shape(state, display_area, fill_width);
 
         shape
-            .into_styled(PrimitiveStyle::with_fill(self.color.selection_color()))
+            .into_styled(PrimitiveStyle::with_fill(self.theme.selection_color()))
             .draw(display)?;
 
         Ok(shape)

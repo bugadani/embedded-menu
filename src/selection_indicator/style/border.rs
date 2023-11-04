@@ -15,17 +15,17 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct Border<C = BinaryColor> {
-    color: C,
+pub struct Border<T = BinaryColor> {
+    theme: T,
 }
 
-impl<C> IndicatorStyle for Border<C>
+impl<T> IndicatorStyle for Border<T>
 where
-    C: Theme,
+    T: Theme,
 {
     type Shape = Rectangle;
     type State = ();
-    type Color = C;
+    type Theme = T;
 
     fn padding(&self, _state: &Self::State, _height: i32) -> Insets {
         Insets {
@@ -40,8 +40,8 @@ where
         bounds
     }
 
-    fn color(&self, _state: &Self::State) -> <Self::Color as Theme>::Color {
-        self.color.selection_color()
+    fn color(&self, _state: &Self::State) -> <Self::Theme as Theme>::Color {
+        self.theme.selection_color()
     }
 
     fn draw<D>(
@@ -51,7 +51,7 @@ where
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = <Self::Color as Theme>::Color>,
+        D: DrawTarget<Color = <Self::Theme as Theme>::Color>,
     {
         let display_area = display.bounding_box();
 

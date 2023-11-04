@@ -48,7 +48,7 @@ where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
     P: SelectionIndicatorController,
-    S: IndicatorStyle<Color = C>,
+    S: IndicatorStyle<Theme = C>,
     C: Theme,
 {
     pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
@@ -88,7 +88,7 @@ where
     IT: InputAdapterSource<R>,
     Chain<CE>: MenuItemCollection<R>,
     P: SelectionIndicatorController,
-    S: IndicatorStyle<Color = C>,
+    S: IndicatorStyle<Theme = C>,
     C: Theme,
 {
     pub fn add_item<I: MenuItem<R>>(
@@ -132,7 +132,7 @@ where
     Link<I, CE>: MenuItemCollection<R> + ChainElement,
     CE: MenuItemCollection<R> + ChainElement,
     P: SelectionIndicatorController,
-    S: IndicatorStyle<Color = C>,
+    S: IndicatorStyle<Theme = C>,
     C: Theme,
 {
     pub fn add_item<I2: MenuItem<R>>(

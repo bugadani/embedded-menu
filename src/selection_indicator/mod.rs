@@ -180,7 +180,7 @@ where
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         C: Theme,
-        S: IndicatorStyle<Color = C>,
+        S: IndicatorStyle<Theme = C>,
     {
         let display_size = display.bounding_box().size;
 

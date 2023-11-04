@@ -16,14 +16,14 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct AnimatedTriangle<C = BinaryColor> {
+pub struct AnimatedTriangle<T = BinaryColor> {
     period: i32,
-    color: C,
+    theme: T,
 }
 
-impl<C> AnimatedTriangle<C> {
-    pub const fn new(period: i32, color: C) -> Self {
-        Self { period, color }
+impl<T> AnimatedTriangle<T> {
+    pub const fn new(period: i32, theme: T) -> Self {
+        Self { period, theme }
     }
 }
 
@@ -32,13 +32,13 @@ pub struct State {
     current: i32,
 }
 
-impl<C> IndicatorStyle for AnimatedTriangle<C>
+impl<T> IndicatorStyle for AnimatedTriangle<T>
 where
-    C: Theme,
+    T: Theme,
 {
-    type Shape = Arrow<C::Color>;
+    type Shape = Arrow<T::Color>;
     type State = State;
-    type Color = C;
+    type Theme = T;
 
     fn on_target_changed(&self, state: &mut Self::State) {
         state.current = 0;
@@ -80,8 +80,8 @@ where
         Self::Shape::new(bounds, fill_width, self.color(state)).translate(Point::new(-offset, 0))
     }
 
-    fn color(&self, _state: &Self::State) -> <Self::Color as Theme>::Color {
-        self.color.selection_color()
+    fn color(&self, _state: &Self::State) -> <Self::Theme as Theme>::Color {
+        self.theme.selection_color()
     }
 
     fn draw<D>(
@@ -91,7 +91,7 @@ where
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = <Self::Color as Theme>::Color>,
+        D: DrawTarget<Color = <Self::Theme as Theme>::Color>,
     {
         let display_area = display.bounding_box();
 

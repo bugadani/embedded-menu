@@ -17,17 +17,17 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct Triangle<C = BinaryColor> {
-    color: C,
+pub struct Triangle<T = BinaryColor> {
+    theme: T,
 }
 
-impl<C> IndicatorStyle for Triangle<C>
+impl<T> IndicatorStyle for Triangle<T>
 where
-    C: Theme,
+    T: Theme,
 {
-    type Shape = Arrow<C::Color>;
+    type Shape = Arrow<T::Color>;
     type State = ();
-    type Color = C;
+    type Theme = T;
 
     fn padding(&self, _state: &Self::State, height: i32) -> Insets {
         Insets {
@@ -42,8 +42,8 @@ where
         Arrow::new(bounds, fill_width, self.color(state))
     }
 
-    fn color(&self, _state: &Self::State) -> <Self::Color as Theme>::Color {
-        self.color.selection_color()
+    fn color(&self, _state: &Self::State) -> <Self::Theme as Theme>::Color {
+        self.theme.selection_color()
     }
 
     fn draw<D>(
@@ -53,7 +53,7 @@ where
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = <Self::Color as Theme>::Color>,
+        D: DrawTarget<Color = <Self::Theme as Theme>::Color>,
     {
         let display_area = display.bounding_box();
 
@@ -69,7 +69,7 @@ where
         let draw_shape: Arrow<<D as DrawTarget>::Color> = Arrow {
             body: shape.body,
             tip: shape.tip,
-            color: self.color.selection_color(),
+            color: self.theme.selection_color(),
         };
 
         draw_shape.draw(display)?;
