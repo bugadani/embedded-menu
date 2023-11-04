@@ -68,7 +68,7 @@ pub trait MenuItem<R>: Marker + View {
         S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        D: DrawTarget<Color = C::Color>,
+        D: DrawTarget<Color = BinaryColor>,
         C: Theme;
 }
 
@@ -191,8 +191,8 @@ where
         }
     }
 
-    pub fn text_style(&self) -> MonoTextStyle<'static, T::Color> {
-        MonoTextStyle::new(self.font, self.theme.text_color())
+    pub fn text_style(&self) -> MonoTextStyle<'static, BinaryColor> {
+        MonoTextStyle::new(self.font, BinaryColor::On)
     }
 
     pub fn title_style(&self) -> MonoTextStyle<'static, T::Color> {

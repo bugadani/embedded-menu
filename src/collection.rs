@@ -1,6 +1,7 @@
 use core::marker::PhantomData;
 
 use embedded_graphics::{
+    pixelcolor::BinaryColor,
     prelude::{DrawTarget, Point, Size},
     primitives::Rectangle,
 };
@@ -30,7 +31,7 @@ pub trait MenuItemCollection<R> {
         S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        D: DrawTarget<Color = C::Color>,
+        D: DrawTarget<Color = BinaryColor>,
         C: Theme;
 }
 
@@ -72,7 +73,7 @@ where
         S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = C::Color>,
+        DIS: DrawTarget<Color = BinaryColor>,
         C: Theme,
     {
         MenuItem::draw_styled(self, style, display)
@@ -145,7 +146,7 @@ where
         S: IndicatorStyle<Color = T>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        D: DrawTarget<Color = T::Color>,
+        D: DrawTarget<Color = BinaryColor>,
         T: Theme,
     {
         for item in self.items.as_ref() {
@@ -234,7 +235,7 @@ where
         S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        D: DrawTarget<Color = C::Color>,
+        D: DrawTarget<Color = BinaryColor>,
         C: Theme,
     {
         self.object.draw_styled(style, display)
@@ -295,7 +296,7 @@ where
         S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        D: DrawTarget<Color = C::Color>,
+        D: DrawTarget<Color = BinaryColor>,
         C: Theme,
     {
         self.parent.draw_styled(style, display)?;

@@ -14,6 +14,7 @@ use crate::{
 };
 use embedded_graphics::{
     draw_target::DrawTarget,
+    pixelcolor::BinaryColor,
     prelude::{Point, Size},
     primitives::Rectangle,
     text::{renderer::TextRenderer, Baseline},
@@ -67,7 +68,7 @@ impl MenuLine {
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        D: DrawTarget<Color = C::Color>,
+        D: DrawTarget<Color = BinaryColor>,
         S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,

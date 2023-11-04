@@ -1,4 +1,5 @@
 use embedded_graphics::{
+    pixelcolor::BinaryColor,
     prelude::{DrawTarget, Point},
     primitives::Rectangle,
 };
@@ -63,7 +64,7 @@ where
         S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = C::Color>,
+        DIS: DrawTarget<Color = BinaryColor>,
         C: Theme,
     {
         self.line.draw_styled(
