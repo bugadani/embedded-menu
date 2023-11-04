@@ -8,7 +8,6 @@ use embedded_graphics::prelude::Primitive;
 use embedded_graphics::primitives::{PrimitiveStyle, Rectangle};
 use embedded_graphics::Drawable;
 
-#[derive(Clone, Copy)]
 pub struct Invert;
 
 impl IndicatorStyle for Invert {
@@ -28,7 +27,7 @@ impl IndicatorStyle for Invert {
         Rectangle::new(bounds.top_left, Size::new(fill_width, bounds.size.height))
     }
 
-    fn color(&self, state: &Self::State) -> Self::Color {
+    fn color(&self, _state: &Self::State) -> <Self::Color as Theme>::Color {
         unimplemented!()
     }
 

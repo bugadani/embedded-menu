@@ -19,8 +19,9 @@ pub struct Rectangle<C = BinaryColor> {
     color: C,
 }
 
-impl<C> IndicatorStyle for Rectangle<C> 
-where C: Copy
+impl<C> IndicatorStyle for Rectangle<C>
+where
+    C: Copy,
 {
     type Shape = Arrow<C>;
     type State = ();
@@ -45,8 +46,7 @@ where C: Copy
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget,
-        <D as DrawTarget>::Color: From<<Self::Shape as Drawable>::Color>,
+        D: DrawTarget<Color = <Self::Color as Theme>::Color>,
     {
         let display_area = display.bounding_box();
 

@@ -1,6 +1,6 @@
 use embedded_graphics::{
     pixelcolor::BinaryColor,
-    prelude::{DrawTarget, PixelColor, Size},
+    prelude::{DrawTarget, Size},
     primitives::{Primitive, PrimitiveStyle, Rectangle},
     Drawable,
 };
@@ -11,6 +11,7 @@ use crate::{
         style::{interpolate, IndicatorStyle},
         Insets,
     },
+    theme::Theme,
 };
 
 #[derive(Clone, Copy)]
@@ -26,7 +27,7 @@ impl<C> Line<C> {
 
 impl<C> IndicatorStyle for Line<C>
 where
-    C: Copy + PixelColor,
+    C: Theme,
 {
     type Shape = Rectangle;
     type State = ();
@@ -48,8 +49,8 @@ where
         )
     }
 
-    fn color(&self, _state: &Self::State) -> Self::Color {
-        self.color
+    fn color(&self, _state: &Self::State) -> <Self::Color as Theme>::Color {
+        self.color.selection_color()
     }
 
     fn draw<D>(
@@ -59,7 +60,7 @@ where
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = Self::Color>,
+        D: DrawTarget<Color = <Self::Color as Theme>::Color>,
     {
         let display_area = display.bounding_box();
 

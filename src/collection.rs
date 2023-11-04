@@ -1,7 +1,7 @@
 use core::marker::PhantomData;
 
 use embedded_graphics::{
-    prelude::{DrawTarget, PixelColor, Point, Size},
+    prelude::{DrawTarget, Point, Size},
     primitives::Rectangle,
 };
 use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
@@ -9,6 +9,7 @@ use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGr
 use crate::{
     interaction::InputAdapterSource,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    theme::Theme,
     Marker, MenuItem, MenuStyle,
 };
 
@@ -26,11 +27,11 @@ pub trait MenuItemCollection<R> {
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
+        S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        D: DrawTarget<Color = C>,
-        C: PixelColor + Default + 'static;
+        D: DrawTarget<Color = C::Color>,
+        C: Theme;
 }
 
 // Treat any MenuItem impl as a 1-element collection
@@ -68,11 +69,11 @@ where
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
-        S: IndicatorStyle,
+        S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = C>,
-        C: PixelColor + Default + 'static,
+        DIS: DrawTarget<Color = C::Color>,
+        C: Theme,
     {
         MenuItem::draw_styled(self, style, display)
     }
@@ -135,17 +136,17 @@ where
         self.items.as_ref().len()
     }
 
-    fn draw_styled<MSC, S, IT, P, D>(
+    fn draw_styled<T, S, IT, P, D>(
         &self,
-        style: &MenuStyle<S, IT, P, R, MSC>,
+        style: &MenuStyle<S, IT, P, R, T>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
+        S: IndicatorStyle<Color = T>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        D: DrawTarget<Color = MSC>,
-        MSC: PixelColor + Default + 'static,
+        D: DrawTarget<Color = T::Color>,
+        T: Theme,
     {
         for item in self.items.as_ref() {
             item.draw_styled(style, display)?;
@@ -230,11 +231,11 @@ where
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
+        S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        D: DrawTarget<Color = C>,
-        C: PixelColor + Default + 'static,
+        D: DrawTarget<Color = C::Color>,
+        C: Theme,
     {
         self.object.draw_styled(style, display)
     }
@@ -291,11 +292,11 @@ where
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
+        S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        D: DrawTarget<Color = C>,
-        C: PixelColor + Default + 'static,
+        D: DrawTarget<Color = C::Color>,
+        C: Theme,
     {
         self.parent.draw_styled(style, display)?;
         self.object.draw_styled(style, display)?;

@@ -3,10 +3,11 @@ use crate::{
     interaction::{InputAdapterSource, InputState},
     margin::Insets,
     selection_indicator::style::IndicatorStyle,
+    theme::Theme,
     MenuState, MenuStyle,
 };
 use embedded_graphics::{
-    prelude::{DrawTarget, DrawTargetExt, PixelColor, Point, Size},
+    prelude::{DrawTarget, DrawTargetExt, Point, Size},
     primitives::Rectangle,
 };
 
@@ -173,11 +174,11 @@ where
         menu_state: &MenuState<IT::InputAdapter, P, S>,
     ) -> Result<(), D::Error>
     where
-        D: DrawTarget<Color = C>,
+        D: DrawTarget<Color = C::Color>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        <S as IndicatorStyle>::Color: Into<C>,
-        C: PixelColor + Default + 'static,
+        C: Theme,
+        S: IndicatorStyle<Color = C>,
     {
         let display_size = display.bounding_box().size;
 
@@ -202,7 +203,7 @@ where
         let _invert_area = self.style.draw(
             &menu_state.indicator_state.state,
             input_state,
-            &mut display.cropped(&selected_item_area).color_converted(),
+            &mut display.cropped(&selected_item_area),
         )?;
 
         // // TODO: Figure out how to handle inversion

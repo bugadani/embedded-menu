@@ -1,5 +1,5 @@
 use embedded_graphics::{
-    prelude::{DrawTarget, PixelColor, Point},
+    prelude::{DrawTarget, Point},
     primitives::Rectangle,
 };
 use embedded_layout::View;
@@ -8,6 +8,7 @@ use crate::{
     interaction::InputAdapterSource,
     items::MenuLine,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    theme::Theme,
     Marker, MenuItem, MenuStyle,
 };
 
@@ -93,12 +94,12 @@ where
         (self.convert)(self.value)
     }
 
-    fn set_style<ST, IT, P, C>(&mut self, style: &MenuStyle<ST, IT, P, R, C>)
+    fn set_style<IS, IT, P, C>(&mut self, style: &MenuStyle<IS, IT, P, R, C>)
     where
-        ST: IndicatorStyle,
+        IS: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        C: PixelColor,
+        C: Theme,
     {
         let initial = self.value;
         let mut longest_str = initial.name();
@@ -120,11 +121,11 @@ where
         display: &mut DIS,
     ) -> Result<(), DIS::Error>
     where
-        IS: IndicatorStyle,
+        IS: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = C>,
-        C: PixelColor + Default + 'static,
+        DIS: DrawTarget<Color = C::Color>,
+        C: Theme,
     {
         self.line
             .draw_styled(self.title_text.as_ref(), self.value.name(), style, display)

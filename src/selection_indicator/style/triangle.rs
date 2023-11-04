@@ -13,6 +13,7 @@ use crate::{
         style::{interpolate, IndicatorStyle},
         Insets,
     },
+    theme::Theme,
 };
 
 #[derive(Clone, Copy)]
@@ -22,9 +23,9 @@ pub struct Triangle<C = BinaryColor> {
 
 impl<C> IndicatorStyle for Triangle<C>
 where
-    C: Copy + PixelColor,
+    C: Theme,
 {
-    type Shape = Arrow<C>;
+    type Shape = Arrow<C::Color>;
     type State = ();
     type Color = C;
 
@@ -41,8 +42,8 @@ where
         Arrow::new(bounds, fill_width, self.color(state))
     }
 
-    fn color(&self, _state: &Self::State) -> Self::Color {
-        self.color
+    fn color(&self, _state: &Self::State) -> <Self::Color as Theme>::Color {
+        self.color.selection_color()
     }
 
     fn draw<D>(
@@ -52,8 +53,7 @@ where
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget,
-        Self::Color: Into<<D as DrawTarget>::Color>,
+        D: DrawTarget<Color = <Self::Color as Theme>::Color>,
     {
         let display_area = display.bounding_box();
 
@@ -69,7 +69,7 @@ where
         let draw_shape: Arrow<<D as DrawTarget>::Color> = Arrow {
             body: shape.body,
             tip: shape.tip,
-            color: shape.color.into(),
+            color: self.color.selection_color(),
         };
 
         draw_shape.draw(display)?;

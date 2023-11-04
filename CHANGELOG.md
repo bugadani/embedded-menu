@@ -14,6 +14,7 @@ Unreleased
  - Removed `derive(Menu)`
  - Removed the `R` type parameter from `SectionTitle`
  - Added initial color support
+ - Style a menu by using a `Theme` object
 
 0.5.4 (2023-10-27)
 ==================

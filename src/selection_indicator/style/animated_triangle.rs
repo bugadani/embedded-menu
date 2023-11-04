@@ -1,6 +1,6 @@
 use embedded_graphics::{
     pixelcolor::BinaryColor,
-    prelude::{DrawTarget, PixelColor, Point},
+    prelude::{DrawTarget, Point},
     primitives::Rectangle,
     transform::Transform,
     Drawable,
@@ -12,6 +12,7 @@ use crate::{
         style::{interpolate, triangle::Arrow, IndicatorStyle},
         Insets,
     },
+    theme::Theme,
 };
 
 #[derive(Clone, Copy)]
@@ -33,9 +34,9 @@ pub struct State {
 
 impl<C> IndicatorStyle for AnimatedTriangle<C>
 where
-    C: Copy + PixelColor,
+    C: Theme,
 {
-    type Shape = Arrow<C>;
+    type Shape = Arrow<C::Color>;
     type State = State;
     type Color = C;
 
@@ -61,7 +62,7 @@ where
     }
 
     fn shape(&self, state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape {
-        let max_offset = Arrow::<C>::tip_width(bounds);
+        let max_offset = Self::Shape::tip_width(bounds);
 
         let half_move = self.period / 5;
         let rest = 3 * half_move;
@@ -76,11 +77,11 @@ where
 
         let offset = offset * max_offset / half_move;
 
-        Arrow::new(bounds, fill_width, self.color(state)).translate(Point::new(-offset, 0))
+        Self::Shape::new(bounds, fill_width, self.color(state)).translate(Point::new(-offset, 0))
     }
 
-    fn color(&self, _state: &Self::State) -> Self::Color {
-        self.color
+    fn color(&self, _state: &Self::State) -> <Self::Color as Theme>::Color {
+        self.color.selection_color()
     }
 
     fn draw<D>(
@@ -90,7 +91,7 @@ where
         display: &mut D,
     ) -> Result<Self::Shape, D::Error>
     where
-        D: DrawTarget<Color = C>,
+        D: DrawTarget<Color = <Self::Color as Theme>::Color>,
     {
         let display_area = display.bounding_box();
 

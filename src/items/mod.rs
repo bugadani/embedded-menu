@@ -9,11 +9,12 @@ pub use select::Select;
 use crate::{
     interaction::InputAdapterSource,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
+    theme::Theme,
     MenuStyle,
 };
 use embedded_graphics::{
     draw_target::DrawTarget,
-    prelude::{PixelColor, Point, Size},
+    prelude::{Point, Size},
     primitives::Rectangle,
     text::{renderer::TextRenderer, Baseline},
     Drawable,
@@ -29,10 +30,10 @@ pub struct MenuLine {
 impl MenuLine {
     pub fn new<C, S, IT, P, R>(longest_value: &str, style: &MenuStyle<S, IT, P, R, C>) -> Self
     where
-        S: IndicatorStyle,
+        S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        C: PixelColor,
+        C: Theme,
     {
         let style = style.text_style();
 
@@ -66,11 +67,11 @@ impl MenuLine {
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        D: DrawTarget<Color = C>,
-        S: IndicatorStyle,
+        D: DrawTarget<Color = C::Color>,
+        S: IndicatorStyle<Color = C>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
-        C: PixelColor + Default + 'static,
+        C: Theme,
     {
         let display_area = display.bounding_box();
 
