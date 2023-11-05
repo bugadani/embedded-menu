@@ -82,11 +82,11 @@ where
     }
 }
 
-impl<T, IT, CE, R, P, S, C> MenuBuilder<T, IT, Chain<CE>, R, P, S, C>
+impl<T, IT, CE, R, P, S, C> MenuBuilder<T, IT, CE, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
-    Chain<CE>: MenuItemCollection<R>,
+    CE: MenuItemCollection<R> + ChainElement,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
     C: Theme,
@@ -94,12 +94,15 @@ where
     pub fn add_item<I: MenuItem<R>>(
         self,
         mut item: I,
-    ) -> MenuBuilder<T, IT, Link<I, Chain<CE>>, R, P, S, C> {
+    ) -> MenuBuilder<T, IT, Link<I, CE>, R, P, S, C> {
         item.set_style(&self.style);
 
         MenuBuilder {
             title: self.title,
-            items: self.items.append(item),
+            items: Link {
+                parent: self.items,
+                object: item,
+            },
             style: self.style,
         }
     }
@@ -107,7 +110,7 @@ where
     pub fn add_items<I, IC>(
         self,
         mut items: IC,
-    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I, R>, Chain<CE>>, R, P, S, C>
+    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I, R>, CE>, R, P, S, C>
     where
         I: MenuItem<R>,
         IC: AsRef<[I]> + AsMut<[I]>,
@@ -119,51 +122,10 @@ where
 
         MenuBuilder {
             title: self.title,
-            items: self.items.append(MenuItems::new(items)),
-            style: self.style,
-        }
-    }
-}
-
-impl<T, IT, I, CE, R, P, S, C> MenuBuilder<T, IT, Link<I, CE>, R, P, S, C>
-where
-    T: AsRef<str>,
-    IT: InputAdapterSource<R>,
-    Link<I, CE>: MenuItemCollection<R> + ChainElement,
-    CE: MenuItemCollection<R> + ChainElement,
-    P: SelectionIndicatorController,
-    S: IndicatorStyle,
-    C: Theme,
-{
-    pub fn add_item<I2: MenuItem<R>>(
-        self,
-        mut item: I2,
-    ) -> MenuBuilder<T, IT, Link<I2, Link<I, CE>>, R, P, S, C> {
-        item.set_style(&self.style);
-
-        MenuBuilder {
-            title: self.title,
-            items: self.items.append(item),
-            style: self.style,
-        }
-    }
-
-    pub fn add_items<I2, IC>(
-        self,
-        mut items: IC,
-    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I2, R>, Link<I, CE>>, R, P, S, C>
-    where
-        I2: MenuItem<R>,
-        IC: AsRef<[I2]> + AsMut<[I2]>,
-    {
-        items
-            .as_mut()
-            .iter_mut()
-            .for_each(|i| i.set_style(&self.style));
-
-        MenuBuilder {
-            title: self.title,
-            items: self.items.append(MenuItems::new(items)),
+            items: Link {
+                parent: self.items,
+                object: MenuItems::new(items),
+            },
             style: self.style,
         }
     }
