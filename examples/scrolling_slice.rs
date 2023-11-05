@@ -5,7 +5,9 @@ use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::simulator::Simulator, items::MenuItem, Menu, MenuStyle, SelectValue,
+    interaction::simulator::Simulator,
+    items::{MenuItem, MenuListItem},
+    Menu, MenuStyle, SelectValue,
 };
 
 #[derive(Copy, Clone, PartialEq, SelectValue)]
@@ -27,15 +29,16 @@ fn main() -> Result<(), core::convert::Infallible> {
         MenuItem::new("Check this 1", false),
         MenuItem::new("Check this 2", false),
     ];
-    let selects2 = [
-        MenuItem::new("Check this 3", true),
-        MenuItem::new("Check this 4", true),
-    ];
+
+    let mut item1 = MenuItem::new("Check this 3", true);
+    let mut item2 = MenuItem::new("Check this 4", true);
+
+    let dyn_selects: [&mut dyn MenuListItem<_>; 2] = [&mut item1, &mut item2];
 
     let mut menu = Menu::with_style("Menu", style)
         .add_item("Foo", ">", |_| ())
         .add_menu_items(selects1)
-        .add_menu_items(selects2)
+        .add_menu_items(dyn_selects)
         .add_item("Foo", "<-", |_| ())
         .add_item("Check this", false, |_| ())
         .add_item("Check this too", TestEnum::A, |_| ())

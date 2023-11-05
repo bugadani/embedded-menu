@@ -3,12 +3,15 @@ use core::marker::PhantomData;
 use embedded_graphics::{
     mono_font::MonoTextStyle,
     pixelcolor::BinaryColor,
-    prelude::{DrawTarget, Point, Size},
+    prelude::{Point, Size},
     primitives::Rectangle,
 };
 use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
 
-use crate::items::{Marker, MenuListItem};
+use crate::{
+    adapters::Canvas,
+    items::{Marker, MenuListItem},
+};
 
 /// Menu-related extensions for object chain elements
 pub trait MenuItemCollection<R> {
@@ -18,13 +21,11 @@ pub trait MenuItemCollection<R> {
     /// Whether an item is selectable. If not, the item will be skipped.
     fn selectable(&self, nth: usize) -> bool;
     fn count(&self) -> usize;
-    fn draw_styled<D>(
+    fn draw_styled(
         &self,
         text_style: &MonoTextStyle<'static, BinaryColor>,
-        display: &mut D,
-    ) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = BinaryColor>;
+        display: &mut dyn Canvas<BinaryColor>,
+    ) -> Result<(), ()>;
 }
 
 // Treat any MenuItem impl as a 1-element collection
@@ -56,14 +57,11 @@ where
         1
     }
 
-    fn draw_styled<D>(
+    fn draw_styled(
         &self,
         text_style: &MonoTextStyle<'static, BinaryColor>,
-        display: &mut D,
-    ) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = BinaryColor>,
-    {
+        display: &mut dyn Canvas<BinaryColor>,
+    ) -> Result<(), ()> {
         MenuListItem::draw_styled(self, text_style, display)
     }
 }
@@ -125,14 +123,11 @@ where
         self.items.as_ref().len()
     }
 
-    fn draw_styled<D>(
+    fn draw_styled(
         &self,
         text_style: &MonoTextStyle<'static, BinaryColor>,
-        display: &mut D,
-    ) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = BinaryColor>,
-    {
+        display: &mut dyn Canvas<BinaryColor>,
+    ) -> Result<(), ()> {
         for item in self.items.as_ref() {
             item.draw_styled(text_style, display)?;
         }
@@ -210,14 +205,11 @@ where
         self.object.count()
     }
 
-    fn draw_styled<D>(
+    fn draw_styled(
         &self,
         text_style: &MonoTextStyle<'static, BinaryColor>,
-        display: &mut D,
-    ) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = BinaryColor>,
-    {
+        display: &mut dyn Canvas<BinaryColor>,
+    ) -> Result<(), ()> {
         self.object.draw_styled(text_style, display)
     }
 }
@@ -267,14 +259,11 @@ where
         self.object.count() + self.parent.count()
     }
 
-    fn draw_styled<D>(
+    fn draw_styled(
         &self,
         text_style: &MonoTextStyle<'static, BinaryColor>,
-        display: &mut D,
-    ) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = BinaryColor>,
-    {
+        display: &mut dyn Canvas<BinaryColor>,
+    ) -> Result<(), ()> {
         self.parent.draw_styled(text_style, display)?;
         self.object.draw_styled(text_style, display)?;
 

@@ -1,5 +1,5 @@
 use crate::{
-    adapters::color_map::BinaryColorDrawTargetExt,
+    adapters::{color_map::BinaryColorDrawTargetExt, DrawTargetWrapper},
     collection::MenuItemCollection,
     interaction::{InputAdapterSource, InputState},
     margin::Insets,
@@ -165,7 +165,7 @@ where
         menuitem_height + indicator_insets.top + indicator_insets.bottom
     }
 
-    pub fn draw<R, D, IT, C>(
+    pub fn draw<R, D, IT, C, E>(
         &self,
         selected_height: i32,
         selected_offset: i32,
@@ -174,9 +174,9 @@ where
         items: &impl MenuItemCollection<R>,
         style: &MenuStyle<S, IT, P, R, C>,
         menu_state: &MenuState<IT::InputAdapter, P, S>,
-    ) -> Result<(), D::Error>
+    ) -> Result<(), E>
     where
-        D: DrawTarget<Color = C::Color>,
+        D: DrawTarget<Color = C::Color, Error = E>,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         C: Theme,
@@ -224,11 +224,14 @@ where
             Size::new(content_width, display_size.height),
         );
 
-        items.draw_styled(
-            &style.text_style(),
-            &mut inverting
-                .cropped(&content_area)
-                .translated(Point::new(0, -menu_state.list_offset)),
-        )
+        let mut cropped = inverting.clipped(&content_area);
+        let area =
+            cropped.translated(content_area.top_left - Point::new(0, menu_state.list_offset));
+
+        let mut canvas = DrawTargetWrapper::new(area);
+
+        _ = items.draw_styled(&style.text_style(), &mut canvas);
+
+        canvas.into_result()
     }
 }

@@ -1,12 +1,12 @@
 use embedded_graphics::{
-    mono_font::MonoTextStyle,
-    pixelcolor::BinaryColor,
-    prelude::{DrawTarget, Point},
-    primitives::Rectangle,
+    mono_font::MonoTextStyle, pixelcolor::BinaryColor, prelude::Point, primitives::Rectangle,
 };
 use embedded_layout::View;
 
-use crate::items::{Marker, MenuLine, MenuListItem};
+use crate::{
+    adapters::Canvas,
+    items::{Marker, MenuLine, MenuListItem},
+};
 
 pub trait SelectValue: Sized + Clone + PartialEq {
     /// Transforms the value on interaction
@@ -140,14 +140,11 @@ where
         self.line = MenuLine::new(longest.marker(), text_style);
     }
 
-    fn draw_styled<D>(
+    fn draw_styled(
         &self,
         text_style: &MonoTextStyle<'static, BinaryColor>,
-        display: &mut D,
-    ) -> Result<(), D::Error>
-    where
-        D: DrawTarget<Color = BinaryColor>,
-    {
+        display: &mut dyn Canvas<BinaryColor>,
+    ) -> Result<(), ()> {
         self.line.draw_styled(
             self.title_text.as_ref(),
             self.value.marker(),

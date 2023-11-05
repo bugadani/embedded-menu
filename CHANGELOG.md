@@ -20,6 +20,7 @@ Unreleased
  - `SelectValue::marker` can now return values with non-`'static` lifetimes
  - `SelectValue` now requires `Clone` instead of `Copy`
  - `SelectValue::next` now takes `&mut self` and returns nothing
+ - `MenuListItem` is now object-safe
 
 ## Removed
 
