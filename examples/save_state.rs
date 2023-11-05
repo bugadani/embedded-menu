@@ -82,11 +82,11 @@ fn do_loop(
             .collect::<Vec<_>>();
 
         let mut menu = Menu::with_style(&title, style)
-            .add_item(MenuItem::new("Foo", ">").with_value_converter(|_| MenuEvent::Nothing))
+            .add_menu_item(MenuItem::new("Foo", ">").with_value_converter(|_| MenuEvent::Nothing))
             .add_section_title("  Dynamic items")
-            .add_items(&mut items)
+            .add_menu_items(&mut items)
             .add_section_title("  Non-Dynamic")
-            .add_item(
+            .add_menu_item(
                 MenuItem::new("Check this too", data.select)
                     .with_value_converter(MenuEvent::Select),
             )

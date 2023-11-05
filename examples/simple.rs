@@ -40,11 +40,11 @@ impl SelectValue for TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::new("Menu")
-        .add_item(MenuItem::new("Foo", ">").with_value_converter(|_| 1))
-        .add_item(MenuItem::new("Check this 1", false).with_value_converter(|b| 20 + b as i32))
+        .add_menu_item(MenuItem::new("Foo", ">").with_value_converter(|_| 1))
+        .add_menu_item(MenuItem::new("Check this 1", false).with_value_converter(|b| 20 + b as i32))
         .add_section_title("===== Section =====")
-        .add_item(MenuItem::new("Check this 2", false).with_value_converter(|b| 30 + b as i32))
-        .add_item(
+        .add_menu_item(MenuItem::new("Check this 2", false).with_value_converter(|b| 30 + b as i32))
+        .add_menu_item(
             MenuItem::new("Check this 3", TestEnum::A).with_value_converter(|b| 40 + b as i32),
         )
         .build();

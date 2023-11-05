@@ -53,12 +53,12 @@ fn main() -> Result<(), core::convert::Infallible> {
     ];
 
     let mut menu = Menu::with_style("Menu", style)
-        .add_item(MenuItem::new("Foo", ">"))
-        .add_items(&mut selects1)
-        .add_items(&mut selects2)
-        .add_item(MenuItem::new("Foo", "<-"))
-        .add_item(MenuItem::new("Check this", false))
-        .add_item(MenuItem::new("Check this too", TestEnum::A))
+        .add_menu_item(MenuItem::new("Foo", ">"))
+        .add_menu_items(&mut selects1)
+        .add_menu_items(&mut selects2)
+        .add_menu_item(MenuItem::new("Foo", "<-"))
+        .add_menu_item(MenuItem::new("Check this", false))
+        .add_menu_item(MenuItem::new("Check this too", TestEnum::A))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

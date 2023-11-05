@@ -56,14 +56,14 @@ where
         self,
         title: T2,
     ) -> MenuBuilder<T, IT, Chain<MenuItem<T2, R, (), false>>, R, P, S, C> {
-        self.add_item(
+        self.add_menu_item(
             MenuItem::new(title, ())
                 .with_value_converter(|_| unreachable!())
                 .selectable::<false>(),
         )
     }
 
-    pub fn add_item<I: MenuListItem<R>>(
+    pub fn add_menu_item<I: MenuListItem<R>>(
         self,
         mut item: I,
     ) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
@@ -76,7 +76,7 @@ where
         }
     }
 
-    pub fn add_items<I, IC>(
+    pub fn add_menu_items<I, IC>(
         self,
         mut items: IC,
     ) -> MenuBuilder<T, IT, Chain<MenuItems<IC, I, R>>, R, P, S, C>
@@ -110,14 +110,14 @@ where
         self,
         title: T2,
     ) -> MenuBuilder<T, IT, Link<MenuItem<T2, R, (), false>, CE>, R, P, S, C> {
-        self.add_item(
+        self.add_menu_item(
             MenuItem::new(title, ())
                 .with_value_converter(|_| unreachable!())
                 .selectable::<false>(),
         )
     }
 
-    pub fn add_item<I: MenuListItem<R>>(
+    pub fn add_menu_item<I: MenuListItem<R>>(
         self,
         mut item: I,
     ) -> MenuBuilder<T, IT, Link<I, CE>, R, P, S, C> {
@@ -133,7 +133,7 @@ where
         }
     }
 
-    pub fn add_items<I, IC>(
+    pub fn add_menu_items<I, IC>(
         self,
         mut items: IC,
     ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I, R>, CE>, R, P, S, C>

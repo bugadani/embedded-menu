@@ -74,10 +74,10 @@ fn main() -> Result<(), core::convert::Infallible> {
                 max_time: 100,
             }),
     )
-    .add_item(MenuItem::new("Foo", ">"))
-    .add_item(MenuItem::new("Check this", false))
-    .add_item(MenuItem::new("Check this", false))
-    .add_item(MenuItem::new("Check this too", false))
+    .add_menu_item(MenuItem::new("Foo", ">"))
+    .add_menu_item(MenuItem::new("Check this", false))
+    .add_menu_item(MenuItem::new("Check this", false))
+    .add_menu_item(MenuItem::new("Check this too", false))
     .build();
 
     let output_settings = OutputSettingsBuilder::new().scale(4).build();
