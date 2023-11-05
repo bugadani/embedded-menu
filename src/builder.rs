@@ -4,7 +4,7 @@ use crate::{
     items::SectionTitle,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
-    Menu, MenuItem, MenuState, MenuStyle, NoItems,
+    Menu, MenuListItem, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
 use embedded_layout::{
@@ -59,7 +59,10 @@ where
         self.add_item(SectionTitle::new(title))
     }
 
-    pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
+    pub fn add_item<I: MenuListItem<R>>(
+        self,
+        mut item: I,
+    ) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
         item.set_style(&self.style);
 
         MenuBuilder {
@@ -74,7 +77,7 @@ where
         mut items: IC,
     ) -> MenuBuilder<T, IT, Chain<MenuItems<IC, I, R>>, R, P, S, C>
     where
-        I: MenuItem<R>,
+        I: MenuListItem<R>,
         IC: AsRef<[I]> + AsMut<[I]>,
     {
         items
@@ -106,7 +109,7 @@ where
         self.add_item(SectionTitle::new(title))
     }
 
-    pub fn add_item<I: MenuItem<R>>(
+    pub fn add_item<I: MenuListItem<R>>(
         self,
         mut item: I,
     ) -> MenuBuilder<T, IT, Link<I, CE>, R, P, S, C> {
@@ -127,7 +130,7 @@ where
         mut items: IC,
     ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I, R>, CE>, R, P, S, C>
     where
-        I: MenuItem<R>,
+        I: MenuListItem<R>,
         IC: AsRef<[I]> + AsMut<[I]>,
     {
         items

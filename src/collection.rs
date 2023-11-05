@@ -11,7 +11,7 @@ use crate::{
     interaction::InputAdapterSource,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
-    Marker, MenuItem, MenuStyle,
+    Marker, MenuListItem, MenuStyle,
 };
 
 /// Menu-related extensions for object chain elements
@@ -38,7 +38,7 @@ pub trait MenuItemCollection<R> {
 // Treat any MenuItem impl as a 1-element collection
 impl<I, R> MenuItemCollection<R> for I
 where
-    I: MenuItem<R> + Marker,
+    I: MenuListItem<R> + Marker,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         debug_assert!(nth == 0);
@@ -76,14 +76,14 @@ where
         DIS: DrawTarget<Color = BinaryColor>,
         C: Theme,
     {
-        MenuItem::draw_styled(self, style, display)
+        MenuListItem::draw_styled(self, style, display)
     }
 }
 
 pub struct MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     items: C,
     /// Used to keep track of the whole collection's position in case it's empty.
@@ -94,7 +94,7 @@ where
 impl<C, I, R> MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     pub fn new(mut items: C) -> Self {
         let mut offset = 0;
@@ -115,7 +115,7 @@ where
 impl<C, I, R> MenuItemCollection<R> for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.items.as_ref()[nth].bounds()
@@ -160,7 +160,7 @@ where
 impl<C, I, R> View for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     fn translate_impl(&mut self, by: Point) {
         self.position += by;
@@ -187,7 +187,7 @@ where
 impl<C, I, R> ViewGroup for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     fn len(&self) -> usize {
         self.count()

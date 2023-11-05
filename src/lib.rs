@@ -46,19 +46,27 @@ pub use embedded_menu_macros::SelectValue;
 /// Marker trait necessary to avoid a "conflicting implementations" error.
 pub trait Marker {}
 
-pub trait MenuItem<R>: Marker + View {
+pub trait MenuListItem<R>: Marker + View {
     /// Returns the value of the selected item, without interacting with it.
     fn value_of(&self) -> R;
+
     fn interact(&mut self) -> R;
+
     fn set_style<S, IT, P, C>(&mut self, style: &MenuStyle<S, IT, P, R, C>)
     where
         S: IndicatorStyle,
         IT: InputAdapterSource<R>,
         P: SelectionIndicatorController,
         C: Theme;
+
+    /// Returns whether the list item is selectable.
+    ///
+    /// If this returns false, the list item will not be interactable and user navigation will skip
+    /// over it.
     fn selectable(&self) -> bool {
         true
     }
+
     fn draw_styled<S, IT, P, D, C>(
         &self,
         style: &MenuStyle<S, IT, P, R, C>,

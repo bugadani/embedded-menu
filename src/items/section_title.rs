@@ -10,7 +10,7 @@ use crate::{
     items::MenuLine,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
-    Marker, MenuItem, MenuStyle,
+    Marker, MenuListItem, MenuStyle,
 };
 
 pub struct SectionTitle<T>
@@ -23,7 +23,7 @@ where
 
 impl<T> Marker for SectionTitle<T> where T: AsRef<str> {}
 
-impl<T, R> MenuItem<R> for SectionTitle<T>
+impl<T, R> MenuListItem<R> for SectionTitle<T>
 where
     T: AsRef<str>,
 {

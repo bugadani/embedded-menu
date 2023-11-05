@@ -10,7 +10,7 @@ use crate::{
     items::MenuLine,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
-    Marker, MenuItem, MenuStyle,
+    Marker, MenuListItem, MenuStyle,
 };
 
 pub trait SelectValue: Sized + Copy + PartialEq {
@@ -96,7 +96,7 @@ where
 {
 }
 
-impl<T, R, S> MenuItem<R> for Select<T, R, S>
+impl<T, R, S> MenuListItem<R> for Select<T, R, S>
 where
     T: AsRef<str>,
     S: SelectValue,
