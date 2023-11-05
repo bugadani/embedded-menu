@@ -122,7 +122,7 @@ where
 
     fn interact(&mut self) -> R {
         self.value = self.value.next();
-        (self.convert)(self.value)
+        self.value_of()
     }
 
     fn selectable(&self) -> bool {
@@ -172,5 +172,24 @@ where
 
     fn bounds(&self) -> Rectangle {
         self.line.bounds()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn interaction_selects_next_value_and_returns_converted() {
+        use super::*;
+        use crate::items::MenuListItem;
+
+        let mut item = MenuItem::new("title", false).with_value_converter(|b| b as u8);
+
+        assert_eq!(item.value_of(), 0);
+
+        assert_eq!(item.interact(), 1);
+        assert_eq!(item.value_of(), 1);
+
+        assert_eq!(item.interact(), 0);
+        assert_eq!(item.value_of(), 0);
     }
 }
