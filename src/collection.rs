@@ -9,9 +9,10 @@ use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGr
 
 use crate::{
     interaction::InputAdapterSource,
+    items::{Marker, MenuListItem},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
-    Marker, MenuListItem, MenuStyle,
+    MenuStyle,
 };
 
 /// Menu-related extensions for object chain elements

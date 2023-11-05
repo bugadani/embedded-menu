@@ -7,10 +7,10 @@ use embedded_layout::View;
 
 use crate::{
     interaction::InputAdapterSource,
-    items::MenuLine,
+    items::{Marker, MenuLine, MenuListItem},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
-    Marker, MenuListItem, MenuStyle,
+    MenuStyle,
 };
 
 pub struct SectionTitle<T>

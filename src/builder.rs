@@ -1,10 +1,10 @@
 use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::{InputAdapterSource, InputState},
-    items::SectionTitle,
+    items::{MenuListItem, SectionTitle},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
-    Menu, MenuListItem, MenuState, MenuStyle, NoItems,
+    Menu, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
 use embedded_layout::{

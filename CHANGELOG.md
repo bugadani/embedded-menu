@@ -12,6 +12,7 @@ Unreleased
  - Replaced the `Invert` selection indicator with `Rectangle`
  - Renamed `SelectValue::name` to `marker`
  - Renamed `MenuItem` trait to `MenuListItem`
+ - Moved `MenuListItem` and `Marker` to `items`
 
 ## Removed
 
