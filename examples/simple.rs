@@ -39,7 +39,7 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::new("Menu")
+    let mut menu = Menu::build("Menu")
         .add_item("Foo", ">", |_| 1)
         .add_item("Check this 1", false, |b| 20 + b as i32)
         .add_section_title("===== Section =====")

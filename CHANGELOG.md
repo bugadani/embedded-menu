@@ -16,6 +16,7 @@ Unreleased
  - Renamed `Select` to `MenuItem`
  - `MenuListItem::draw_styled` and `MenuListItem::set_style` now only takes a font style instead of the whole menu style
  - Renamed `MenuBuilder::add_item(s)` to `add_menu_item(s)`
+ - Renamed `Menu::new` to `build`
 
 ## Removed
 

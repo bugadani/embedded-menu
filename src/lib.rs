@@ -272,7 +272,8 @@ where
     S: IndicatorStyle,
     C: Theme,
 {
-    pub fn new(title: T) -> MenuBuilder<T, Programmed, NoItems, R, StaticPosition, S, C>
+    /// Creates a new menu builder with the given title.
+    pub fn build(title: T) -> MenuBuilder<T, Programmed, NoItems, R, StaticPosition, S, C>
     where
         MenuStyle<S, Programmed, StaticPosition, R, C>: Default,
     {
@@ -288,6 +289,7 @@ where
     P: SelectionIndicatorController,
     C: Theme,
 {
+    /// Creates a new menu builder with the given title and style.
     pub fn with_style(
         title: T,
         style: MenuStyle<S, IT, P, R, C>,
