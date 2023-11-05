@@ -18,6 +18,8 @@ Unreleased
  - Renamed `MenuBuilder::add_item(s)` to `add_menu_item(s)`
  - Renamed `Menu::new` to `build`
  - `SelectValue::marker` can now return values with non-`'static` lifetimes
+ - `SelectValue` now requires `Clone` instead of `Copy`
+ - `SelectValue::next` now takes `&mut self` and returns nothing
 
 ## Removed
 

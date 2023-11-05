@@ -8,19 +8,17 @@ use embedded_layout::View;
 
 use crate::items::{Marker, MenuLine, MenuListItem};
 
-pub trait SelectValue: Sized + Copy + PartialEq {
+pub trait SelectValue: Sized + Clone + PartialEq {
     /// Transforms the value on interaction
-    fn next(&self) -> Self {
-        *self
-    }
+    fn next(&mut self) {}
 
     /// Returns a displayable marker for the value
     fn marker(&self) -> &str;
 }
 
 impl SelectValue for bool {
-    fn next(&self) -> Self {
-        !*self
+    fn next(&mut self) {
+        *self = !*self;
     }
 
     fn marker(&self) -> &str {
@@ -34,20 +32,12 @@ impl SelectValue for bool {
 }
 
 impl SelectValue for &str {
-    fn next(&self) -> Self {
-        *self
-    }
-
     fn marker(&self) -> &str {
         *self
     }
 }
 
 impl SelectValue for () {
-    fn next(&self) -> Self {
-        ()
-    }
-
     fn marker(&self) -> &str {
         ""
     }
@@ -117,11 +107,11 @@ where
     S: SelectValue,
 {
     fn value_of(&self) -> R {
-        (self.convert)(self.value)
+        (self.convert)(self.value.clone())
     }
 
     fn interact(&mut self) -> R {
-        self.value = self.value.next();
+        self.value.next();
         self.value_of()
     }
 
@@ -130,17 +120,21 @@ where
     }
 
     fn set_style(&mut self, text_style: &MonoTextStyle<'_, BinaryColor>) {
-        let initial = self.value;
-        let mut longest = initial;
+        let mut current = self.value.clone();
+        let mut longest = self.value.clone();
+
         let mut longest_len = longest.marker().len();
 
-        let mut current = initial.next();
-        while current != initial {
+        loop {
+            current.next();
+            if current == self.value {
+                break;
+            }
+
             if current.marker().len() > longest_len {
-                longest = current;
+                longest = current.clone();
                 longest_len = longest.marker().len();
             }
-            current = current.next();
         }
 
         self.line = MenuLine::new(longest.marker(), text_style);

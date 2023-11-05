@@ -4,33 +4,13 @@ use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
-use embedded_menu::{
-    interaction::simulator::Simulator, items::menu_item::SelectValue, Menu, MenuStyle,
-};
+use embedded_menu::{interaction::simulator::Simulator, Menu, MenuStyle, SelectValue};
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, SelectValue)]
 pub enum TestEnum {
     A,
     B,
     C,
-}
-
-impl SelectValue for TestEnum {
-    fn next(&self) -> Self {
-        match self {
-            TestEnum::A => TestEnum::B,
-            TestEnum::B => TestEnum::C,
-            TestEnum::C => TestEnum::A,
-        }
-    }
-
-    fn marker(&self) -> &'static str {
-        match self {
-            TestEnum::A => "A",
-            TestEnum::B => "AB",
-            TestEnum::C => "ABC",
-        }
-    }
 }
 
 fn main() -> Result<(), core::convert::Infallible> {

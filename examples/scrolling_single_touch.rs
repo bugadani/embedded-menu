@@ -9,33 +9,15 @@ use embedded_graphics_simulator::{
     Window,
 };
 use embedded_menu::{
-    interaction::single_touch::SingleTouch, items::menu_item::SelectValue,
-    selection_indicator::style::animated_triangle::AnimatedTriangle, Menu, MenuStyle,
+    interaction::single_touch::SingleTouch,
+    selection_indicator::style::animated_triangle::AnimatedTriangle, Menu, MenuStyle, SelectValue,
 };
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, SelectValue)]
 pub enum TestEnum {
     A,
     B,
     C,
-}
-
-impl SelectValue for TestEnum {
-    fn next(&self) -> Self {
-        match self {
-            TestEnum::A => TestEnum::B,
-            TestEnum::B => TestEnum::C,
-            TestEnum::C => TestEnum::A,
-        }
-    }
-
-    fn marker(&self) -> &'static str {
-        match self {
-            TestEnum::A => "A",
-            TestEnum::B => "AB",
-            TestEnum::C => "ABC",
-        }
-    }
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
