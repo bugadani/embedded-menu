@@ -10,7 +10,7 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::single_touch::SingleTouch,
-    items::{select::SelectValue, Select},
+    items::{menu_item::SelectValue, MenuItem},
     selection_indicator::style::animated_triangle::AnimatedTriangle,
     Menu, MenuStyle,
 };
@@ -51,19 +51,19 @@ fn main() -> Result<(), core::convert::Infallible> {
         .with_animated_selection_indicator(10);
 
     let mut menu = Menu::with_style("Menu with even longer title", style)
-        .add_item(Select::new("Foo", ">"))
-        .add_item(Select::new("Check this", false))
-        .add_item(Select::new("Check this", false))
-        .add_item(Select::new("Check this too", TestEnum::A))
-        .add_item(Select::new("Check this too", TestEnum::A))
-        .add_item(Select::new("Check this", true))
-        .add_item(Select::new("Check this too", true))
-        .add_item(Select::new("Check this too", TestEnum::A))
-        .add_item(Select::new("Check this", false))
-        .add_item(Select::new("Check this too", true))
-        .add_item(Select::new("Foo", "<-"))
-        .add_item(Select::new("Check this", false))
-        .add_item(Select::new("Check this too", TestEnum::A))
+        .add_item(MenuItem::new("Foo", ">"))
+        .add_item(MenuItem::new("Check this", false))
+        .add_item(MenuItem::new("Check this", false))
+        .add_item(MenuItem::new("Check this too", TestEnum::A))
+        .add_item(MenuItem::new("Check this too", TestEnum::A))
+        .add_item(MenuItem::new("Check this", true))
+        .add_item(MenuItem::new("Check this too", true))
+        .add_item(MenuItem::new("Check this too", TestEnum::A))
+        .add_item(MenuItem::new("Check this", false))
+        .add_item(MenuItem::new("Check this too", true))
+        .add_item(MenuItem::new("Foo", "<-"))
+        .add_item(MenuItem::new("Check this", false))
+        .add_item(MenuItem::new("Check this too", TestEnum::A))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

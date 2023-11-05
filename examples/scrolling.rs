@@ -6,7 +6,7 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, Select},
+    items::{menu_item::SelectValue, MenuItem},
     Menu, MenuStyle,
 };
 
@@ -44,19 +44,19 @@ fn main() -> Result<(), core::convert::Infallible> {
         .with_animated_selection_indicator(10);
 
     let mut menu = Menu::with_style("Menu", style)
-        .add_item(Select::new("Foo", ">"))
-        .add_item(Select::new("Check this", false))
-        .add_item(Select::new("Check this", false))
-        .add_item(Select::new("Check this too", TestEnum::A))
-        .add_item(Select::new("Check this too", TestEnum::A))
-        .add_item(Select::new("Check this", true))
-        .add_item(Select::new("Check this too", true))
-        .add_item(Select::new("Check this too", TestEnum::A))
-        .add_item(Select::new("Check this", false))
-        .add_item(Select::new("Check this too", true))
-        .add_item(Select::new("Foo", "<-"))
-        .add_item(Select::new("Check this", false))
-        .add_item(Select::new("Check this too", TestEnum::A))
+        .add_item(MenuItem::new("Foo", ">"))
+        .add_item(MenuItem::new("Check this", false))
+        .add_item(MenuItem::new("Check this", false))
+        .add_item(MenuItem::new("Check this too", TestEnum::A))
+        .add_item(MenuItem::new("Check this too", TestEnum::A))
+        .add_item(MenuItem::new("Check this", true))
+        .add_item(MenuItem::new("Check this too", true))
+        .add_item(MenuItem::new("Check this too", TestEnum::A))
+        .add_item(MenuItem::new("Check this", false))
+        .add_item(MenuItem::new("Check this too", true))
+        .add_item(MenuItem::new("Foo", "<-"))
+        .add_item(MenuItem::new("Check this", false))
+        .add_item(MenuItem::new("Check this too", TestEnum::A))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

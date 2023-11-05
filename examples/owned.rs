@@ -8,7 +8,7 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, Select},
+    items::{menu_item::SelectValue, MenuItem},
     Menu, MenuStyle,
 };
 
@@ -39,9 +39,9 @@ impl SelectValue for TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     // Use a generator to create owned strings that we give to the menu.
-    let items: Vec<Select<_, _, _>> = (1..10)
+    let items: Vec<MenuItem<_, _, _>> = (1..10)
         .map(|i| format!("Item {}", i))
-        .map(|i| Select::new(i, false))
+        .map(|i| MenuItem::new(i, false))
         .collect();
 
     let mut menu = Menu::with_style(
@@ -51,7 +51,7 @@ fn main() -> Result<(), core::convert::Infallible> {
             esc_value: (),
         }),
     )
-    .add_item(Select::new("Foo", ">"))
+    .add_item(MenuItem::new("Foo", ">"))
     .add_items(items)
     .build();
 

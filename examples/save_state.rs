@@ -6,7 +6,7 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, Select},
+    items::{menu_item::SelectValue, MenuItem},
     selection_indicator::{style::line::Line, AnimatedPosition},
     Menu, MenuState, MenuStyle,
 };
@@ -69,7 +69,7 @@ fn do_loop(
     for _ in 0..60 {
         let mut items = (0..item_count)
             .map(|i| {
-                Select::new("Changing", data.slice_data[i]).with_value_converter(match i {
+                MenuItem::new("Changing", data.slice_data[i]).with_value_converter(match i {
                     0 => |data| MenuEvent::SliceCheckbox(0, data),
                     1 => |data| MenuEvent::SliceCheckbox(1, data),
                     2 => |data| MenuEvent::SliceCheckbox(2, data),
@@ -82,12 +82,13 @@ fn do_loop(
             .collect::<Vec<_>>();
 
         let mut menu = Menu::with_style(&title, style)
-            .add_item(Select::new("Foo", ">").with_value_converter(|_| MenuEvent::Nothing))
+            .add_item(MenuItem::new("Foo", ">").with_value_converter(|_| MenuEvent::Nothing))
             .add_section_title("  Dynamic items")
             .add_items(&mut items)
             .add_section_title("  Non-Dynamic")
             .add_item(
-                Select::new("Check this too", data.select).with_value_converter(MenuEvent::Select),
+                MenuItem::new("Check this too", data.select)
+                    .with_value_converter(MenuEvent::Select),
             )
             .build_with_state(*state);
 

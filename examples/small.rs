@@ -12,7 +12,7 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, Select},
+    items::{menu_item::SelectValue, MenuItem},
     Menu, MenuStyle,
 };
 
@@ -49,10 +49,10 @@ fn main() -> Result<(), core::convert::Infallible> {
             esc_value: (),
         }),
     )
-    .add_item(Select::new("Foo", ">"))
-    .add_item(Select::new("Check this", false))
-    .add_item(Select::new("Check this", false))
-    .add_item(Select::new("Check this too", false))
+    .add_item(MenuItem::new("Foo", ">"))
+    .add_item(MenuItem::new("Check this", false))
+    .add_item(MenuItem::new("Check this", false))
+    .add_item(MenuItem::new("Check this too", false))
     .build();
 
     let output_settings = OutputSettingsBuilder::new()

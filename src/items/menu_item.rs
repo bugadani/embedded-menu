@@ -48,7 +48,7 @@ impl SelectValue for &'static str {
     }
 }
 
-pub struct Select<T, R, S>
+pub struct MenuItem<T, R, S>
 where
     T: AsRef<str>,
     S: SelectValue,
@@ -59,7 +59,7 @@ where
     line: MenuLine,
 }
 
-impl<T, S> Select<T, (), S>
+impl<T, S> MenuItem<T, (), S>
 where
     T: AsRef<str>,
     S: SelectValue,
@@ -74,13 +74,13 @@ where
     }
 }
 
-impl<T, R, S> Select<T, R, S>
+impl<T, R, S> MenuItem<T, R, S>
 where
     T: AsRef<str>,
     S: SelectValue,
 {
-    pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> Select<T, R2, S> {
-        Select {
+    pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> MenuItem<T, R2, S> {
+        MenuItem {
             convert,
             title_text: self.title_text,
             value: self.value,
@@ -89,14 +89,14 @@ where
     }
 }
 
-impl<T, R, S> Marker for Select<T, R, S>
+impl<T, R, S> Marker for MenuItem<T, R, S>
 where
     T: AsRef<str>,
     S: SelectValue,
 {
 }
 
-impl<T, R, S> MenuListItem<R> for Select<T, R, S>
+impl<T, R, S> MenuListItem<R> for MenuItem<T, R, S>
 where
     T: AsRef<str>,
     S: SelectValue,
@@ -152,7 +152,7 @@ where
     }
 }
 
-impl<T, R, S> View for Select<T, R, S>
+impl<T, R, S> View for MenuItem<T, R, S>
 where
     T: AsRef<str>,
     S: SelectValue,

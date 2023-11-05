@@ -13,6 +13,7 @@ Unreleased
  - Renamed `SelectValue::name` to `marker`
  - Renamed `MenuItem` trait to `MenuListItem`
  - Moved `MenuListItem` and `Marker` to `items`
+ - Renamed `Select` to `MenuItem`
 
 ## Removed
 

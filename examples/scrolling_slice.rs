@@ -6,7 +6,7 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, Select},
+    items::{menu_item::SelectValue, MenuItem},
     Menu, MenuStyle,
 };
 
@@ -44,21 +44,21 @@ fn main() -> Result<(), core::convert::Infallible> {
         .with_animated_selection_indicator(10);
 
     let mut selects1 = [
-        Select::new("Check this 1", false),
-        Select::new("Check this 2", false),
+        MenuItem::new("Check this 1", false),
+        MenuItem::new("Check this 2", false),
     ];
     let mut selects2 = [
-        Select::new("Check this 3", true),
-        Select::new("Check this 4", true),
+        MenuItem::new("Check this 3", true),
+        MenuItem::new("Check this 4", true),
     ];
 
     let mut menu = Menu::with_style("Menu", style)
-        .add_item(Select::new("Foo", ">"))
+        .add_item(MenuItem::new("Foo", ">"))
         .add_items(&mut selects1)
         .add_items(&mut selects2)
-        .add_item(Select::new("Foo", "<-"))
-        .add_item(Select::new("Check this", false))
-        .add_item(Select::new("Check this too", TestEnum::A))
+        .add_item(MenuItem::new("Foo", "<-"))
+        .add_item(MenuItem::new("Check this", false))
+        .add_item(MenuItem::new("Check this too", TestEnum::A))
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

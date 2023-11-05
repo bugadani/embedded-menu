@@ -13,7 +13,7 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::single_touch::SingleTouch,
-    items::{select::SelectValue, Select},
+    items::{menu_item::SelectValue, MenuItem},
     selection_indicator::style::AnimatedTriangle,
     theme::Theme,
     Menu, MenuStyle,
@@ -74,10 +74,10 @@ fn main() -> Result<(), core::convert::Infallible> {
                 max_time: 100,
             }),
     )
-    .add_item(Select::new("Foo", ">"))
-    .add_item(Select::new("Check this", false))
-    .add_item(Select::new("Check this", false))
-    .add_item(Select::new("Check this too", false))
+    .add_item(MenuItem::new("Foo", ">"))
+    .add_item(MenuItem::new("Check this", false))
+    .add_item(MenuItem::new("Check this", false))
+    .add_item(MenuItem::new("Check this too", false))
     .build();
 
     let output_settings = OutputSettingsBuilder::new().scale(4).build();

@@ -12,7 +12,7 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, Select},
+    items::{menu_item::SelectValue, MenuItem},
     Menu, MenuStyle,
 };
 
@@ -52,10 +52,10 @@ fn main() -> Result<(), core::convert::Infallible> {
                 esc_value: (),
             }),
     )
-    .add_item(Select::new("Nav item", "»")) // » is not part of the ASCII font
-    .add_item(Select::new("Checkbox", true))
-    .add_item(Select::new("Other checkbox", false))
-    .add_item(Select::new("Multiple options long", TestEnum::A))
+    .add_item(MenuItem::new("Nav item", "»")) // » is not part of the ASCII font
+    .add_item(MenuItem::new("Checkbox", true))
+    .add_item(MenuItem::new("Other checkbox", false))
+    .add_item(MenuItem::new("Multiple options long", TestEnum::A))
     .build();
 
     let output_settings = OutputSettingsBuilder::new()
