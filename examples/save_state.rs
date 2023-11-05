@@ -4,7 +4,6 @@ use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, Window,
 };
-use embedded_menu::items::SectionTitle;
 use embedded_menu::{
     interaction::simulator::Simulator,
     items::{select::SelectValue, Select},
@@ -93,9 +92,9 @@ fn do_loop(
 
         let mut menu = Menu::with_style(&title, style)
             .add_item(Select::new("Foo", NavEvent).with_value_converter(|_| MenuEvent::Nothing))
-            .add_item(SectionTitle::new("  Dynamic items"))
+            .add_section_title("  Dynamic items")
             .add_items(&mut items)
-            .add_item(SectionTitle::new("  Non-Dynamic"))
+            .add_section_title("  Non-Dynamic")
             .add_item(
                 Select::new("Check this too", data.select).with_value_converter(MenuEvent::Select),
             )

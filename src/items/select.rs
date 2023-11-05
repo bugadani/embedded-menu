@@ -54,9 +54,9 @@ where
     T: AsRef<str>,
     S: SelectValue,
 {
-    pub fn new(title: T, value: S) -> Self {
+    pub fn new(title_text: T, value: S) -> Self {
         Self {
-            title_text: title,
+            title_text,
             value,
             convert: |_| (),
             line: MenuLine::empty(),

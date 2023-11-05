@@ -1,6 +1,7 @@
 use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::{InputAdapterSource, InputState},
+    items::SectionTitle,
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
     Menu, MenuItem, MenuState, MenuStyle, NoItems,
@@ -51,6 +52,13 @@ where
     S: IndicatorStyle,
     C: Theme,
 {
+    pub fn add_section_title<T2: AsRef<str>>(
+        self,
+        title: T2,
+    ) -> MenuBuilder<T, IT, Chain<SectionTitle<T2>>, R, P, S, C> {
+        self.add_item(SectionTitle::new(title))
+    }
+
     pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
         item.set_style(&self.style);
 
@@ -91,6 +99,13 @@ where
     S: IndicatorStyle,
     C: Theme,
 {
+    pub fn add_section_title<T2: AsRef<str>>(
+        self,
+        title: T2,
+    ) -> MenuBuilder<T, IT, Link<SectionTitle<T2>, CE>, R, P, S, C> {
+        self.add_item(SectionTitle::new(title))
+    }
+
     pub fn add_item<I: MenuItem<R>>(
         self,
         mut item: I,
