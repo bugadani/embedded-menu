@@ -13,9 +13,19 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, NavigationItem, Select},
+    items::{select::SelectValue, Select},
     Menu, MenuStyle,
 };
+
+#[derive(Copy, Clone, PartialEq)]
+struct NavEvent;
+
+impl SelectValue for NavEvent {
+    fn name(&self) -> &'static str {
+        // not part of the ASCII font
+        "»"
+    }
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
@@ -53,9 +63,7 @@ fn main() -> Result<(), core::convert::Infallible> {
                 esc_value: (),
             }),
     )
-    .add_item(
-        NavigationItem::new("Nav item", ()).with_marker("»"), // not part of the ASCII font
-    )
+    .add_item(Select::new("Nav item", NavEvent))
     .add_item(Select::new("Checkbox", true))
     .add_item(Select::new("Other checkbox", false))
     .add_item(Select::new("Multiple options long", TestEnum::A))

@@ -13,9 +13,18 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, NavigationItem, Select},
+    items::{select::SelectValue, Select},
     Menu, MenuStyle,
 };
+
+#[derive(Copy, Clone, PartialEq)]
+struct NavEvent;
+
+impl SelectValue for NavEvent {
+    fn name(&self) -> &'static str {
+        ">"
+    }
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
@@ -50,7 +59,7 @@ fn main() -> Result<(), core::convert::Infallible> {
             esc_value: (),
         }),
     )
-    .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
+    .add_item(Select::new("Foo", NavEvent))
     .add_item(Select::new("Check this", false))
     .add_item(Select::new("Check this", false))
     .add_item(Select::new("Check this too", false))

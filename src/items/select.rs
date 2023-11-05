@@ -14,7 +14,9 @@ use crate::{
 };
 
 pub trait SelectValue: Sized + Copy + PartialEq {
-    fn next(&self) -> Self;
+    fn next(&self) -> Self {
+        *self
+    }
     fn name(&self) -> &'static str;
 }
 

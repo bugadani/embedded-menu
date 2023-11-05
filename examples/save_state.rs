@@ -7,10 +7,19 @@ use embedded_graphics_simulator::{
 use embedded_menu::items::SectionTitle;
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, NavigationItem, Select},
+    items::{select::SelectValue, Select},
     selection_indicator::{style::line::Line, AnimatedPosition},
     Menu, MenuState, MenuStyle,
 };
+
+#[derive(Copy, Clone, PartialEq)]
+struct NavEvent;
+
+impl SelectValue for NavEvent {
+    fn name(&self) -> &'static str {
+        ">"
+    }
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
@@ -83,7 +92,7 @@ fn do_loop(
             .collect::<Vec<_>>();
 
         let mut menu = Menu::with_style(&title, style)
-            .add_item(NavigationItem::new("Foo", MenuEvent::Nothing).with_marker(">"))
+            .add_item(Select::new("Foo", NavEvent).with_value_converter(|_| MenuEvent::Nothing))
             .add_item(SectionTitle::new("  Dynamic items"))
             .add_items(&mut items)
             .add_item(SectionTitle::new("  Non-Dynamic"))

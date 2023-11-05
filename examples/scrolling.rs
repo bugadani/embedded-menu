@@ -6,9 +6,24 @@ use embedded_graphics_simulator::{
 };
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, NavigationItem, Select},
+    items::{select::SelectValue, Select},
     Menu, MenuStyle,
 };
+
+#[derive(Copy, Clone, PartialEq)]
+enum NavEvent {
+    One,
+    Two,
+}
+
+impl SelectValue for NavEvent {
+    fn name(&self) -> &'static str {
+        match self {
+            Self::One => ">",
+            Self::Two => "<-",
+        }
+    }
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
@@ -44,7 +59,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .with_animated_selection_indicator(10);
 
     let mut menu = Menu::with_style("Menu", style)
-        .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
+        .add_item(Select::new("Foo", NavEvent::One))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this too", TestEnum::A))
@@ -54,7 +69,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .add_item(Select::new("Check this too", TestEnum::A))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this too", true))
-        .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
+        .add_item(Select::new("Foo", NavEvent::Two))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this too", TestEnum::A))
         .build();

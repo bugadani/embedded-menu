@@ -10,9 +10,18 @@ use embedded_graphics_simulator::{
 use embedded_menu::items::SectionTitle;
 use embedded_menu::{
     interaction::{Action, Interaction, Navigation},
-    items::{select::SelectValue, NavigationItem, Select},
+    items::{select::SelectValue, Select},
     Menu,
 };
+
+#[derive(Copy, Clone, PartialEq)]
+struct NavEvent;
+
+impl SelectValue for NavEvent {
+    fn name(&self) -> &'static str {
+        ">"
+    }
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
@@ -41,7 +50,7 @@ impl SelectValue for TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::new("Menu")
-        .add_item(NavigationItem::new("Foo", 1).with_marker(">"))
+        .add_item(Select::new("Foo", NavEvent).with_value_converter(|_| 1))
         .add_item(Select::new("Check this 1", false).with_value_converter(|b| 20 + b as i32))
         .add_item(SectionTitle::new("===== Section ====="))
         .add_item(Select::new("Check this 2", false).with_value_converter(|b| 30 + b as i32))

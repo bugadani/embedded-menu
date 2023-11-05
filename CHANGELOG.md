@@ -17,6 +17,7 @@ Unreleased
  - Style a menu by using a `Theme` object
  - Replaced the `Invert` selection indicator with `Rectangle`
  - Removed `IndicatorStyle::Color`, `IndicatorStyle::color`, `IndicatorStyle::draw` is now generic over the theme
+ - Removed `NavigationItem`
 
 0.5.4 (2023-10-27)
 ==================
