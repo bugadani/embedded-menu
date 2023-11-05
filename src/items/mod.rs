@@ -2,12 +2,6 @@ pub mod menu_item;
 
 pub use menu_item::MenuItem;
 
-use crate::{
-    interaction::InputAdapterSource,
-    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
-    theme::Theme,
-    MenuStyle,
-};
 use embedded_graphics::{
     draw_target::DrawTarget,
     mono_font::MonoTextStyle,
@@ -29,12 +23,7 @@ pub trait MenuListItem<R>: Marker + View {
 
     fn interact(&mut self) -> R;
 
-    fn set_style<S, IT, P, C>(&mut self, style: &MenuStyle<S, IT, P, R, C>)
-    where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        C: Theme;
+    fn set_style(&mut self, text_style: &MonoTextStyle<'_, BinaryColor>);
 
     /// Returns whether the list item is selectable.
     ///
@@ -60,16 +49,8 @@ pub struct MenuLine {
 }
 
 impl MenuLine {
-    pub fn new<T, S, IT, P, R>(longest_value: &str, style: &MenuStyle<S, IT, P, R, T>) -> Self
-    where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        T: Theme,
-    {
-        let style = style.text_style();
-
-        let value_width = style
+    pub fn new(longest_value: &str, text_style: &MonoTextStyle<'_, BinaryColor>) -> Self {
+        let value_width = text_style
             .measure_string(longest_value, Point::zero(), Baseline::Top)
             .bounding_box
             .size
@@ -78,7 +59,7 @@ impl MenuLine {
         MenuLine {
             bounds: Rectangle::new(
                 Point::zero(),
-                Size::new(1, style.font.character_size.height - 1),
+                Size::new(1, text_style.font.character_size.height - 1),
             ),
             value_width,
         }

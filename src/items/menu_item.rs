@@ -6,13 +6,7 @@ use embedded_graphics::{
 };
 use embedded_layout::View;
 
-use crate::{
-    interaction::InputAdapterSource,
-    items::{Marker, MenuLine, MenuListItem},
-    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
-    theme::Theme,
-    MenuStyle,
-};
+use crate::items::{Marker, MenuLine, MenuListItem};
 
 pub trait SelectValue: Sized + Copy + PartialEq {
     /// Transforms the value on interaction
@@ -135,13 +129,7 @@ where
         SELECTABLE
     }
 
-    fn set_style<IS, IT, P, C>(&mut self, style: &MenuStyle<IS, IT, P, R, C>)
-    where
-        IS: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        C: Theme,
-    {
+    fn set_style(&mut self, text_style: &MonoTextStyle<'_, BinaryColor>) {
         let initial = self.value;
         let mut longest_str = initial.marker();
 
@@ -153,7 +141,7 @@ where
             current = current.next();
         }
 
-        self.line = MenuLine::new(longest_str, style);
+        self.line = MenuLine::new(longest_str, text_style);
     }
 
     fn draw_styled<D>(

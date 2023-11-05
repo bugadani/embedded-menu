@@ -14,7 +14,7 @@ Unreleased
  - Renamed `MenuItem` trait to `MenuListItem`
  - Moved `MenuListItem` and `Marker` to `items`
  - Renamed `Select` to `MenuItem`
- - `MenuListItem::draw_styled` now only takes a font style instead of the whole menu style
+ - `MenuListItem::draw_styled` and `MenuListItem::set_style` now only takes a font style instead of the whole menu style
 
 ## Removed
 

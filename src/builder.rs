@@ -67,7 +67,7 @@ where
         self,
         mut item: I,
     ) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
-        item.set_style(&self.style);
+        item.set_style(&self.style.text_style());
 
         MenuBuilder {
             title: self.title,
@@ -87,7 +87,7 @@ where
         items
             .as_mut()
             .iter_mut()
-            .for_each(|i| i.set_style(&self.style));
+            .for_each(|i| i.set_style(&self.style.text_style()));
 
         MenuBuilder {
             title: self.title,
@@ -121,7 +121,7 @@ where
         self,
         mut item: I,
     ) -> MenuBuilder<T, IT, Link<I, CE>, R, P, S, C> {
-        item.set_style(&self.style);
+        item.set_style(&self.style.text_style());
 
         MenuBuilder {
             title: self.title,
@@ -144,7 +144,7 @@ where
         items
             .as_mut()
             .iter_mut()
-            .for_each(|i| i.set_style(&self.style));
+            .for_each(|i| i.set_style(&self.style.text_style()));
 
         MenuBuilder {
             title: self.title,
