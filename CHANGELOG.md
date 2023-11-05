@@ -18,6 +18,7 @@ Unreleased
  - Replaced the `Invert` selection indicator with `Rectangle`
  - Removed `IndicatorStyle::Color`, `IndicatorStyle::color`, `IndicatorStyle::draw` is now generic over the theme
  - Removed `NavigationItem`
+ - Renamed `SelectValue::name` to `marker`
 
 0.5.4 (2023-10-27)
 ==================

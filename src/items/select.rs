@@ -14,10 +14,13 @@ use crate::{
 };
 
 pub trait SelectValue: Sized + Copy + PartialEq {
+    /// Transforms the value on interaction
     fn next(&self) -> Self {
         *self
     }
-    fn name(&self) -> &'static str;
+
+    /// Returns a displayable marker for the value
+    fn marker(&self) -> &'static str;
 }
 
 impl SelectValue for bool {
@@ -25,7 +28,7 @@ impl SelectValue for bool {
         !*self
     }
 
-    fn name(&self) -> &'static str {
+    fn marker(&self) -> &'static str {
         match *self {
             // true => "O",
             // false => "O\r+\r#", // this only works for certain small fonts, unfortunately
@@ -105,12 +108,12 @@ where
         C: Theme,
     {
         let initial = self.value;
-        let mut longest_str = initial.name();
+        let mut longest_str = initial.marker();
 
         let mut current = initial.next();
         while current != initial {
-            if current.name().len() > longest_str.len() {
-                longest_str = current.name();
+            if current.marker().len() > longest_str.len() {
+                longest_str = current.marker();
             }
             current = current.next();
         }
@@ -130,8 +133,12 @@ where
         DIS: DrawTarget<Color = BinaryColor>,
         C: Theme,
     {
-        self.line
-            .draw_styled(self.title_text.as_ref(), self.value.name(), style, display)
+        self.line.draw_styled(
+            self.title_text.as_ref(),
+            self.value.marker(),
+            style,
+            display,
+        )
     }
 }
 

@@ -17,7 +17,7 @@ enum NavEvent {
 }
 
 impl SelectValue for NavEvent {
-    fn name(&self) -> &'static str {
+    fn marker(&self) -> &'static str {
         match self {
             Self::One => ">",
             Self::Two => "<-",
@@ -41,7 +41,7 @@ impl SelectValue for TestEnum {
         }
     }
 
-    fn name(&self) -> &'static str {
+    fn marker(&self) -> &'static str {
         match self {
             TestEnum::A => "A",
             TestEnum::B => "AB",
