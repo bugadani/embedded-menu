@@ -1,4 +1,5 @@
 use embedded_graphics::{
+    mono_font::MonoTextStyle,
     pixelcolor::BinaryColor,
     prelude::{DrawTarget, Point},
     primitives::Rectangle,
@@ -155,22 +156,18 @@ where
         self.line = MenuLine::new(longest_str, style);
     }
 
-    fn draw_styled<IS, IT, P, DIS, C>(
+    fn draw_styled<D>(
         &self,
-        style: &MenuStyle<IS, IT, P, R, C>,
-        display: &mut DIS,
-    ) -> Result<(), DIS::Error>
+        text_style: &MonoTextStyle<'static, BinaryColor>,
+        display: &mut D,
+    ) -> Result<(), D::Error>
     where
-        IS: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = BinaryColor>,
-        C: Theme,
+        D: DrawTarget<Color = BinaryColor>,
     {
         self.line.draw_styled(
             self.title_text.as_ref(),
             self.value.marker(),
-            style,
+            text_style,
             display,
         )
     }

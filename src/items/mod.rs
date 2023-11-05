@@ -10,6 +10,7 @@ use crate::{
 };
 use embedded_graphics::{
     draw_target::DrawTarget,
+    mono_font::MonoTextStyle,
     pixelcolor::BinaryColor,
     prelude::{Point, Size},
     primitives::Rectangle,
@@ -43,17 +44,13 @@ pub trait MenuListItem<R>: Marker + View {
         true
     }
 
-    fn draw_styled<S, IT, P, D, C>(
+    fn draw_styled<D>(
         &self,
-        style: &MenuStyle<S, IT, P, R, C>,
+        text_style: &MonoTextStyle<'static, BinaryColor>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        D: DrawTarget<Color = BinaryColor>,
-        C: Theme;
+        D: DrawTarget<Color = BinaryColor>;
 }
 
 /// Helper struct to draw a menu line that has a title and some additional marker.
@@ -94,19 +91,15 @@ impl MenuLine {
         }
     }
 
-    pub fn draw_styled<T, D, S, IT, P, R>(
+    pub fn draw_styled<D>(
         &self,
         title: &str,
         value_text: &str,
-        style: &MenuStyle<S, IT, P, R, T>,
+        text_style: &MonoTextStyle<'static, BinaryColor>, // TODO: allow non-mono fonts
         display: &mut D,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        T: Theme,
     {
         let display_area = display.bounding_box();
 
@@ -119,12 +112,10 @@ impl MenuLine {
             Size::new(display_area.size.width, self.bounds.size.height + 1),
         );
 
-        let text_style = style.text_style();
-
         TextBox::with_textbox_style(
             value_text,
             text_bounds,
-            text_style,
+            *text_style,
             TextBoxStyleBuilder::new()
                 .alignment(HorizontalAlignment::Right)
                 .build(),
@@ -132,7 +123,7 @@ impl MenuLine {
         .draw(display)?;
 
         text_bounds.size.width -= self.value_width;
-        TextBox::new(title, text_bounds, text_style).draw(display)?;
+        TextBox::new(title, text_bounds, *text_style).draw(display)?;
 
         Ok(())
     }
