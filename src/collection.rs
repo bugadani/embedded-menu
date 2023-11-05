@@ -1,18 +1,14 @@
 use core::marker::PhantomData;
 
 use embedded_graphics::{
+    mono_font::MonoTextStyle,
     pixelcolor::BinaryColor,
     prelude::{DrawTarget, Point, Size},
     primitives::Rectangle,
 };
 use embedded_layout::{object_chain::ChainElement, prelude::*, view_group::ViewGroup};
 
-use crate::{
-    interaction::InputAdapterSource,
-    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
-    theme::Theme,
-    Marker, MenuItem, MenuStyle,
-};
+use crate::items::{Marker, MenuListItem};
 
 /// Menu-related extensions for object chain elements
 pub trait MenuItemCollection<R> {
@@ -22,23 +18,19 @@ pub trait MenuItemCollection<R> {
     /// Whether an item is selectable. If not, the item will be skipped.
     fn selectable(&self, nth: usize) -> bool;
     fn count(&self) -> usize;
-    fn draw_styled<C, S, IT, P, D>(
+    fn draw_styled<D>(
         &self,
-        style: &MenuStyle<S, IT, P, R, C>,
+        text_style: &MonoTextStyle<'static, BinaryColor>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        D: DrawTarget<Color = BinaryColor>,
-        C: Theme;
+        D: DrawTarget<Color = BinaryColor>;
 }
 
 // Treat any MenuItem impl as a 1-element collection
 impl<I, R> MenuItemCollection<R> for I
 where
-    I: MenuItem<R> + Marker,
+    I: MenuListItem<R> + Marker,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         debug_assert!(nth == 0);
@@ -64,26 +56,22 @@ where
         1
     }
 
-    fn draw_styled<C, S, IT, P, DIS>(
+    fn draw_styled<D>(
         &self,
-        style: &MenuStyle<S, IT, P, R, C>,
-        display: &mut DIS,
-    ) -> Result<(), DIS::Error>
+        text_style: &MonoTextStyle<'static, BinaryColor>,
+        display: &mut D,
+    ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        DIS: DrawTarget<Color = BinaryColor>,
-        C: Theme,
+        D: DrawTarget<Color = BinaryColor>,
     {
-        MenuItem::draw_styled(self, style, display)
+        MenuListItem::draw_styled(self, text_style, display)
     }
 }
 
 pub struct MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     items: C,
     /// Used to keep track of the whole collection's position in case it's empty.
@@ -94,7 +82,7 @@ where
 impl<C, I, R> MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     pub fn new(mut items: C) -> Self {
         let mut offset = 0;
@@ -115,7 +103,7 @@ where
 impl<C, I, R> MenuItemCollection<R> for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     fn bounds_of(&self, nth: usize) -> Rectangle {
         self.items.as_ref()[nth].bounds()
@@ -137,20 +125,16 @@ where
         self.items.as_ref().len()
     }
 
-    fn draw_styled<T, S, IT, P, D>(
+    fn draw_styled<D>(
         &self,
-        style: &MenuStyle<S, IT, P, R, T>,
+        text_style: &MonoTextStyle<'static, BinaryColor>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,
-        T: Theme,
     {
         for item in self.items.as_ref() {
-            item.draw_styled(style, display)?;
+            item.draw_styled(text_style, display)?;
         }
 
         Ok(())
@@ -160,7 +144,7 @@ where
 impl<C, I, R> View for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     fn translate_impl(&mut self, by: Point) {
         self.position += by;
@@ -187,7 +171,7 @@ where
 impl<C, I, R> ViewGroup for MenuItems<C, I, R>
 where
     C: AsRef<[I]> + AsMut<[I]>,
-    I: MenuItem<R>,
+    I: MenuListItem<R>,
 {
     fn len(&self) -> usize {
         self.count()
@@ -226,19 +210,15 @@ where
         self.object.count()
     }
 
-    fn draw_styled<C, S, IT, P, D>(
+    fn draw_styled<D>(
         &self,
-        style: &MenuStyle<S, IT, P, R, C>,
+        text_style: &MonoTextStyle<'static, BinaryColor>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,
-        C: Theme,
     {
-        self.object.draw_styled(style, display)
+        self.object.draw_styled(text_style, display)
     }
 }
 
@@ -287,20 +267,16 @@ where
         self.object.count() + self.parent.count()
     }
 
-    fn draw_styled<C, S, IT, P, D>(
+    fn draw_styled<D>(
         &self,
-        style: &MenuStyle<S, IT, P, R, C>,
+        text_style: &MonoTextStyle<'static, BinaryColor>,
         display: &mut D,
     ) -> Result<(), D::Error>
     where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
         D: DrawTarget<Color = BinaryColor>,
-        C: Theme,
     {
-        self.parent.draw_styled(style, display)?;
-        self.object.draw_styled(style, display)?;
+        self.parent.draw_styled(text_style, display)?;
+        self.object.draw_styled(text_style, display)?;
 
         Ok(())
     }

@@ -1,6 +1,25 @@
 Unreleased
 ==========
 
+## New
+
+ - Added initial color support
+ - Added `MenuBuilder::add_section_title`
+ - Style a menu by using a `Theme` object
+
+## Changed
+
+ - Replaced the `Invert` selection indicator with `Rectangle`
+ - Renamed `SelectValue::name` to `marker`
+ - Renamed `MenuItem` trait to `MenuListItem`
+ - Moved `MenuListItem` and `Marker` to `items`
+ - Renamed `Select` to `MenuItem`
+ - `MenuListItem::draw_styled` and `MenuListItem::set_style` now only takes a font style instead of the whole menu style
+ - Renamed `MenuBuilder::add_item(s)` to `add_menu_item(s)`
+ - Renamed `Menu::new` to `build`
+
+## Removed
+
  - Removed the concept of menu item descriptions. This change removes the following APIs:
    - `MenuItemCollection::details_of`
    - `MenuItem::details`
@@ -13,10 +32,9 @@ Unreleased
  - Removed `MenuItemCollection::title_of`
  - Removed `derive(Menu)`
  - Removed the `R` type parameter from `SectionTitle`
- - Added initial color support
- - Style a menu by using a `Theme` object
- - Replaced the `Invert` selection indicator with `Rectangle`
  - Removed `IndicatorStyle::Color`, `IndicatorStyle::color`, `IndicatorStyle::draw` is now generic over the theme
+ - Removed `NavigationItem`
+ - Removed `SectionTitle`
 
 0.5.4 (2023-10-27)
 ==================

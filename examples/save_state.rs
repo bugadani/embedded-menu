@@ -4,10 +4,9 @@ use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, Window,
 };
-use embedded_menu::items::SectionTitle;
 use embedded_menu::{
     interaction::simulator::Simulator,
-    items::{select::SelectValue, NavigationItem, Select},
+    items::{menu_item::SelectValue, MenuItem},
     selection_indicator::{style::line::Line, AnimatedPosition},
     Menu, MenuState, MenuStyle,
 };
@@ -28,7 +27,7 @@ impl SelectValue for TestEnum {
         }
     }
 
-    fn name(&self) -> &'static str {
+    fn marker(&self) -> &'static str {
         match self {
             TestEnum::A => "A",
             TestEnum::B => "AB",
@@ -70,7 +69,7 @@ fn do_loop(
     for _ in 0..60 {
         let mut items = (0..item_count)
             .map(|i| {
-                Select::new("Changing", data.slice_data[i]).with_value_converter(match i {
+                MenuItem::new("Changing", data.slice_data[i]).with_value_converter(match i {
                     0 => |data| MenuEvent::SliceCheckbox(0, data),
                     1 => |data| MenuEvent::SliceCheckbox(1, data),
                     2 => |data| MenuEvent::SliceCheckbox(2, data),
@@ -83,16 +82,14 @@ fn do_loop(
             .collect::<Vec<_>>();
 
         let mut menu = Menu::with_style(&title, style)
-            .add_item(NavigationItem::new("Foo", MenuEvent::Nothing).with_marker(">"))
-            .add_item(SectionTitle::new("  Dynamic items"))
-            .add_items(&mut items)
-            .add_item(SectionTitle::new("  Non-Dynamic"))
-            .add_item(
-                Select::new("Check this too", data.select).with_value_converter(MenuEvent::Select),
-            )
+            .add_item("Foo", ">", |_| MenuEvent::Nothing)
+            .add_section_title("  Dynamic items")
+            .add_menu_items(&mut items)
+            .add_section_title("  Non-Dynamic")
+            .add_item("Check this too", data.select, MenuEvent::Select)
             .build_with_state(*state);
 
-        let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
 
         menu.update(&display);
         menu.draw(&mut display).unwrap();

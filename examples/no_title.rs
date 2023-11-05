@@ -2,14 +2,12 @@
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
-use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
+use embedded_graphics::{prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::simulator::Simulator,
-    items::{select::SelectValue, NavigationItem, Select},
-    Menu, MenuStyle,
+    interaction::simulator::Simulator, items::menu_item::SelectValue, Menu, MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -28,7 +26,7 @@ impl SelectValue for TestEnum {
         }
     }
 
-    fn name(&self) -> &'static str {
+    fn marker(&self) -> &'static str {
         match self {
             TestEnum::A => "A",
             TestEnum::B => "AB",
@@ -45,10 +43,10 @@ fn main() -> Result<(), core::convert::Infallible> {
             esc_value: (),
         }),
     )
-    .add_item(NavigationItem::new("Foo", ()).with_marker(">"))
-    .add_item(Select::new("Check this 1", false))
-    .add_item(Select::new("Check this 2", false))
-    .add_item(Select::new("Check this 3", TestEnum::A))
+    .add_item("Foo", ">", |_| ())
+    .add_item("Check this 1", false, |_| ())
+    .add_item("Check this 2", false, |_| ())
+    .add_item("Check this 3", TestEnum::A, |_| ())
     .build();
 
     let output_settings = OutputSettingsBuilder::new()
@@ -57,7 +55,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut window = Window::new("Menu demonstration", &output_settings);
 
     'running: loop {
-        let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
         menu.update(&display);
         menu.draw(&mut display).unwrap();
         window.update(&display);

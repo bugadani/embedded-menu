@@ -1,9 +1,10 @@
 use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::{InputAdapterSource, InputState},
+    items::{menu_item::SelectValue, MenuItem, MenuListItem},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
-    Menu, MenuItem, MenuState, MenuStyle, NoItems,
+    Menu, MenuState, MenuStyle, NoItems,
 };
 use core::marker::PhantomData;
 use embedded_layout::{
@@ -34,6 +35,7 @@ where
     P: SelectionIndicatorController,
     C: Theme,
 {
+    /// Creates a new menu builder with the given title and style.
     pub const fn new(title: T, style: MenuStyle<S, IT, P, R, C>) -> Self {
         Self {
             title,
@@ -51,8 +53,38 @@ where
     S: IndicatorStyle,
     C: Theme,
 {
-    pub fn add_item<I: MenuItem<R>>(self, mut item: I) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
-        item.set_style(&self.style);
+    /// Append a non-selectable menu item to the menu with the given title.
+    pub fn add_section_title<T2: AsRef<str>>(
+        self,
+        title: T2,
+    ) -> MenuBuilder<T, IT, Chain<MenuItem<T2, R, (), false>>, R, P, S, C> {
+        self.add_menu_item(
+            MenuItem::new(title, ())
+                .with_value_converter(|_| unreachable!())
+                .selectable::<false>(),
+        )
+    }
+
+    /// Append an interactable menu item to the menu.
+    ///
+    /// The menu item will initially have the given value. Upon interaction, the value will be
+    /// updated according to the value type's `next` method. The menu will use the callback
+    /// passed in the third argument to convert the value to the global return type.
+    pub fn add_item<T2: AsRef<str>, V: SelectValue>(
+        self,
+        title: T2,
+        value: V,
+        converter: fn(V) -> R,
+    ) -> MenuBuilder<T, IT, Chain<MenuItem<T2, R, V, true>>, R, P, S, C> {
+        self.add_menu_item(MenuItem::new(title, value).with_value_converter(converter))
+    }
+
+    /// Append an arbitrary [`MenuListItem`] implementation to the menu.
+    pub fn add_menu_item<I: MenuListItem<R>>(
+        self,
+        mut item: I,
+    ) -> MenuBuilder<T, IT, Chain<I>, R, P, S, C> {
+        item.set_style(&self.style.text_style());
 
         MenuBuilder {
             title: self.title,
@@ -61,18 +93,19 @@ where
         }
     }
 
-    pub fn add_items<I, IC>(
+    /// Append multiple arbitrary [`MenuListItem`] implementations to the menu.
+    pub fn add_menu_items<I, IC>(
         self,
         mut items: IC,
     ) -> MenuBuilder<T, IT, Chain<MenuItems<IC, I, R>>, R, P, S, C>
     where
-        I: MenuItem<R>,
+        I: MenuListItem<R>,
         IC: AsRef<[I]> + AsMut<[I]>,
     {
         items
             .as_mut()
             .iter_mut()
-            .for_each(|i| i.set_style(&self.style));
+            .for_each(|i| i.set_style(&self.style.text_style()));
 
         MenuBuilder {
             title: self.title,
@@ -82,88 +115,78 @@ where
     }
 }
 
-impl<T, IT, CE, R, P, S, C> MenuBuilder<T, IT, Chain<CE>, R, P, S, C>
+impl<T, IT, CE, R, P, S, C> MenuBuilder<T, IT, CE, R, P, S, C>
 where
     T: AsRef<str>,
     IT: InputAdapterSource<R>,
-    Chain<CE>: MenuItemCollection<R>,
-    P: SelectionIndicatorController,
-    S: IndicatorStyle,
-    C: Theme,
-{
-    pub fn add_item<I: MenuItem<R>>(
-        self,
-        mut item: I,
-    ) -> MenuBuilder<T, IT, Link<I, Chain<CE>>, R, P, S, C> {
-        item.set_style(&self.style);
-
-        MenuBuilder {
-            title: self.title,
-            items: self.items.append(item),
-            style: self.style,
-        }
-    }
-
-    pub fn add_items<I, IC>(
-        self,
-        mut items: IC,
-    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I, R>, Chain<CE>>, R, P, S, C>
-    where
-        I: MenuItem<R>,
-        IC: AsRef<[I]> + AsMut<[I]>,
-    {
-        items
-            .as_mut()
-            .iter_mut()
-            .for_each(|i| i.set_style(&self.style));
-
-        MenuBuilder {
-            title: self.title,
-            items: self.items.append(MenuItems::new(items)),
-            style: self.style,
-        }
-    }
-}
-
-impl<T, IT, I, CE, R, P, S, C> MenuBuilder<T, IT, Link<I, CE>, R, P, S, C>
-where
-    T: AsRef<str>,
-    IT: InputAdapterSource<R>,
-    Link<I, CE>: MenuItemCollection<R> + ChainElement,
     CE: MenuItemCollection<R> + ChainElement,
     P: SelectionIndicatorController,
     S: IndicatorStyle,
     C: Theme,
 {
-    pub fn add_item<I2: MenuItem<R>>(
+    /// Append a non-selectable menu item to the menu with the given title.
+    pub fn add_section_title<T2: AsRef<str>>(
         self,
-        mut item: I2,
-    ) -> MenuBuilder<T, IT, Link<I2, Link<I, CE>>, R, P, S, C> {
-        item.set_style(&self.style);
+        title: T2,
+    ) -> MenuBuilder<T, IT, Link<MenuItem<T2, R, (), false>, CE>, R, P, S, C> {
+        self.add_menu_item(
+            MenuItem::new(title, ())
+                .with_value_converter(|_| unreachable!())
+                .selectable::<false>(),
+        )
+    }
+
+    /// Append an interactable menu item to the menu.
+    ///
+    /// The menu item will initially have the given value. Upon interaction, the value will be
+    /// updated according to the value type's `next` method. The menu will use the callback
+    /// passed in the third argument to convert the value to the global return type.
+    pub fn add_item<T2: AsRef<str>, V: SelectValue>(
+        self,
+        title: T2,
+        value: V,
+        converter: fn(V) -> R,
+    ) -> MenuBuilder<T, IT, Link<MenuItem<T2, R, V, true>, CE>, R, P, S, C> {
+        self.add_menu_item(MenuItem::new(title, value).with_value_converter(converter))
+    }
+
+    /// Append an arbitrary [`MenuListItem`] implementation to the menu.
+    pub fn add_menu_item<I: MenuListItem<R>>(
+        self,
+        mut item: I,
+    ) -> MenuBuilder<T, IT, Link<I, CE>, R, P, S, C> {
+        item.set_style(&self.style.text_style());
 
         MenuBuilder {
             title: self.title,
-            items: self.items.append(item),
+            items: Link {
+                parent: self.items,
+                object: item,
+            },
             style: self.style,
         }
     }
 
-    pub fn add_items<I2, IC>(
+    /// Append multiple arbitrary [`MenuListItem`] implementations to the menu.
+    pub fn add_menu_items<I, IC>(
         self,
         mut items: IC,
-    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I2, R>, Link<I, CE>>, R, P, S, C>
+    ) -> MenuBuilder<T, IT, Link<MenuItems<IC, I, R>, CE>, R, P, S, C>
     where
-        I2: MenuItem<R>,
-        IC: AsRef<[I2]> + AsMut<[I2]>,
+        I: MenuListItem<R>,
+        IC: AsRef<[I]> + AsMut<[I]>,
     {
         items
             .as_mut()
             .iter_mut()
-            .for_each(|i| i.set_style(&self.style));
+            .for_each(|i| i.set_style(&self.style.text_style()));
 
         MenuBuilder {
             title: self.title,
-            items: self.items.append(MenuItems::new(items)),
+            items: Link {
+                parent: self.items,
+                object: MenuItems::new(items),
+            },
             style: self.style,
         }
     }
@@ -178,6 +201,7 @@ where
     S: IndicatorStyle,
     C: Theme,
 {
+    /// Builds the menu and initializes it to a default state.
     pub fn build(self) -> Menu<T, IT, VG, R, P, S, C> {
         self.build_with_state(MenuState {
             selected: 0,
@@ -188,6 +212,7 @@ where
         })
     }
 
+    /// Builds the menu, assigning to it the given state.
     pub fn build_with_state(
         mut self,
         mut state: MenuState<IT::InputAdapter, P, S>,

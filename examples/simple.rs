@@ -2,15 +2,14 @@
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
-use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
+use embedded_graphics::{prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
     Window,
 };
-use embedded_menu::items::SectionTitle;
 use embedded_menu::{
     interaction::{Action, Interaction, Navigation},
-    items::{select::SelectValue, NavigationItem, Select},
+    items::menu_item::SelectValue,
     Menu,
 };
 
@@ -30,7 +29,7 @@ impl SelectValue for TestEnum {
         }
     }
 
-    fn name(&self) -> &'static str {
+    fn marker(&self) -> &'static str {
         match self {
             TestEnum::A => "A",
             TestEnum::B => "AB",
@@ -40,12 +39,12 @@ impl SelectValue for TestEnum {
 }
 
 fn main() -> Result<(), core::convert::Infallible> {
-    let mut menu = Menu::new("Menu")
-        .add_item(NavigationItem::new("Foo", 1).with_marker(">"))
-        .add_item(Select::new("Check this 1", false).with_value_converter(|b| 20 + b as i32))
-        .add_item(SectionTitle::new("===== Section ====="))
-        .add_item(Select::new("Check this 2", false).with_value_converter(|b| 30 + b as i32))
-        .add_item(Select::new("Check this 3", TestEnum::A).with_value_converter(|b| 40 + b as i32))
+    let mut menu = Menu::build("Menu")
+        .add_item("Foo", ">", |_| 1)
+        .add_item("Check this 1", false, |b| 20 + b as i32)
+        .add_section_title("===== Section =====")
+        .add_item("Check this 2", false, |b| 30 + b as i32)
+        .add_item("Check this 3", TestEnum::A, |b| 40 + b as i32)
         .build();
 
     let output_settings = OutputSettingsBuilder::new()
@@ -56,7 +55,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut selected_value: i32 = 0;
 
     'running: loop {
-        let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
         menu.update(&display);
         menu.draw(&mut display).unwrap();
         window.update(&display);

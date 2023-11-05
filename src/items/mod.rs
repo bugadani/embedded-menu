@@ -1,19 +1,10 @@
-mod navigation_item;
-mod section_title;
-pub mod select;
+pub mod menu_item;
 
-pub use navigation_item::NavigationItem;
-pub use section_title::SectionTitle;
-pub use select::Select;
+pub use menu_item::MenuItem;
 
-use crate::{
-    interaction::InputAdapterSource,
-    selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
-    theme::Theme,
-    MenuStyle,
-};
 use embedded_graphics::{
     draw_target::DrawTarget,
+    mono_font::MonoTextStyle,
     pixelcolor::BinaryColor,
     prelude::{Point, Size},
     primitives::Rectangle,
@@ -23,22 +14,43 @@ use embedded_graphics::{
 use embedded_layout::prelude::*;
 use embedded_text::{alignment::HorizontalAlignment, style::TextBoxStyleBuilder, TextBox};
 
+/// Marker trait necessary to avoid a "conflicting implementations" error.
+pub trait Marker {}
+
+pub trait MenuListItem<R>: Marker + View {
+    /// Returns the value of the selected item, without interacting with it.
+    fn value_of(&self) -> R;
+
+    fn interact(&mut self) -> R;
+
+    fn set_style(&mut self, text_style: &MonoTextStyle<'_, BinaryColor>);
+
+    /// Returns whether the list item is selectable.
+    ///
+    /// If this returns false, the list item will not be interactable and user navigation will skip
+    /// over it.
+    fn selectable(&self) -> bool {
+        true
+    }
+
+    fn draw_styled<D>(
+        &self,
+        text_style: &MonoTextStyle<'static, BinaryColor>,
+        display: &mut D,
+    ) -> Result<(), D::Error>
+    where
+        D: DrawTarget<Color = BinaryColor>;
+}
+
+/// Helper struct to draw a menu line that has a title and some additional marker.
 pub struct MenuLine {
     bounds: Rectangle,
     value_width: u32,
 }
 
 impl MenuLine {
-    pub fn new<T, S, IT, P, R>(longest_value: &str, style: &MenuStyle<S, IT, P, R, T>) -> Self
-    where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        T: Theme,
-    {
-        let style = style.text_style();
-
-        let value_width = style
+    pub fn new(longest_value: &str, text_style: &MonoTextStyle<'_, BinaryColor>) -> Self {
+        let value_width = text_style
             .measure_string(longest_value, Point::zero(), Baseline::Top)
             .bounding_box
             .size
@@ -47,7 +59,7 @@ impl MenuLine {
         MenuLine {
             bounds: Rectangle::new(
                 Point::zero(),
-                Size::new(1, style.font.character_size.height - 1),
+                Size::new(1, text_style.font.character_size.height - 1),
             ),
             value_width,
         }
@@ -60,19 +72,15 @@ impl MenuLine {
         }
     }
 
-    pub fn draw_styled<T, D, S, IT, P, R>(
+    pub fn draw_styled<D>(
         &self,
         title: &str,
         value_text: &str,
-        style: &MenuStyle<S, IT, P, R, T>,
+        text_style: &MonoTextStyle<'static, BinaryColor>, // TODO: allow non-mono fonts
         display: &mut D,
     ) -> Result<(), D::Error>
     where
         D: DrawTarget<Color = BinaryColor>,
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        T: Theme,
     {
         let display_area = display.bounding_box();
 
@@ -85,12 +93,10 @@ impl MenuLine {
             Size::new(display_area.size.width, self.bounds.size.height + 1),
         );
 
-        let text_style = style.text_style();
-
         TextBox::with_textbox_style(
             value_text,
             text_bounds,
-            text_style,
+            *text_style,
             TextBoxStyleBuilder::new()
                 .alignment(HorizontalAlignment::Right)
                 .build(),
@@ -98,7 +104,7 @@ impl MenuLine {
         .draw(display)?;
 
         text_bounds.size.width -= self.value_width;
-        TextBox::new(title, text_bounds, text_style).draw(display)?;
+        TextBox::new(title, text_bounds, *text_style).draw(display)?;
 
         Ok(())
     }

@@ -15,7 +15,7 @@ use crate::{
     collection::MenuItemCollection,
     interaction::{
         programmed::Programmed, Action, InputAdapter, InputAdapterSource, InputResult, InputState,
-        Interaction,
+        Interaction, Navigation,
     },
     selection_indicator::{
         style::{line::Line as LineIndicator, IndicatorStyle},
@@ -40,37 +40,7 @@ use embedded_text::{
     TextBox,
 };
 
-use crate::interaction::Navigation;
 pub use embedded_menu_macros::SelectValue;
-
-/// Marker trait necessary to avoid a "conflicting implementations" error.
-pub trait Marker {}
-
-pub trait MenuItem<R>: Marker + View {
-    /// Returns the value of the selected item, without interacting with it.
-    fn value_of(&self) -> R;
-    fn interact(&mut self) -> R;
-    fn set_style<S, IT, P, C>(&mut self, style: &MenuStyle<S, IT, P, R, C>)
-    where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        C: Theme;
-    fn selectable(&self) -> bool {
-        true
-    }
-    fn draw_styled<S, IT, P, D, C>(
-        &self,
-        style: &MenuStyle<S, IT, P, R, C>,
-        display: &mut D,
-    ) -> Result<(), D::Error>
-    where
-        S: IndicatorStyle,
-        IT: InputAdapterSource<R>,
-        P: SelectionIndicatorController,
-        D: DrawTarget<Color = BinaryColor>,
-        C: Theme;
-}
 
 #[derive(Copy, Clone, Debug)]
 pub enum DisplayScrollbar {
@@ -302,7 +272,8 @@ where
     S: IndicatorStyle,
     C: Theme,
 {
-    pub fn new(title: T) -> MenuBuilder<T, Programmed, NoItems, R, StaticPosition, S, C>
+    /// Creates a new menu builder with the given title.
+    pub fn build(title: T) -> MenuBuilder<T, Programmed, NoItems, R, StaticPosition, S, C>
     where
         MenuStyle<S, Programmed, StaticPosition, R, C>: Default,
     {
@@ -318,6 +289,7 @@ where
     P: SelectionIndicatorController,
     C: Theme,
 {
+    /// Creates a new menu builder with the given title and style.
     pub fn with_style(
         title: T,
         style: MenuStyle<S, IT, P, R, C>,
