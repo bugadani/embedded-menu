@@ -17,6 +17,7 @@ Unreleased
  - `MenuListItem::draw_styled` and `MenuListItem::set_style` now only takes a font style instead of the whole menu style
  - Renamed `MenuBuilder::add_item(s)` to `add_menu_item(s)`
  - Renamed `Menu::new` to `build`
+ - `SelectValue::marker` can now return values with non-`'static` lifetimes
 
 ## Removed
 

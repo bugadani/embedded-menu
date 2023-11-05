@@ -15,7 +15,7 @@ pub trait SelectValue: Sized + Copy + PartialEq {
     }
 
     /// Returns a displayable marker for the value
-    fn marker(&self) -> &'static str;
+    fn marker(&self) -> &str;
 }
 
 impl SelectValue for bool {
@@ -23,7 +23,7 @@ impl SelectValue for bool {
         !*self
     }
 
-    fn marker(&self) -> &'static str {
+    fn marker(&self) -> &str {
         match *self {
             // true => "O",
             // false => "O\r+\r#", // this only works for certain small fonts, unfortunately
@@ -33,12 +33,12 @@ impl SelectValue for bool {
     }
 }
 
-impl SelectValue for &'static str {
+impl SelectValue for &str {
     fn next(&self) -> Self {
         *self
     }
 
-    fn marker(&self) -> &'static str {
+    fn marker(&self) -> &str {
         *self
     }
 }
@@ -48,7 +48,7 @@ impl SelectValue for () {
         ()
     }
 
-    fn marker(&self) -> &'static str {
+    fn marker(&self) -> &str {
         ""
     }
 }
@@ -131,17 +131,19 @@ where
 
     fn set_style(&mut self, text_style: &MonoTextStyle<'_, BinaryColor>) {
         let initial = self.value;
-        let mut longest_str = initial.marker();
+        let mut longest = initial;
+        let mut longest_len = longest.marker().len();
 
         let mut current = initial.next();
         while current != initial {
-            if current.marker().len() > longest_str.len() {
-                longest_str = current.marker();
+            if current.marker().len() > longest_len {
+                longest = current;
+                longest_len = longest.marker().len();
             }
             current = current.next();
         }
 
-        self.line = MenuLine::new(longest_str, text_style);
+        self.line = MenuLine::new(longest.marker(), text_style);
     }
 
     fn draw_styled<D>(
