@@ -48,7 +48,17 @@ impl SelectValue for &'static str {
     }
 }
 
-pub struct MenuItem<T, R, S>
+impl SelectValue for () {
+    fn next(&self) -> Self {
+        ()
+    }
+
+    fn marker(&self) -> &'static str {
+        ""
+    }
+}
+
+pub struct MenuItem<T, R, S, const SELECTABLE: bool>
 where
     T: AsRef<str>,
     S: SelectValue,
@@ -59,7 +69,7 @@ where
     line: MenuLine,
 }
 
-impl<T, S> MenuItem<T, (), S>
+impl<T, S> MenuItem<T, (), S, true>
 where
     T: AsRef<str>,
     S: SelectValue,
@@ -74,12 +84,12 @@ where
     }
 }
 
-impl<T, R, S> MenuItem<T, R, S>
+impl<T, R, S, const SELECTABLE: bool> MenuItem<T, R, S, SELECTABLE>
 where
     T: AsRef<str>,
     S: SelectValue,
 {
-    pub fn with_value_converter<R2: Copy>(self, convert: fn(S) -> R2) -> MenuItem<T, R2, S> {
+    pub fn with_value_converter<R2>(self, convert: fn(S) -> R2) -> MenuItem<T, R2, S, SELECTABLE> {
         MenuItem {
             convert,
             title_text: self.title_text,
@@ -87,16 +97,26 @@ where
             line: self.line,
         }
     }
+
+    /// Make the item selectable or not
+    pub fn selectable<const SELECTABLE2: bool>(self) -> MenuItem<T, R, S, SELECTABLE2> {
+        MenuItem {
+            convert: self.convert,
+            title_text: self.title_text,
+            value: self.value,
+            line: self.line,
+        }
+    }
 }
 
-impl<T, R, S> Marker for MenuItem<T, R, S>
+impl<T, R, S, const SELECTABLE: bool> Marker for MenuItem<T, R, S, SELECTABLE>
 where
     T: AsRef<str>,
     S: SelectValue,
 {
 }
 
-impl<T, R, S> MenuListItem<R> for MenuItem<T, R, S>
+impl<T, R, S, const SELECTABLE: bool> MenuListItem<R> for MenuItem<T, R, S, SELECTABLE>
 where
     T: AsRef<str>,
     S: SelectValue,
@@ -108,6 +128,10 @@ where
     fn interact(&mut self) -> R {
         self.value = self.value.next();
         (self.convert)(self.value)
+    }
+
+    fn selectable(&self) -> bool {
+        SELECTABLE
     }
 
     fn set_style<IS, IT, P, C>(&mut self, style: &MenuStyle<IS, IT, P, R, C>)
@@ -152,7 +176,7 @@ where
     }
 }
 
-impl<T, R, S> View for MenuItem<T, R, S>
+impl<T, R, S, const SELECTABLE: bool> View for MenuItem<T, R, S, SELECTABLE>
 where
     T: AsRef<str>,
     S: SelectValue,

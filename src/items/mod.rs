@@ -1,8 +1,6 @@
 pub mod menu_item;
-mod section_title;
 
 pub use menu_item::MenuItem;
-pub use section_title::SectionTitle;
 
 use crate::{
     interaction::InputAdapterSource,
@@ -58,6 +56,7 @@ pub trait MenuListItem<R>: Marker + View {
         C: Theme;
 }
 
+/// Helper struct to draw a menu line that has a title and some additional marker.
 pub struct MenuLine {
     bounds: Rectangle,
     value_width: u32,

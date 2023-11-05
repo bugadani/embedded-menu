@@ -31,6 +31,7 @@ Unreleased
  - Removed the `R` type parameter from `SectionTitle`
  - Removed `IndicatorStyle::Color`, `IndicatorStyle::color`, `IndicatorStyle::draw` is now generic over the theme
  - Removed `NavigationItem`
+ - Removed `SectionTitle`
 
 0.5.4 (2023-10-27)
 ==================

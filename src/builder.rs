@@ -1,7 +1,7 @@
 use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::{InputAdapterSource, InputState},
-    items::{MenuListItem, SectionTitle},
+    items::{MenuItem, MenuListItem},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
     Menu, MenuState, MenuStyle, NoItems,
@@ -55,8 +55,12 @@ where
     pub fn add_section_title<T2: AsRef<str>>(
         self,
         title: T2,
-    ) -> MenuBuilder<T, IT, Chain<SectionTitle<T2>>, R, P, S, C> {
-        self.add_item(SectionTitle::new(title))
+    ) -> MenuBuilder<T, IT, Chain<MenuItem<T2, R, (), false>>, R, P, S, C> {
+        self.add_item(
+            MenuItem::new(title, ())
+                .with_value_converter(|_| unreachable!())
+                .selectable::<false>(),
+        )
     }
 
     pub fn add_item<I: MenuListItem<R>>(
@@ -105,8 +109,12 @@ where
     pub fn add_section_title<T2: AsRef<str>>(
         self,
         title: T2,
-    ) -> MenuBuilder<T, IT, Link<SectionTitle<T2>, CE>, R, P, S, C> {
-        self.add_item(SectionTitle::new(title))
+    ) -> MenuBuilder<T, IT, Link<MenuItem<T2, R, (), false>, CE>, R, P, S, C> {
+        self.add_item(
+            MenuItem::new(title, ())
+                .with_value_converter(|_| unreachable!())
+                .selectable::<false>(),
+        )
     }
 
     pub fn add_item<I: MenuListItem<R>>(
