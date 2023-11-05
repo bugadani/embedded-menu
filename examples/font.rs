@@ -11,9 +11,7 @@ use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::simulator::Simulator,
-    items::{menu_item::SelectValue, MenuItem},
-    Menu, MenuStyle,
+    interaction::simulator::Simulator, items::menu_item::SelectValue, Menu, MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -52,10 +50,10 @@ fn main() -> Result<(), core::convert::Infallible> {
                 esc_value: (),
             }),
     )
-    .add_item(MenuItem::new("Nav item", "»")) // » is not part of the ASCII font
-    .add_item(MenuItem::new("Checkbox", true))
-    .add_item(MenuItem::new("Other checkbox", false))
-    .add_item(MenuItem::new("Multiple options long", TestEnum::A))
+    .add_item("Nav item", "»", |_| ()) // » is not part of the ASCII font
+    .add_item("Checkbox", true, |_| ())
+    .add_item("Other checkbox", false, |_| ())
+    .add_item("Multiple options long", TestEnum::A, |_| ())
     .build();
 
     let output_settings = OutputSettingsBuilder::new()

@@ -7,9 +7,7 @@ use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::simulator::Simulator,
-    items::{menu_item::SelectValue, MenuItem},
-    Menu, MenuStyle,
+    interaction::simulator::Simulator, items::menu_item::SelectValue, Menu, MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -45,10 +43,10 @@ fn main() -> Result<(), core::convert::Infallible> {
             esc_value: (),
         }),
     )
-    .add_item(MenuItem::new("Foo", ">"))
-    .add_item(MenuItem::new("Check this 1", false))
-    .add_item(MenuItem::new("Check this 2", false))
-    .add_item(MenuItem::new("Check this 3", TestEnum::A))
+    .add_item("Foo", ">", |_| ())
+    .add_item("Check this 1", false, |_| ())
+    .add_item("Check this 2", false, |_| ())
+    .add_item("Check this 3", TestEnum::A, |_| ())
     .build();
 
     let output_settings = OutputSettingsBuilder::new()

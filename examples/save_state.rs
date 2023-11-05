@@ -82,14 +82,11 @@ fn do_loop(
             .collect::<Vec<_>>();
 
         let mut menu = Menu::with_style(&title, style)
-            .add_menu_item(MenuItem::new("Foo", ">").with_value_converter(|_| MenuEvent::Nothing))
+            .add_item("Foo", ">", |_| MenuEvent::Nothing)
             .add_section_title("  Dynamic items")
             .add_menu_items(&mut items)
             .add_section_title("  Non-Dynamic")
-            .add_menu_item(
-                MenuItem::new("Check this too", data.select)
-                    .with_value_converter(MenuEvent::Select),
-            )
+            .add_item("Check this too", data.select, MenuEvent::Select)
             .build_with_state(*state);
 
         let mut display = SimulatorDisplay::new(Size::new(128, 64));

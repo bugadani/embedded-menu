@@ -12,11 +12,8 @@ use embedded_graphics_simulator::{
     sdl2::Keycode, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::single_touch::SingleTouch,
-    items::{menu_item::SelectValue, MenuItem},
-    selection_indicator::style::AnimatedTriangle,
-    theme::Theme,
-    Menu, MenuStyle,
+    interaction::single_touch::SingleTouch, items::menu_item::SelectValue,
+    selection_indicator::style::AnimatedTriangle, theme::Theme, Menu, MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -74,10 +71,10 @@ fn main() -> Result<(), core::convert::Infallible> {
                 max_time: 100,
             }),
     )
-    .add_menu_item(MenuItem::new("Foo", ">"))
-    .add_menu_item(MenuItem::new("Check this", false))
-    .add_menu_item(MenuItem::new("Check this", false))
-    .add_menu_item(MenuItem::new("Check this too", false))
+    .add_item("Foo", ">", |_| ())
+    .add_item("Check this", false, |_| ())
+    .add_item("Check this", false, |_| ())
+    .add_item("Check this too", false, |_| ())
     .build();
 
     let output_settings = OutputSettingsBuilder::new().scale(4).build();

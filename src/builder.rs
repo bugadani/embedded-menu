@@ -1,7 +1,7 @@
 use crate::{
     collection::{MenuItemCollection, MenuItems},
     interaction::{InputAdapterSource, InputState},
-    items::{MenuItem, MenuListItem},
+    items::{menu_item::SelectValue, MenuItem, MenuListItem},
     selection_indicator::{style::IndicatorStyle, SelectionIndicatorController},
     theme::Theme,
     Menu, MenuState, MenuStyle, NoItems,
@@ -63,6 +63,15 @@ where
         )
     }
 
+    pub fn add_item<T2: AsRef<str>, V: SelectValue>(
+        self,
+        title: T2,
+        value: V,
+        converter: fn(V) -> R,
+    ) -> MenuBuilder<T, IT, Chain<MenuItem<T2, R, V, true>>, R, P, S, C> {
+        self.add_menu_item(MenuItem::new(title, value).with_value_converter(converter))
+    }
+
     pub fn add_menu_item<I: MenuListItem<R>>(
         self,
         mut item: I,
@@ -115,6 +124,15 @@ where
                 .with_value_converter(|_| unreachable!())
                 .selectable::<false>(),
         )
+    }
+
+    pub fn add_item<T2: AsRef<str>, V: SelectValue>(
+        self,
+        title: T2,
+        value: V,
+        converter: fn(V) -> R,
+    ) -> MenuBuilder<T, IT, Link<MenuItem<T2, R, V, true>, CE>, R, P, S, C> {
+        self.add_menu_item(MenuItem::new(title, value).with_value_converter(converter))
     }
 
     pub fn add_menu_item<I: MenuListItem<R>>(

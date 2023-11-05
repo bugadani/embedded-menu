@@ -5,9 +5,7 @@ use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::simulator::Simulator,
-    items::{menu_item::SelectValue, MenuItem},
-    Menu, MenuStyle,
+    interaction::simulator::Simulator, items::menu_item::SelectValue, Menu, MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -44,19 +42,19 @@ fn main() -> Result<(), core::convert::Infallible> {
         .with_animated_selection_indicator(10);
 
     let mut menu = Menu::with_style("Menu", style)
-        .add_menu_item(MenuItem::new("Foo", ">"))
-        .add_menu_item(MenuItem::new("Check this", false))
-        .add_menu_item(MenuItem::new("Check this", false))
-        .add_menu_item(MenuItem::new("Check this too", TestEnum::A))
-        .add_menu_item(MenuItem::new("Check this too", TestEnum::A))
-        .add_menu_item(MenuItem::new("Check this", true))
-        .add_menu_item(MenuItem::new("Check this too", true))
-        .add_menu_item(MenuItem::new("Check this too", TestEnum::A))
-        .add_menu_item(MenuItem::new("Check this", false))
-        .add_menu_item(MenuItem::new("Check this too", true))
-        .add_menu_item(MenuItem::new("Foo", "<-"))
-        .add_menu_item(MenuItem::new("Check this", false))
-        .add_menu_item(MenuItem::new("Check this too", TestEnum::A))
+        .add_item("Foo", ">", |_| ())
+        .add_item("Check this", false, |_| ())
+        .add_item("Check this", false, |_| ())
+        .add_item("Check this too", TestEnum::A, |_| ())
+        .add_item("Check this too", TestEnum::A, |_| ())
+        .add_item("Check this", true, |_| ())
+        .add_item("Check this too", true, |_| ())
+        .add_item("Check this too", TestEnum::A, |_| ())
+        .add_item("Check this", false, |_| ())
+        .add_item("Check this too", true, |_| ())
+        .add_item("Foo", "<-", |_| ())
+        .add_item("Check this", false, |_| ())
+        .add_item("Check this too", TestEnum::A, |_| ())
         .build();
 
     let output_settings = OutputSettingsBuilder::new()

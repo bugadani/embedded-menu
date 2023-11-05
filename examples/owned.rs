@@ -51,8 +51,8 @@ fn main() -> Result<(), core::convert::Infallible> {
             esc_value: (),
         }),
     )
-    .add_item(MenuItem::new("Foo", ">"))
-    .add_items(items)
+    .add_item("Foo", ">", |_| ())
+    .add_menu_items(items)
     .build();
 
     let output_settings = OutputSettingsBuilder::new()

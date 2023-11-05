@@ -12,11 +12,9 @@ use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 use embedded_menu::{
-    interaction::simulator::Simulator,
-    items::{menu_item::SelectValue, MenuItem},
-    selection_indicator::style::rectangle::Rectangle as RectangleIndicator,
-    theme::Theme,
-    Menu, MenuStyle,
+    interaction::simulator::Simulator, items::menu_item::SelectValue,
+    selection_indicator::style::rectangle::Rectangle as RectangleIndicator, theme::Theme, Menu,
+    MenuStyle,
 };
 
 #[derive(Copy, Clone, PartialEq)]
@@ -73,10 +71,10 @@ fn main() -> Result<(), core::convert::Infallible> {
                 esc_value: (),
             }),
     )
-    .add_item(MenuItem::new("Foo", ">"))
-    .add_item(MenuItem::new("Check this", false))
-    .add_item(MenuItem::new("Check this", TestEnum::A))
-    .add_item(MenuItem::new("Check this too", false))
+    .add_item("Foo", ">", |_| ())
+    .add_item("Check this", false, |_| ())
+    .add_item("Check this", TestEnum::A, |_| ())
+    .add_item("Check this too", false, |_| ())
     .build();
 
     let output_settings = OutputSettingsBuilder::new().scale(4).build();
