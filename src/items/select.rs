@@ -38,6 +38,16 @@ impl SelectValue for bool {
     }
 }
 
+impl SelectValue for &'static str {
+    fn next(&self) -> Self {
+        *self
+    }
+
+    fn marker(&self) -> &'static str {
+        *self
+    }
+}
+
 pub struct Select<T, R, S>
 where
     T: AsRef<str>,

@@ -3,7 +3,7 @@
 //! Navigate using only the spacebar. Short(ish) press moves on to the next item, long press activates.
 //! Watch the animated selection indicator fill up. Long press is registered as the bar reaches full width.
 
-use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
+use embedded_graphics::{prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
     Window,
@@ -14,21 +14,6 @@ use embedded_menu::{
     selection_indicator::style::animated_triangle::AnimatedTriangle,
     Menu, MenuStyle,
 };
-
-#[derive(Copy, Clone, PartialEq)]
-enum NavEvent {
-    One,
-    Two,
-}
-
-impl SelectValue for NavEvent {
-    fn marker(&self) -> &'static str {
-        match self {
-            Self::One => ">",
-            Self::Two => "<-",
-        }
-    }
-}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
@@ -66,7 +51,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .with_animated_selection_indicator(10);
 
     let mut menu = Menu::with_style("Menu with even longer title", style)
-        .add_item(Select::new("Foo", NavEvent::One))
+        .add_item(Select::new("Foo", ">"))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this too", TestEnum::A))
@@ -76,7 +61,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .add_item(Select::new("Check this too", TestEnum::A))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this too", true))
-        .add_item(Select::new("Foo", NavEvent::Two))
+        .add_item(Select::new("Foo", "<-"))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this too", TestEnum::A))
         .build();
@@ -88,7 +73,7 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     let mut space_pressed = false;
     'running: loop {
-        let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
         menu.update(&display);
         menu.draw(&mut display).unwrap();
         window.update(&display);

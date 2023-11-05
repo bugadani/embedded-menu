@@ -11,21 +11,6 @@ use embedded_menu::{
 };
 
 #[derive(Copy, Clone, PartialEq)]
-enum NavEvent {
-    One,
-    Two,
-}
-
-impl SelectValue for NavEvent {
-    fn marker(&self) -> &'static str {
-        match self {
-            Self::One => ">",
-            Self::Two => "<-",
-        }
-    }
-}
-
-#[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
     A,
     B,
@@ -59,7 +44,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .with_animated_selection_indicator(10);
 
     let mut menu = Menu::with_style("Menu", style)
-        .add_item(Select::new("Foo", NavEvent::One))
+        .add_item(Select::new("Foo", ">"))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this too", TestEnum::A))
@@ -69,7 +54,7 @@ fn main() -> Result<(), core::convert::Infallible> {
         .add_item(Select::new("Check this too", TestEnum::A))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this too", true))
-        .add_item(Select::new("Foo", NavEvent::Two))
+        .add_item(Select::new("Foo", "<-"))
         .add_item(Select::new("Check this", false))
         .add_item(Select::new("Check this too", TestEnum::A))
         .build();
@@ -80,7 +65,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut window = Window::new("Menu demonstration", &output_settings);
 
     'running: loop {
-        let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
         menu.update(&display);
         menu.draw(&mut display).unwrap();
         window.update(&display);

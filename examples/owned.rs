@@ -2,7 +2,7 @@
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
-use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
+use embedded_graphics::{prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
@@ -11,15 +11,6 @@ use embedded_menu::{
     items::{select::SelectValue, Select},
     Menu, MenuStyle,
 };
-
-#[derive(Copy, Clone, PartialEq)]
-struct NavEvent;
-
-impl SelectValue for NavEvent {
-    fn marker(&self) -> &'static str {
-        ">"
-    }
-}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
@@ -60,7 +51,7 @@ fn main() -> Result<(), core::convert::Infallible> {
             esc_value: (),
         }),
     )
-    .add_item(Select::new("Foo", NavEvent))
+    .add_item(Select::new("Foo", ">"))
     .add_items(items)
     .build();
 
@@ -70,7 +61,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut window = Window::new("Menu demonstration", &output_settings);
 
     'running: loop {
-        let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
         menu.update(&display);
         menu.draw(&mut display).unwrap();
         window.update(&display);

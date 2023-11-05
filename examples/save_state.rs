@@ -12,15 +12,6 @@ use embedded_menu::{
 };
 
 #[derive(Copy, Clone, PartialEq)]
-struct NavEvent;
-
-impl SelectValue for NavEvent {
-    fn marker(&self) -> &'static str {
-        ">"
-    }
-}
-
-#[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
     A,
     B,
@@ -91,7 +82,7 @@ fn do_loop(
             .collect::<Vec<_>>();
 
         let mut menu = Menu::with_style(&title, style)
-            .add_item(Select::new("Foo", NavEvent).with_value_converter(|_| MenuEvent::Nothing))
+            .add_item(Select::new("Foo", ">").with_value_converter(|_| MenuEvent::Nothing))
             .add_section_title("  Dynamic items")
             .add_items(&mut items)
             .add_section_title("  Non-Dynamic")
@@ -100,7 +91,7 @@ fn do_loop(
             )
             .build_with_state(*state);
 
-        let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
 
         menu.update(&display);
         menu.draw(&mut display).unwrap();

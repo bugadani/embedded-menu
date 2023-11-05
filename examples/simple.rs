@@ -2,7 +2,7 @@
 //!
 //! Navigate using up/down arrows, interact using the Enter key
 
-use embedded_graphics::{pixelcolor::BinaryColor, prelude::Size, Drawable};
+use embedded_graphics::{prelude::Size, Drawable};
 use embedded_graphics_simulator::{
     sdl2::Keycode, BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent,
     Window,
@@ -12,15 +12,6 @@ use embedded_menu::{
     items::{select::SelectValue, Select},
     Menu,
 };
-
-#[derive(Copy, Clone, PartialEq)]
-struct NavEvent;
-
-impl SelectValue for NavEvent {
-    fn marker(&self) -> &'static str {
-        ">"
-    }
-}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
@@ -49,7 +40,7 @@ impl SelectValue for TestEnum {
 
 fn main() -> Result<(), core::convert::Infallible> {
     let mut menu = Menu::new("Menu")
-        .add_item(Select::new("Foo", NavEvent).with_value_converter(|_| 1))
+        .add_item(Select::new("Foo", ">").with_value_converter(|_| 1))
         .add_item(Select::new("Check this 1", false).with_value_converter(|b| 20 + b as i32))
         .add_section_title("===== Section =====")
         .add_item(Select::new("Check this 2", false).with_value_converter(|b| 30 + b as i32))
@@ -64,7 +55,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut selected_value: i32 = 0;
 
     'running: loop {
-        let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
         menu.update(&display);
         menu.draw(&mut display).unwrap();
         window.update(&display);

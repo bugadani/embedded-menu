@@ -4,7 +4,6 @@
 
 use embedded_graphics::{
     mono_font::{ascii::FONT_8X13_BOLD, iso_8859_1::FONT_6X10},
-    pixelcolor::BinaryColor,
     prelude::Size,
     Drawable,
 };
@@ -16,16 +15,6 @@ use embedded_menu::{
     items::{select::SelectValue, Select},
     Menu, MenuStyle,
 };
-
-#[derive(Copy, Clone, PartialEq)]
-struct NavEvent;
-
-impl SelectValue for NavEvent {
-    fn marker(&self) -> &'static str {
-        // not part of the ASCII font
-        "»"
-    }
-}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
@@ -63,7 +52,7 @@ fn main() -> Result<(), core::convert::Infallible> {
                 esc_value: (),
             }),
     )
-    .add_item(Select::new("Nav item", NavEvent))
+    .add_item(Select::new("Nav item", "»")) // » is not part of the ASCII font
     .add_item(Select::new("Checkbox", true))
     .add_item(Select::new("Other checkbox", false))
     .add_item(Select::new("Multiple options long", TestEnum::A))
@@ -75,7 +64,7 @@ fn main() -> Result<(), core::convert::Infallible> {
     let mut window = Window::new("Menu demonstration", &output_settings);
 
     'running: loop {
-        let mut display: SimulatorDisplay<BinaryColor> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
         menu.update(&display);
         menu.draw(&mut display).unwrap();
         window.update(&display);

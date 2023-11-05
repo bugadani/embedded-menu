@@ -20,15 +20,6 @@ use embedded_menu::{
 };
 
 #[derive(Copy, Clone, PartialEq)]
-struct NavEvent;
-
-impl SelectValue for NavEvent {
-    fn marker(&self) -> &'static str {
-        ">"
-    }
-}
-
-#[derive(Copy, Clone, PartialEq)]
 pub enum TestEnum {
     A,
     B,
@@ -83,7 +74,7 @@ fn main() -> Result<(), core::convert::Infallible> {
                 max_time: 100,
             }),
     )
-    .add_item(Select::new("Foo", NavEvent))
+    .add_item(Select::new("Foo", ">"))
     .add_item(Select::new("Check this", false))
     .add_item(Select::new("Check this", false))
     .add_item(Select::new("Check this too", false))
@@ -94,7 +85,7 @@ fn main() -> Result<(), core::convert::Infallible> {
 
     let mut space_pressed = false;
     'running: loop {
-        let mut display: SimulatorDisplay<Rgb888> = SimulatorDisplay::new(Size::new(128, 64));
+        let mut display = SimulatorDisplay::new(Size::new(128, 64));
         let mut sub = display.cropped(&Rectangle::new(Point::new(16, 16), Size::new(96, 34)));
         menu.update(&sub);
         menu.draw(&mut sub).unwrap();
