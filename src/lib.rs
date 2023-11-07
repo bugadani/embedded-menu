@@ -31,7 +31,7 @@ use embedded_graphics::{
     mono_font::{ascii::FONT_6X10, MonoFont, MonoTextStyle},
     pixelcolor::BinaryColor,
     prelude::{Dimensions, DrawTargetExt, Point},
-    primitives::{Line, Primitive, PrimitiveStyle},
+    primitives::{Line, Primitive, PrimitiveStyle, Rectangle},
     Drawable,
 };
 use embedded_layout::{layout::linear::LinearLayout, prelude::*, view_group::ViewGroup};
@@ -375,7 +375,7 @@ where
     fn header<'t>(
         &self,
         title: &'t str,
-        display: &impl Dimensions,
+        display_area: Rectangle,
     ) -> Option<impl View + 't + Drawable<Color = C::Color>>
     where
         C: Theme + 't,
@@ -383,8 +383,6 @@ where
         if title.is_empty() {
             return None;
         }
-
-        let display_area = display.bounding_box();
 
         let text_style = self.style.title_style();
         let thin_stroke = PrimitiveStyle::with_stroke(self.style.theme.text_color(), 1);
@@ -423,9 +421,11 @@ where
         let top_distance = self.top_offset();
 
         let list_offset_change = if top_distance > 0 {
-            let display_height = display.bounding_box().size().height as i32;
+            let display_area = display.bounding_box();
+            let display_height = display_area.size().height as i32;
 
-            let header_height = if let Some(header) = self.header(self.title.as_ref(), display) {
+            let header_height = if let Some(header) = self.header(self.title.as_ref(), display_area)
+            {
                 header.size().height as i32
             } else {
                 0
@@ -470,7 +470,7 @@ where
     {
         let display_area = display.bounding_box();
 
-        let header = self.header(self.title.as_ref(), display);
+        let header = self.header(self.title.as_ref(), display_area);
         let content_area = if let Some(header) = header {
             header.draw(display)?;
             display_area.resized_height(
