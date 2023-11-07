@@ -170,7 +170,7 @@ where
         selected_height: i32,
         selected_offset: i32,
         input_state: InputState,
-        display: &mut D,
+        mut display: D,
         items: &impl MenuItemCollection<R>,
         style: &MenuStyle<S, IT, P, R, C>,
         menu_state: &MenuState<IT::InputAdapter, P, S>,
