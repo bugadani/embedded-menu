@@ -33,7 +33,7 @@ impl SelectValue for bool {
 
 impl SelectValue for &str {
     fn marker(&self) -> &str {
-        *self
+        self
     }
 }
 
