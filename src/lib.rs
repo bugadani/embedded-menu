@@ -522,9 +522,7 @@ where
             selected_menuitem_height,
             self.top_offset(),
             self.state.last_input_state,
-            &mut display
-                .clipped(&menu_display_area)
-                .cropped(&menu_display_area),
+            display.cropped(&menu_display_area),
             &self.items,
             &self.style,
             &self.state,
