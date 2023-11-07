@@ -23,19 +23,19 @@ fn main() -> Result<(), core::convert::Infallible> {
         })
         .with_animated_selection_indicator(10);
 
-    let mut selects1 = [
+    let selects1 = [
         MenuItem::new("Check this 1", false),
         MenuItem::new("Check this 2", false),
     ];
-    let mut selects2 = [
+    let selects2 = [
         MenuItem::new("Check this 3", true),
         MenuItem::new("Check this 4", true),
     ];
 
     let mut menu = Menu::with_style("Menu", style)
         .add_item("Foo", ">", |_| ())
-        .add_menu_items(&mut selects1)
-        .add_menu_items(&mut selects2)
+        .add_menu_items(selects1)
+        .add_menu_items(selects2)
         .add_item("Foo", "<-", |_| ())
         .add_item("Check this", false, |_| ())
         .add_item("Check this too", TestEnum::A, |_| ())
