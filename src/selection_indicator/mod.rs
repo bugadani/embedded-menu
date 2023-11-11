@@ -227,8 +227,8 @@ where
         items.draw_styled(
             &style.text_style(),
             &mut inverting
-                .cropped(&content_area)
-                .translated(Point::new(0, -menu_state.list_offset)),
+                .clipped(&content_area)
+                .translated(content_area.top_left - Point::new(0, menu_state.list_offset)),
         )
     }
 }
