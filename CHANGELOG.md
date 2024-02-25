@@ -1,3 +1,8 @@
+0.6.1 (2024-02-25)
+==================
+
+Point release because I forgot to release the macros first.
+
 0.6.0 (2024-02-25)
 ==================
 
