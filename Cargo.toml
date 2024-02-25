@@ -1,6 +1,6 @@
 [package]
 name = "embedded-menu"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Dániel Buga <bugadani@gmail.com>"]
 edition = "2021"
 description = "Simple interactive menu for embedded devices"
@@ -15,7 +15,7 @@ embedded-graphics = "0.8.0"
 embedded-layout = "0.4.0"
 embedded-text = "0.7"
 
-embedded-menu-macros = { version = "0.3.0", path = "embedded-menu-macros" }
+embedded-menu-macros = { version = "0.4.0", path = "embedded-menu-macros" }
 
 embedded-graphics-simulator = { version = "0.6.0", optional = true }
 
