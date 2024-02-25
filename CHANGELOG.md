@@ -1,5 +1,5 @@
-Unreleased
-==========
+0.6.0 (2024-02-25)
+==================
 
 ## New
 
@@ -9,6 +9,7 @@ Unreleased
 
 ## Changed
 
+ - **breaking** Changed MSRV to 1.71.1
  - Replaced the `Invert` selection indicator with `Rectangle`
  - Renamed `SelectValue::name` to `marker`
  - Renamed `MenuItem` trait to `MenuListItem`
