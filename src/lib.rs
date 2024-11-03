@@ -5,10 +5,9 @@ pub mod builder;
 pub mod collection;
 pub mod interaction;
 pub mod items;
+pub mod margin;
 pub mod selection_indicator;
 pub mod theme;
-
-mod margin;
 
 use crate::{
     builder::MenuBuilder,
