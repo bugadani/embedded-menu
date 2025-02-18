@@ -18,7 +18,7 @@ pub use border::Border;
 pub use line::Line;
 pub use triangle::Triangle;
 
-pub fn interpolate(value: u32, x_min: u32, x_max: u32, y_min: u32, y_max: u32) -> u32 {
+pub const fn interpolate(value: u32, x_min: u32, x_max: u32, y_min: u32, y_max: u32) -> u32 {
     let x_range = x_max - x_min;
     let y_range = y_max - y_min;
 
