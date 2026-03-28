@@ -48,9 +48,9 @@ where
     T: AsRef<str>,
     S: SelectValue,
 {
-    title_text: T,
+    pub title_text: T,
     convert: fn(S) -> R,
-    value: S,
+    pub value: S,
     line: MenuLine,
 }
 

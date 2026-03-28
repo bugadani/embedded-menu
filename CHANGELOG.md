@@ -4,6 +4,7 @@ Unreleased
  - Some functions are now `const`
  - `#[display_as]` can now be placed on the enum type that derives `SelectValue`
  - Added `InputResult::None`
+ - Made `MenuItem::{title, value}` public
 
 0.6.1 (2024-02-25)
 ==================
