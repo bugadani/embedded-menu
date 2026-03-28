@@ -3,6 +3,7 @@ Unreleased
 
  - Some functions are now `const`
  - `#[display_as]` can now be placed on the enum type that derives `SelectValue`
+ - Added `InputResult::None`
 
 0.6.1 (2024-02-25)
 ==================

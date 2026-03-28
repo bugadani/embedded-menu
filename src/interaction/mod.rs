@@ -141,7 +141,11 @@ impl Navigation {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum InputResult<R> {
+    /// No interaction occurred
+    None,
+    /// The input state was updated
     StateUpdate(InputState),
+    /// An interaction occurred
     Interaction(Interaction<R>),
 }
 

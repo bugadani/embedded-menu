@@ -314,6 +314,7 @@ where
             .handle_input(&mut self.state.interaction_state, input);
 
         self.state.last_input_state = match input {
+            InputResult::None => self.state.last_input_state, // No change
             InputResult::Interaction(_) => InputState::Idle,
             InputResult::StateUpdate(state) => state,
         };
