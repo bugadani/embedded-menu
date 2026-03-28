@@ -65,7 +65,7 @@ impl MenuLine {
         }
     }
 
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         MenuLine {
             bounds: Rectangle::new(Point::zero(), Size::new(1, 0)),
             value_width: 0,

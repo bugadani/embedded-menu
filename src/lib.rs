@@ -1,5 +1,5 @@
 #![cfg_attr(not(test), no_std)]
-
+#![deny(clippy::missing_const_for_fn)]
 pub mod adapters;
 pub mod builder;
 pub mod collection;
@@ -158,7 +158,7 @@ where
         }
     }
 
-    pub fn text_style(&self) -> MonoTextStyle<'static, BinaryColor> {
+    pub const fn text_style(&self) -> MonoTextStyle<'static, BinaryColor> {
         MonoTextStyle::new(self.font, BinaryColor::On)
     }
 
@@ -289,7 +289,7 @@ where
     C: Theme,
 {
     /// Creates a new menu builder with the given title and style.
-    pub fn with_style(
+    pub const fn with_style(
         title: T,
         style: MenuStyle<S, IT, P, R, C>,
     ) -> MenuBuilder<T, IT, NoItems, R, P, S, C> {
@@ -342,7 +342,7 @@ where
         }
     }
 
-    pub fn state(&self) -> MenuState<IT::InputAdapter, P, S> {
+    pub const fn state(&self) -> MenuState<IT::InputAdapter, P, S> {
         self.state
     }
 }

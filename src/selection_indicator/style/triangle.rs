@@ -89,7 +89,7 @@ impl Arrow {
         Self { body, tip }
     }
 
-    pub fn tip_width(bounds: Rectangle) -> i32 {
+    pub const fn tip_width(bounds: Rectangle) -> i32 {
         bounds.size.height as i32 - 1 - SHRINK
     }
 

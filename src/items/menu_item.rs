@@ -59,7 +59,7 @@ where
     T: AsRef<str>,
     S: SelectValue,
 {
-    pub fn new(title_text: T, value: S) -> Self {
+    pub const fn new(title_text: T, value: S) -> Self {
         Self {
             title_text,
             value,
