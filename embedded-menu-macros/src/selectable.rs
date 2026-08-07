@@ -25,7 +25,10 @@ pub fn expand_next_fn(input: &DataEnum) -> syn::Result<TokenStream> {
     })
 }
 
-pub fn expand_name_fn(input: &DataEnum, top_level_name: &Option<String>) -> syn::Result<TokenStream> {
+pub fn expand_name_fn(
+    input: &DataEnum,
+    top_level_name: &Option<String>,
+) -> syn::Result<TokenStream> {
     let variants = input
         .variants
         .iter()
@@ -45,7 +48,9 @@ pub fn expand_name_fn(input: &DataEnum, top_level_name: &Option<String>) -> syn:
             }
 
             let path = &v.ident;
-            let name_str = manual_name.or(top_level_name.clone()).unwrap_or_else(|| v.ident.to_string());
+            let name_str = manual_name
+                .or(top_level_name.clone())
+                .unwrap_or_else(|| v.ident.to_string());
 
             Ok(quote! {
                 Self::#path => #name_str
@@ -68,11 +73,12 @@ pub fn expand_select_value(input: DeriveInput) -> syn::Result<TokenStream> {
         .attrs
         .iter()
         .find(|attr| attr.meta.path().is_ident("display_as"))
-        .map(syn::Attribute::parse_args::<LitStr>) {
-            None => None,
-            Some(Ok(top_level_name)) => Some(top_level_name.value()),
-            Some(Err(err)) => return Err(err),
-        };
+        .map(syn::Attribute::parse_args::<LitStr>)
+    {
+        None => None,
+        Some(Ok(top_level_name)) => Some(top_level_name.value()),
+        Some(Err(err)) => return Err(err),
+    };
 
     let enum_name = input.ident;
 

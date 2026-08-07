@@ -73,9 +73,10 @@ fn do_loop(
 
         let mut display = SimulatorDisplay::new(Size::new(128, 64));
 
-        menu.update(&display);
-        menu.draw(&mut display).unwrap();
-        window.update(&display);
+        if menu.update(&display) {
+            menu.draw(&mut display).unwrap();
+            window.update(&display);
+        }
 
         for event in window.events() {
             if let Some(change) = menu.interact(event) {

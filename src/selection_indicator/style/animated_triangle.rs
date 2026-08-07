@@ -22,6 +22,22 @@ impl AnimatedTriangle {
     pub const fn new(period: i32) -> Self {
         Self { period }
     }
+
+    /// The arrow's horizontal offset, before scaling to the shape's width.
+    ///
+    /// The arrow rests at 0 for the majority of the period.
+    const fn offset(&self, current: i32) -> i32 {
+        let half_move = self.period / 5;
+        let rest = 3 * half_move;
+
+        if current < rest {
+            0
+        } else if current < rest + half_move {
+            current - rest
+        } else {
+            self.period - current
+        }
+    }
 }
 
 #[derive(Default, Clone, Copy)]
@@ -37,12 +53,16 @@ impl IndicatorStyle for AnimatedTriangle {
         state.current = 0;
     }
 
-    fn update(&self, state: &mut Self::State, input_state: InputState) {
+    fn update(&self, state: &mut Self::State, input_state: InputState) -> bool {
+        let previous = state.current;
+
         state.current = if input_state == InputState::Idle {
             (state.current + 1) % self.period
         } else {
             0
         };
+
+        self.offset(previous) != self.offset(state.current)
     }
 
     fn padding(&self, _state: &Self::State, height: i32) -> Insets {
@@ -58,17 +78,7 @@ impl IndicatorStyle for AnimatedTriangle {
         let max_offset = Self::Shape::tip_width(bounds);
 
         let half_move = self.period / 5;
-        let rest = 3 * half_move;
-
-        let offset = if state.current < rest {
-            0
-        } else if state.current < rest + half_move {
-            state.current - rest
-        } else {
-            self.period - state.current
-        };
-
-        let offset = offset * max_offset / half_move;
+        let offset = self.offset(state.current) * max_offset / half_move;
 
         Arrow::new(bounds, fill_width).translate(Point::new(-offset, 0))
     }

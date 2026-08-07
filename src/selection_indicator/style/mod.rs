@@ -37,7 +37,15 @@ pub trait IndicatorStyle: Copy {
     type State: Default + Copy;
 
     fn on_target_changed(&self, _state: &mut Self::State) {}
-    fn update(&self, _state: &mut Self::State, _input_state: InputState) {}
+
+    /// Advances the animation by a single frame.
+    ///
+    /// Returns whether the appearance of the indicator changed, i.e. whether the menu needs to
+    /// be redrawn. Styles that animate should only report the frames on which what they render
+    /// actually differs from the previous frame.
+    fn update(&self, _state: &mut Self::State, _input_state: InputState) -> bool {
+        false
+    }
     fn padding(&self, state: &Self::State, height: i32) -> Insets;
     fn shape(&self, state: &Self::State, bounds: Rectangle, fill_width: u32) -> Self::Shape;
     fn draw<T, D>(

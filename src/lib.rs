@@ -263,6 +263,7 @@ where
     items: VG,
     style: MenuStyle<S, IT, P, R, C>,
     state: MenuState<IT::InputAdapter, P, S>,
+    dirty: bool,
 }
 
 impl<T, R, S, C> Menu<T, Programmed, NoItems, R, StaticPosition, S, C>
@@ -313,11 +314,18 @@ where
             .adapter()
             .handle_input(&mut self.state.interaction_state, input);
 
-        self.state.last_input_state = match input {
+        let last_input_state = match input {
             InputResult::None => self.state.last_input_state, // No change
             InputResult::Interaction(_) => InputState::Idle,
             InputResult::StateUpdate(state) => state,
         };
+
+        // The input state drives how the selection indicator is filled in, so a change to it is
+        // visible.
+        if last_input_state != self.state.last_input_state {
+            self.dirty = true;
+        }
+        self.state.last_input_state = last_input_state;
 
         match input {
             InputResult::Interaction(interaction) => match interaction {
@@ -330,10 +338,13 @@ where
                     if new_selected != self.state.selected {
                         self.state
                             .set_selected_item(new_selected, &self.items, &self.style);
+                        self.dirty = true;
                     }
                     None
                 }
                 Interaction::Action(Action::Select) => {
+                    // We can't tell whether the item's appearance changed, so assume it did.
+                    self.dirty = true;
                     let value = self.items.interact_with(self.state.selected);
                     Some(value)
                 }
@@ -411,9 +422,27 @@ where
         self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset
     }
 
-    pub fn update(&mut self, display: &impl Dimensions) {
+    /// Advances animations by a single frame, and returns whether the menu needs to be redrawn.
+    ///
+    /// Call this once per frame, and only draw the menu if it returns `true`:
+    ///
+    /// ```ignore
+    /// if menu.update(&display) {
+    ///     menu.draw(&mut display)?;
+    ///     display.flush()?;
+    /// }
+    /// ```
+    ///
+    /// Each call reports the changes since the previous one, so ignoring a `true` means losing
+    /// that frame.
+    ///
+    /// The returned value only accounts for state the menu owns. If you change anything else
+    /// that the menu displays - the value of a menu item, or the contents of an item collection
+    /// you own - draw the menu yourself; it has no way to observe those changes.
+    pub fn update(&mut self, display: &impl Dimensions) -> bool {
         // animations
-        self.style
+        let animation_changed = self
+            .style
             .indicator
             .update(self.state.last_input_state, &mut self.state.indicator_state);
 
@@ -449,6 +478,12 @@ where
 
         // Move menu list.
         self.state.list_offset += list_offset_change;
+
+        if animation_changed || list_offset_change != 0 {
+            self.dirty = true;
+        }
+
+        core::mem::take(&mut self.dirty)
     }
 }
 
@@ -529,5 +564,98 @@ where
         )?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use embedded_graphics::{mock_display::MockDisplay, pixelcolor::BinaryColor, Drawable};
+
+    use crate::{
+        interaction::{Action, Interaction, Navigation},
+        selection_indicator::style::AnimatedTriangle,
+        Menu, MenuStyle,
+    };
+
+    /// The menu is wider and taller than a `MockDisplay`, and freely overdraws.
+    fn test_display() -> MockDisplay<BinaryColor> {
+        let mut display = MockDisplay::new();
+        display.set_allow_overdraw(true);
+        display.set_allow_out_of_bounds_drawing(true);
+        display
+    }
+
+    #[test]
+    fn animated_position_settles_and_input_wakes_it_up() {
+        let style = MenuStyle::new(BinaryColor::On).with_animated_selection_indicator(10);
+        let mut menu = Menu::with_style("Title", style)
+            .add_item("Item 1", "", |_| ())
+            .add_item("Item 2", "", |_| ())
+            .add_item("Item 3", "", |_| ())
+            .build();
+
+        let mut display = test_display();
+
+        // A menu that has never been drawn must be drawn.
+        assert!(menu.update(&display));
+        menu.draw(&mut display).unwrap();
+        assert!(!menu.update(&display));
+
+        menu.interact(Interaction::Navigation(Navigation::Next));
+
+        let mut frames = 0;
+        while menu.update(&display) {
+            menu.draw(&mut display).unwrap();
+            frames += 1;
+            assert!(frames < 100, "the indicator animation did not settle");
+        }
+        assert!(frames > 1, "the indicator did not animate");
+    }
+
+    #[test]
+    fn selecting_an_item_requires_a_redraw() {
+        let style = MenuStyle::new(BinaryColor::On);
+        let mut menu = Menu::with_style("Title", style)
+            .add_item("Item 1", false, |_| ())
+            .add_item("Item 2", false, |_| ())
+            .build();
+
+        let mut display = test_display();
+        assert!(menu.update(&display));
+        menu.draw(&mut display).unwrap();
+        assert!(!menu.update(&display));
+
+        menu.interact(Interaction::Action(Action::Select));
+        assert!(menu.update(&display));
+    }
+
+    #[test]
+    fn animated_triangle_only_redraws_while_the_arrow_moves() {
+        let period = 10;
+        let style =
+            MenuStyle::new(BinaryColor::On).with_selection_indicator(AnimatedTriangle::new(period));
+        let mut menu = Menu::with_style("Title", style)
+            .add_item("Item 1", "", |_| ())
+            .add_item("Item 2", "", |_| ())
+            .build();
+
+        let mut display = test_display();
+        while menu.update(&display) {
+            menu.draw(&mut display).unwrap();
+        }
+
+        // The arrow rests at its resting position for 3/5 of every period, and only the frames
+        // where it actually moves need to be drawn.
+        let redraws = (0..period)
+            .filter(|_| {
+                let redraw = menu.update(&display);
+                if redraw {
+                    menu.draw(&mut display).unwrap();
+                }
+                redraw
+            })
+            .count();
+
+        assert_eq!(redraws, 4);
     }
 }

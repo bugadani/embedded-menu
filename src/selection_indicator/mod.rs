@@ -21,7 +21,12 @@ pub trait SelectionIndicatorController: Copy {
     fn update_target(&self, state: &mut Self::State, y: i32);
     fn jump_to_target(&self, state: &mut Self::State);
     fn offset(&self, state: &Self::State) -> i32;
-    fn update(&self, state: &mut Self::State);
+
+    /// Advances the animation by a single frame.
+    ///
+    /// Returns whether the indicator's position changed, i.e. whether the menu needs to be
+    /// redrawn.
+    fn update(&self, state: &mut Self::State) -> bool;
 }
 
 #[derive(Clone, Copy, Default)]
@@ -45,7 +50,9 @@ impl SelectionIndicatorController for StaticPosition {
         state.y_offset
     }
 
-    fn update(&self, _state: &mut Self::State) {}
+    fn update(&self, _state: &mut Self::State) -> bool {
+        false
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -80,7 +87,7 @@ impl SelectionIndicatorController for AnimatedPosition {
         state.current
     }
 
-    fn update(&self, state: &mut Self::State) {
+    fn update(&self, state: &mut Self::State) -> bool {
         let rounding = if state.current < state.target {
             self.frames - 1
         } else {
@@ -88,7 +95,10 @@ impl SelectionIndicatorController for AnimatedPosition {
         };
 
         let distance = state.target - state.current;
-        state.current += (distance + rounding) / self.frames;
+        let step = (distance + rounding) / self.frames;
+        state.current += step;
+
+        step != 0
     }
 }
 
@@ -155,9 +165,13 @@ where
         self.controller.jump_to_target(&mut state.position);
     }
 
-    pub fn update(&self, input_state: InputState, state: &mut State<P, S>) {
-        self.controller.update(&mut state.position);
-        self.style.update(&mut state.state, input_state);
+    /// Advances the animations by a single frame, returning whether anything moved.
+    pub fn update(&self, input_state: InputState, state: &mut State<P, S>) -> bool {
+        // Both updates must run, so avoid short-circuiting.
+        let position_changed = self.controller.update(&mut state.position);
+        let style_changed = self.style.update(&mut state.state, input_state);
+
+        position_changed || style_changed
     }
 
     pub fn item_height(&self, menuitem_height: i32, state: &State<P, S>) -> i32 {

@@ -41,9 +41,10 @@ fn main() -> Result<(), core::convert::Infallible> {
     'running: loop {
         let mut display = SimulatorDisplay::new(Size::new(128, 64));
         let mut sub = display.cropped(&Rectangle::new(Point::new(16, 16), Size::new(96, 34)));
-        menu.update(&sub);
-        menu.draw(&mut sub).unwrap();
-        window.update(&display);
+        if menu.update(&sub) {
+            menu.draw(&mut sub).unwrap();
+            window.update(&display);
+        }
 
         for event in window.events() {
             menu.interact(event);

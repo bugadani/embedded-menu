@@ -5,6 +5,11 @@ Unreleased
  - `#[display_as]` can now be placed on the enum type that derives `SelectValue`
  - Added `InputResult::None`
  - Made `MenuItem::{title, value}` public
+ - `Menu::update` now returns whether the menu needs to be redrawn, so unchanged frames can be
+   skipped. The returned value only accounts for state the menu owns; draw the menu yourself if
+   you change a menu item's value or the contents of an item collection you own.
+ - **breaking** `SelectionIndicatorController::update` and `IndicatorStyle::update` now return
+   whether the indicator's appearance changed
 
 0.6.1 (2024-02-25)
 ==================
