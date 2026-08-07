@@ -228,7 +228,11 @@ where
         self.interaction_state = Default::default();
     }
 
-    fn set_selected_item<ITS, R, T>(
+    /// Points the selection indicator at `selected`, without restarting the indicator's animation.
+    ///
+    /// Use this when the selection itself doesn't change, but the items may have been laid out
+    /// anew, e.g. when the menu is rebuilt from an existing state.
+    fn relayout<ITS, R, T>(
         &mut self,
         selected: usize,
         items: &impl MenuItemCollection<R>,
@@ -250,7 +254,22 @@ where
 
         style
             .indicator
-            .change_selected_item(selected_offset, &mut self.indicator_state);
+            .update_target(selected_offset, &mut self.indicator_state);
+    }
+
+    fn set_selected_item<ITS, R, T>(
+        &mut self,
+        selected: usize,
+        items: &impl MenuItemCollection<R>,
+        style: &MenuStyle<S, ITS, P, R, T>,
+    ) where
+        ITS: InputAdapterSource<R, InputAdapter = IT>,
+        T: Theme,
+    {
+        self.relayout(selected, items, style);
+        style
+            .indicator
+            .on_target_changed(&mut self.indicator_state);
     }
 }
 
@@ -710,5 +729,42 @@ mod test {
             .count();
 
         assert_eq!(redraws, 4);
+    }
+
+    #[test]
+    fn rebuilding_a_menu_does_not_restart_the_indicator_animation() {
+        let period = 10;
+        let new_menu = || {
+            let style = MenuStyle::new(BinaryColor::On)
+                .with_selection_indicator(AnimatedTriangle::new(period));
+            Menu::with_style("Title", style)
+                .add_item("Item 1", "", |_| ())
+                .add_item("Item 2", "", |_| ())
+        };
+
+        let mut menu = new_menu().build();
+        let mut display = test_display();
+
+        // Rebuild the menu more often than the arrow's resting phase (3/5 of the period) lasts.
+        // The animation must still reach the moving phase.
+        let rebuild_period = 3 * period / 5 - 1;
+
+        let mut moved = 0;
+        for frame in 0..3 * period {
+            let rebuilt = frame % rebuild_period == 0;
+            if rebuilt {
+                menu = new_menu().build_with_state(menu.state());
+            }
+
+            if menu.update(&display) {
+                menu.draw(&mut display).unwrap();
+                // A rebuilt menu is always redrawn, so those frames say nothing about the arrow.
+                if !rebuilt {
+                    moved += 1;
+                }
+            }
+        }
+
+        assert!(moved > 0, "the arrow did not animate");
     }
 }

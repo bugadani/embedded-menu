@@ -203,16 +203,13 @@ where
 {
     /// Builds the menu and initializes it to a default state.
     pub fn build(self) -> Menu<T, IT, VG, R, P, S, C> {
-        let mut menu = self.build_with_state(MenuState {
+        self.build_with_state(MenuState {
             selected: 0,
             list_offset: 0,
             interaction_state: Default::default(),
             indicator_state: Default::default(),
             last_input_state: InputState::Idle,
-        });
-        // A newly built menu has never been drawn.
-        menu.dirty = true;
-        menu
+        })
     }
 
     /// Builds the menu, assigning to it the given state.
@@ -225,7 +222,7 @@ where
 
         LinearLayout::vertical(EmptyViewGroup).arrange_view_group(&mut self.items);
 
-        state.set_selected_item(state.selected, &self.items, &self.style);
+        state.relayout(state.selected, &self.items, &self.style);
         if max_idx < state.selected {
             self.style
                 .indicator
@@ -238,7 +235,9 @@ where
             title: self.title,
             items: self.items,
             style: self.style,
-            dirty: false,
+            // A freshly built menu has never been drawn, and its items may differ from those of
+            // the menu the state came from.
+            dirty: true,
         }
     }
 }

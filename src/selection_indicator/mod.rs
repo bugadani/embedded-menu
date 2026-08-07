@@ -162,8 +162,13 @@ where
         self.controller.offset(&state.position)
     }
 
-    pub fn change_selected_item(&self, pos: i32, state: &mut State<P, S>) {
+    /// Moves the indicator to a new position, without restarting the style's animation.
+    pub fn update_target(&self, pos: i32, state: &mut State<P, S>) {
         self.controller.update_target(&mut state.position, pos);
+    }
+
+    /// Restarts the style's animation, because the indicator points at a different item now.
+    pub fn on_target_changed(&self, state: &mut State<P, S>) {
         self.style.on_target_changed(&mut state.state);
     }
 

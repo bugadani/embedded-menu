@@ -14,6 +14,7 @@ Unreleased
  - Fixed a panic when a menu item's value is wider than the display
  - `AnimatedPosition::new` and `AnimatedTriangle::new` now reject animation lengths that would
    later divide by zero
+ - Rebuilding a menu no longer restarts the indicator animation
 
 0.6.1 (2024-02-25)
 ==================
