@@ -267,9 +267,7 @@ where
         T: Theme,
     {
         self.relayout(selected, items, style);
-        style
-            .indicator
-            .on_target_changed(&mut self.indicator_state);
+        style.indicator.on_target_changed(&mut self.indicator_state);
     }
 }
 
