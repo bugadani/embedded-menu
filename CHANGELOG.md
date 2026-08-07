@@ -1,4 +1,4 @@
-Unreleased
+0.7.0 (2026-08-07)
 ==================
 
  - Some functions are now `const`
