@@ -88,7 +88,7 @@ impl<R> InputAdapter for SingleTouchAdapter<R> {
                 InputResult::from(InputState::InProgress(interpolate(
                     state.interaction_time - ignore_time,
                     0,
-                    self.max_time - ignore_time,
+                    self.max_time.saturating_sub(ignore_time),
                     0,
                     255,
                 ) as u8))

@@ -19,7 +19,13 @@ pub struct AnimatedTriangle {
 }
 
 impl AnimatedTriangle {
+    /// Creates an animation with the given period, in frames.
+    ///
+    /// # Panics
+    ///
+    /// The period must be at least 5 frames, as the animation is divided into fifths.
     pub const fn new(period: i32) -> Self {
+        assert!(period >= 5, "the animation period must be at least 5");
         Self { period }
     }
 

@@ -242,7 +242,11 @@ where
                 .calculate_selection(self.selected, items.count(), |i| items.selectable(i));
         self.selected = selected;
 
-        let selected_offset = items.bounds_of(selected).top_left.y;
+        let selected_offset = if items.count() == 0 {
+            0
+        } else {
+            items.bounds_of(selected).top_left.y
+        };
 
         style
             .indicator
@@ -343,6 +347,10 @@ where
                     None
                 }
                 Interaction::Action(Action::Select) => {
+                    if self.items.count() == 0 {
+                        return None;
+                    }
+
                     // We can't tell whether the item's appearance changed, so assume it did.
                     self.dirty = true;
                     let value = self.items.interact_with(self.state.selected);
@@ -369,7 +377,13 @@ where
     P: SelectionIndicatorController,
     S: IndicatorStyle,
 {
+    /// Returns the value of the selected item, without interacting with it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the menu has no items, as there is no value to return.
     pub fn selected_value(&self) -> R {
+        assert!(self.items.count() > 0, "the menu has no items");
         self.items.value_of(self.state.selected)
     }
 }
@@ -422,6 +436,17 @@ where
         self.style.indicator.offset(&self.state.indicator_state) - self.state.list_offset
     }
 
+    /// The height of the selected menu item, or 0 if the menu has no items.
+    fn selected_item_height(&self) -> i32 {
+        if self.items.count() == 0 {
+            0
+        } else {
+            MenuItemCollection::bounds_of(&self.items, self.state.selected)
+                .size()
+                .height as i32
+        }
+    }
+
     /// Advances animations by a single frame, and returns whether the menu needs to be redrawn.
     ///
     /// Call this once per frame, and only draw the menu if it returns `true`:
@@ -460,9 +485,7 @@ where
                 0
             };
 
-            let selected_height = MenuItemCollection::bounds_of(&self.items, self.state.selected)
-                .size()
-                .height as i32;
+            let selected_height = self.selected_item_height();
             let indicator_height = self
                 .style
                 .indicator
@@ -519,11 +542,13 @@ where
         let menu_height = content_area.size().height as i32;
         let list_height = self.items.bounds().size().height as i32;
 
-        let draw_scrollbar = match self.style.scrollbar {
-            DisplayScrollbar::Display => true,
-            DisplayScrollbar::Hide => false,
-            DisplayScrollbar::Auto => list_height > menu_height,
-        };
+        // An empty list has nothing to scroll, and scaling by its height would divide by zero.
+        let draw_scrollbar = list_height > 0
+            && match self.style.scrollbar {
+                DisplayScrollbar::Display => true,
+                DisplayScrollbar::Hide => false,
+                DisplayScrollbar::Auto => list_height > menu_height,
+            };
 
         let menu_display_area = if draw_scrollbar {
             let scrollbar_area = content_area.resized_width(2, AnchorX::Right);
@@ -548,13 +573,8 @@ where
             content_area
         };
 
-        let selected_menuitem_height =
-            MenuItemCollection::bounds_of(&self.items, self.state.selected)
-                .size()
-                .height as i32;
-
         self.style.indicator.draw(
-            selected_menuitem_height,
+            self.selected_item_height(),
             self.top_offset(),
             self.state.last_input_state,
             display.cropped(&menu_display_area),
@@ -573,8 +593,9 @@ mod test {
 
     use crate::{
         interaction::{Action, Interaction, Navigation},
+        items::MenuItem,
         selection_indicator::style::AnimatedTriangle,
-        Menu, MenuStyle,
+        DisplayScrollbar, Menu, MenuStyle,
     };
 
     /// The menu is wider and taller than a `MockDisplay`, and freely overdraws.
@@ -583,6 +604,38 @@ mod test {
         display.set_allow_overdraw(true);
         display.set_allow_out_of_bounds_drawing(true);
         display
+    }
+
+    #[test]
+    fn a_menu_without_items_can_be_used() {
+        let mut items: [MenuItem<&str, (), &str, true>; 0] = [];
+        let mut menu = Menu::with_style(
+            "Title",
+            MenuStyle::new(BinaryColor::On).with_scrollbar_style(DisplayScrollbar::Display),
+        )
+        .add_menu_items(&mut items)
+        .build();
+
+        let mut display = test_display();
+        menu.update(&display);
+        menu.draw(&mut display).unwrap();
+
+        assert_eq!(
+            menu.interact(Interaction::Navigation(Navigation::Next)),
+            None
+        );
+        assert_eq!(menu.interact(Interaction::Action(Action::Select)), None);
+    }
+
+    #[test]
+    fn a_value_wider_than_the_display_can_be_drawn() {
+        let mut menu = Menu::with_style("Title", MenuStyle::new(BinaryColor::On))
+            .add_item("Title", "a marker far wider than the display", |_| ())
+            .build();
+
+        let mut display = test_display();
+        menu.update(&display);
+        menu.draw(&mut display).unwrap();
     }
 
     #[test]

@@ -10,6 +10,10 @@ Unreleased
    you change a menu item's value or the contents of an item collection you own.
  - **breaking** `SelectionIndicatorController::update` and `IndicatorStyle::update` now return
    whether the indicator's appearance changed
+ - Fixed a panic when a menu contains no items
+ - Fixed a panic when a menu item's value is wider than the display
+ - `AnimatedPosition::new` and `AnimatedTriangle::new` now reject animation lengths that would
+   later divide by zero
 
 0.6.1 (2024-02-25)
 ==================

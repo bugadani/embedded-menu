@@ -52,6 +52,10 @@ impl Navigation {
         count: usize,
         selectable: impl Fn(usize) -> bool,
     ) -> usize {
+        if count == 0 {
+            return 0;
+        }
+
         // Clamp the selection to the range of selectable items.
         selected = selected.clamp(0, count - 1);
         let original = selected;

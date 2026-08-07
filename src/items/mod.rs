@@ -103,7 +103,9 @@ impl MenuLine {
         )
         .draw(display)?;
 
-        text_bounds.size.width -= self.value_width;
+        // The value is drawn over the full width, so a value wider than the display leaves no
+        // room for the title at all.
+        text_bounds.size.width = text_bounds.size.width.saturating_sub(self.value_width);
         TextBox::new(title, text_bounds, *text_style).draw(display)?;
 
         Ok(())

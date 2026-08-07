@@ -67,7 +67,13 @@ pub struct AnimatedState {
 }
 
 impl AnimatedPosition {
+    /// Creates an indicator that takes the given number of frames to reach its target.
+    ///
+    /// # Panics
+    ///
+    /// The animation must take at least one frame.
     pub const fn new(frames: i32) -> Self {
+        assert!(frames >= 1, "the animation must take at least one frame");
         Self { frames }
     }
 }
